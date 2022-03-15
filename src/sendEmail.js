@@ -10,19 +10,14 @@ import {
     mailerApiKeyClaroline,
     mailgunApiKey,
     mailgunDomain,
+    mailgunWhitelist,
 } from './credentialsConfig'
 
 const mailgun = new Mailgun(FormData)
 
 const mailgunClient = mailgun.client({ username: 'api', key: mailgunApiKey, url: 'https://api.eu.mailgun.net' })
 
-const postalSuppressedDomains = [
-    '@pragmaticmanagement.ch',
-    '@ilavigny.ch',
-    '@polouest.ch',
-    '@lerepuis.ch',
-    '@vd.educanet2.ch',
-]
+const postalSuppressedDomains = mailgunWhitelist.split(',')
 
 export const sendEmail = async ({
     to,

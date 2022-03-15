@@ -16,3 +16,6 @@ export const mailerTag = process.env.MAILER_TAG ?? 'former22'
 export const mailerFrom = process.env.MAILER_FROM ?? 'no-reply@cep-dev.ch'
 export const mailgunApiKey = process.env.MAILGUN_API_KEY ?? ''
 export const mailgunDomain = process.env.MAILGUN_DOMAIN ?? 'cep-dev.ch'
+export const mailgunWhitelist =
+    process.env.MAILGUN_WHITELIST ??
+    '@araspe.ch,@ilavigny.ch,@lerepuis.ch,@polouest.ch,@pragmaticmanagement.ch,@vd.educanet2.ch'
