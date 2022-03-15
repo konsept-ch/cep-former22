@@ -57,14 +57,19 @@ app.use('/mail', mailRouter)
 app.get('/', (_req, res) => {
     const allRoutes = app._router.stack
         .filter(({ name }) => name === 'bound dispatch')
-        .map(({ route: { path } }) => path)
+        .map(({ route: { path, stack } }) => ({ path, method: stack[0].method }))
         .slice(0, -1)
+
+    const mailRoutes = mailRouter.stack.map(({ route: { path, stack } }) => ({
+        path: `/mail${path}`,
+        method: stack[0].method,
+    }))
 
     const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
 
     res.send(
-        `<ul><li>${SWAGGER_LINK}</li>${allRoutes
-            .map((route) => `<li><a href="${route}">${route}</a></li>`)
+        `<ul><li>${SWAGGER_LINK}</li>${[...allRoutes, ...mailRoutes]
+            .map(({ path, method }) => `<li><a href="${path}">${path} (${method})</a></li>`)
             .join('')}</ul>`
     )
 })
