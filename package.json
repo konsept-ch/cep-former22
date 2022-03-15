@@ -1,0 +1,43 @@
+{
+  "name": "cep-middleware",
+  "version": "1.0.0",
+  "description": "CEP Middleware for PeopleSoft and Former22",
+  "author": "konsept.ch",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "private": true,
+  "engines": {
+    "node": ">=16.14.0",
+    "npm": ">=8.3.1"
+  },
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "pm2 start ecosystem.config.cjs && pm2 logs",
+    "stop": "pm2 stop middleware",
+    "monitor": "pm2 monit",
+    "logs": "pm2 logs",
+    "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start"
+  },
+  "dependencies": {
+    "@prisma/client": "3.9.2",
+    "cors": "2.8.5",
+    "express": "4.17.2",
+    "js-yaml": "4.1.0",
+    "nanoid": "3.2.0",
+    "node-fetch": "3.2.0",
+    "pm2": "5.1.2",
+    "prisma": "3.9.2",
+    "swagger-jsdoc": "7.0.0-rc.6",
+    "swagger-ui-express": "4.3.0",
+    "uuid": "8.3.2",
+    "winston": "3.6.0",
+    "xml-js": "1.6.11"
+  },
+  "devDependencies": {
+    "cross-env": "7.0.3",
+    "eslint": "8.9.0",
+    "eslint-config-prettier": "8.3.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "prettier": "2.5.1"
+  }
+}
