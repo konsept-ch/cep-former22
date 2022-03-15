@@ -1,5 +1,6 @@
 import fetch from 'node-fetch'
 import FormData from 'form-data'
+import Mailgun from 'mailgun.js'
 
 import {
     mailerHostUrl,
@@ -8,7 +9,12 @@ import {
     mailerFrom,
     mailerApiKeyClaroline,
     mailgunApiKey,
+    mailgunDomain,
 } from './credentialsConfig'
+
+const mailgun = new Mailgun(FormData)
+
+const mailgunClient = mailgun.client({ username: 'api', key: mailgunApiKey, url: 'https://api.eu.mailgun.net' })
 
 const postalSuppressedDomains = [
     '@pragmaticmanagement.ch',
@@ -47,32 +53,23 @@ export const sendEmail = async ({
     const emailResponse = await result.json()
 
     if (postalSuppressedDomains.some((domain) => destinations[0].includes(domain))) {
-        // TODO send to mailgun
-        const clientIdAndSecret = `api:${mailgunApiKey}`
-        const base64 = Buffer.from(clientIdAndSecret).toString('base64')
+        try {
+            const mailgunResult = await mailgunClient.messages.create(mailgunDomain, {
+                from,
+                to: destinations,
+                subject,
+                // text: 'Testing some Mailgun awesomness!',
+                html: html_body,
+            })
 
-        // eslint-disable-next-line no-undef
-        const formdata = new FormData()
-        formdata.append('from', 'Excited User <mailgun@cep-val.ch>')
-        // formdata.append('to', 'YOU@YOUR_DOMAIN_NAME')
-        formdata.append('to', 'dan@konsept.ch')
-        formdata.append('subject', 'Hello')
-        formdata.append('text', 'Testing some Mailgun awesomeness!')
+            console.log(`E-mail domain is in suppression list, mailgun used: ${to.join(', ')}`)
+            console.log(mailgunResult)
 
-        const mailgunResult = await fetch(`https://api.eu.mailgun.net/v3/cep-val.ch/messages`, {
-            method: 'post',
-            headers: {
-                // 'X-Server-API-Key': isFromClaroline ? mailerApiKeyClaroline : mailerApiKey,
-                // 'Content-Type': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept-Language': 'en_US',
-                Accept: 'application/json',
-                Authorization: `Basic ${base64}`,
-            },
-            body: formdata,
-        })
-
-        return { emailResponse, mailgunResult }
+            return { emailResponse, mailgunResult }
+        } catch (error) {
+            console.error(error)
+            return { emailResponse, mailgunResult: error.message }
+        }
     } else {
         return { emailResponse }
     }
