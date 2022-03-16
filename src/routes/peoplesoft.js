@@ -1,7 +1,11 @@
+import { Router } from 'express'
 import convert from 'xml-js'
-import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from './callApi'
-import { fetchInscriptionsWithStatuses, createService } from './utils'
-import { prisma } from '.'
+
+import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
+import { fetchInscriptionsWithStatuses, createService } from '../utils'
+import { prisma } from '..'
+
+export const peoplesoftRouter = Router()
 
 const respondToPeopleSoft = (res, data) =>
     res.format({
@@ -19,42 +23,44 @@ const respondToPeopleSoft = (res, data) =>
         default: () => res.json(data),
     })
 
-export const peopleSoftServices = () => {
-    /**
-     * @openapi
-     *
-     * /peoplesoft/formations:
-     *   get:
-     *     summary: Retourne la liste des formations
-     *     tags: [Formations]
-     *     description: Liste des formations proposées par le CEP
-     *     parameters:
-     *       - name: X-Former22-API-Key
-     *         in: header
-     *         required: false
-     *         schema:
-     *           type: string
-     *     responses:
-     *       200:
-     *         description: La liste des formations a été retourné avec succès
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 $ref: '#/components/schemas/Course'
-     *           application/xml:
-     *             schema:
-     *               type: object
-     *               xml:
-     *                 name: formations
-     *               properties:
-     *                 formation:
-     *                   type: array
-     *                   items:
-     *                     $ref: '#/components/schemas/Course'
-     */
-    createService('get', '/peoplesoft/formations', async (req, res) => {
+/**
+ * @openapi
+ *
+ * /peoplesoft/formations:
+ *   get:
+ *     summary: Retourne la liste des formations
+ *     tags: [Formations]
+ *     description: Liste des formations proposées par le CEP
+ *     parameters:
+ *       - name: X-Former22-API-Key
+ *         in: header
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: La liste des formations a été retourné avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Course'
+ *           application/xml:
+ *             schema:
+ *               type: object
+ *               xml:
+ *                 name: formations
+ *               properties:
+ *                 formation:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Course'
+ */
+createService(
+    'get',
+    '/formations',
+    async (req, res) => {
         const token = req.header(PEOPLESOFT_TOKEN) ?? req.query.apitoken
 
         if (token == null) {
@@ -74,6 +80,7 @@ export const peopleSoftServices = () => {
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
+                    // Use prisma instead
                     const courses = await callApi({
                         req,
                         path: 'data_source/all_courses/home',
@@ -143,33 +150,39 @@ export const peopleSoftServices = () => {
                 }
             }
         }
-    })
+    },
+    null,
+    peoplesoftRouter
+)
 
-    /**
-     * @openapi
-     *
-     * /peoplesoft/inscriptions:
-     *   get:
-     *     summary: Retourne la liste des inscriptions qui concernent PeopleSoft de la Ville de Lausanne
-     *     tags: [Inscriptions]
-     *     description: Liste des inscriptions qui concernent PeopleSoft de la Ville de Lausanne
-     *     parameters:
-     *       - name: filter
-     *         in: query
-     *         required: false
-     *         schema:
-     *           type: string
-     *     responses:
-     *       200:
-     *         description: La liste des inscriptions a été retourné avec succès
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 $ref: '#/components/schemas/Inscription'
-     */
-    createService('get', '/peoplesoft/inscriptions', async (_req, res) => {
+/**
+ * @openapi
+ *
+ * /peoplesoft/inscriptions:
+ *   get:
+ *     summary: Retourne la liste des inscriptions qui concernent PeopleSoft de la Ville de Lausanne
+ *     tags: [Inscriptions]
+ *     description: Liste des inscriptions qui concernent PeopleSoft de la Ville de Lausanne
+ *     parameters:
+ *       - name: filter
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: La liste des inscriptions a été retourné avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Inscription'
+ */
+createService(
+    'get',
+    '/inscriptions',
+    async (_req, res) => {
         try {
             const inscriptions = await fetchInscriptionsWithStatuses()
 
@@ -181,5 +194,7 @@ export const peopleSoftServices = () => {
         } catch (error) {
             console.error(error)
         }
-    })
-}
+    },
+    null,
+    peoplesoftRouter
+)

@@ -7,7 +7,8 @@ import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
 
 import { generateEndpoints } from './expressEndpoints'
-import { peopleSoftServices } from './peopleSoftServices'
+// import { peopleSoftServices } from './peopleSoftServices'
+import { peoplesoftRouter } from './routes/peoplesoft'
 import { mailRouter } from './routes/mail'
 
 const { PrismaClient } = prismaClientPkg
@@ -30,7 +31,7 @@ const swaggerOptions = {
             version: '1.0.0',
         },
     },
-    apis: ['./src/swaggerSchemas.yml', './src/peopleSoftServices.js'], // files containing annotations as above
+    apis: ['./src/swaggerSchemas.yml', './src/routes/peoplesoft.js'], // files containing annotations as above
 }
 
 const openapiSpecification = await swaggerJsdoc(swaggerOptions)
@@ -51,7 +52,8 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
 app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi.setup(null, swaggerUiOptions))
 
 generateEndpoints()
-peopleSoftServices()
+// peopleSoftServices()
+app.use('/peoplesoft', peoplesoftRouter)
 app.use('/mail', mailRouter)
 
 app.get('/', (_req, res) => {
@@ -64,11 +66,15 @@ app.get('/', (_req, res) => {
         path: `/mail${path}`,
         method: stack[0].method,
     }))
+    const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
+        path: `/peoplesoft${path}`,
+        method: stack[0].method,
+    }))
 
     const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
 
     res.send(
-        `<ul><li>${SWAGGER_LINK}</li>${[...allRoutes, ...mailRoutes]
+        `<ul><li>${SWAGGER_LINK}</li>${[...allRoutes, ...mailRoutes, ...peoplesoftRoutes]
             .map(({ path, method }) => `<li><a href="${path}">${path} (${method})</a></li>`)
             .join('')}</ul>`
     )
