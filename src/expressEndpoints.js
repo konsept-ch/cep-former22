@@ -588,7 +588,7 @@ export const generateEndpoints = () => {
         })
 
         const { emailResponse } = await sendEmail({
-            to: 'yansy.blue.1998@gmail.com',
+            to: 'dan@konsept.ch',
             subject: "Rapport d'erreur de l'interface utilisateur",
             html_body: `<h2>Date:</h2><p>${date}</p><h2>Description:</h2><p>${req.body.errorDescription}</p>`,
         })
