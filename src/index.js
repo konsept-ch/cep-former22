@@ -10,6 +10,7 @@ import { generateEndpoints } from './expressEndpoints'
 import { peoplesoftRouter } from './routes/peoplesoft'
 import { mailRouter } from './routes/mail'
 import { templatesRouter } from './routes/templates'
+import { inscriptionsRouter } from './routes/inscriptions'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -55,6 +56,7 @@ generateEndpoints()
 app.use('/peoplesoft', peoplesoftRouter)
 app.use('/mail', mailRouter)
 app.use('/templates', templatesRouter)
+app.use('/inscriptions', inscriptionsRouter)
 
 app.get('/', (_req, res) => {
     const allRoutes = app._router.stack

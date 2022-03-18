@@ -2,8 +2,9 @@ import { Router } from 'express'
 import convert from 'xml-js'
 
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
-import { fetchInscriptionsWithStatuses, createService } from '../utils'
+import { createService } from '../utils'
 import { prisma } from '..'
+import { fetchInscriptionsWithStatuses } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
