@@ -7,9 +7,9 @@ import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
 
 import { generateEndpoints } from './expressEndpoints'
-// import { peopleSoftServices } from './peopleSoftServices'
 import { peoplesoftRouter } from './routes/peoplesoft'
 import { mailRouter } from './routes/mail'
+import { templatesRouter } from './routes/templates'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -52,9 +52,9 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
 app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi.setup(null, swaggerUiOptions))
 
 generateEndpoints()
-// peopleSoftServices()
 app.use('/peoplesoft', peoplesoftRouter)
 app.use('/mail', mailRouter)
+app.use('/templates', templatesRouter)
 
 app.get('/', (_req, res) => {
     const allRoutes = app._router.stack
@@ -62,19 +62,23 @@ app.get('/', (_req, res) => {
         .map(({ route: { path, stack } }) => ({ path, method: stack[0].method }))
         .slice(0, -1)
 
+    const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
+        path: `/peoplesoft${path}`,
+        method: stack[0].method,
+    }))
     const mailRoutes = mailRouter.stack.map(({ route: { path, stack } }) => ({
         path: `/mail${path}`,
         method: stack[0].method,
     }))
-    const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
-        path: `/peoplesoft${path}`,
+    const templatesRoutes = templatesRouter.stack.map(({ route: { path, stack } }) => ({
+        path: `/templates${path}`,
         method: stack[0].method,
     }))
 
     const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
 
     res.send(
-        `<ul><li>${SWAGGER_LINK}</li>${[...allRoutes, ...mailRoutes, ...peoplesoftRoutes]
+        `<ul><li>${SWAGGER_LINK}</li>${[...allRoutes, ...peoplesoftRoutes, ...mailRoutes, ...templatesRoutes]
             .map(({ path, method }) => `<li><a href="${path}">${path} (${method})</a></li>`)
             .join('')}</ul>`
     )
