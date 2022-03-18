@@ -23,9 +23,15 @@ export const callApi = async ({
     })
 
     try {
-        const responseJson = await response.json()
+        if (method.toLowerCase() !== 'delete') {
+            const responseJson = await response.json()
 
-        return responseJson?.data ? responseJson?.data?.filter(predicate) : responseJson
+            return responseJson?.data ? responseJson?.data?.filter(predicate) : responseJson
+        } else {
+            const responseText = await response.text()
+
+            return responseText
+        }
     } catch (error) {
         console.warn(response)
         console.error(error)
