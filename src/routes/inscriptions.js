@@ -61,6 +61,27 @@ createService(
                 create: { inscriptionStatus: req.body.status, inscriptionId: req.params.inscriptionId },
             })
 
+            if (emailTemplateId) {
+                const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
+                    req,
+                    templateId: emailTemplateId,
+                    sessionId: currentInscription.session.id,
+                    inscriptionId: currentInscription.id,
+                })
+
+                const { emailResponse } = await sendEmail({
+                    to: currentInscription.user.email,
+                    subject: emailSubject,
+                    html_body: emailContent,
+                })
+
+                await sendSms({ to: '359877155302', content: smsContent })
+
+                res.json({ emailResponse })
+            } else {
+                res.json('Le statut a été modifié')
+            }
+
             if (statusesForRefusalRh.includes(newStatus)) {
                 await callApi({
                     req,
@@ -82,27 +103,6 @@ createService(
                     params: { 'ids[0]': currentInscription.id },
                     method: 'delete',
                 })
-            }
-
-            if (emailTemplateId) {
-                const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                    req,
-                    templateId: emailTemplateId,
-                    sessionId: currentInscription.session.id,
-                    inscriptionId: currentInscription.id,
-                })
-
-                const { emailResponse } = await sendEmail({
-                    to: currentInscription.user.email,
-                    subject: emailSubject,
-                    html_body: emailContent,
-                })
-
-                await sendSms({ to: '359877155302', content: smsContent })
-
-                res.json({ emailResponse })
-            } else {
-                res.json('Le statut a été modifié')
             }
 
             return {
