@@ -75,11 +75,13 @@ createService(
                     html_body: emailContent,
                 })
 
+                console.info(emailResponse)
+
                 await sendSms({ to: '359877155302', content: smsContent })
 
-                res.json({ emailResponse })
-            } else {
-                res.json('Le statut a été modifié')
+                // res.json({ emailResponse })
+                // } else {
+                // res.json('Le statut a été modifié')
             }
 
             if (statusesForRefusalRh.includes(newStatus)) {
@@ -104,6 +106,8 @@ createService(
                     method: 'delete',
                 })
             }
+
+            res.json('Le statut a été modifié')
 
             return {
                 entityName: `${currentInscription.user.username} => ${currentInscription.session.name}`,
