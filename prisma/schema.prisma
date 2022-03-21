@@ -5494,11 +5494,13 @@ model former22_session {
 }
 
 model former22_log {
-  logId             String  @id @db.VarChar(255)
   userEmail         String? @db.VarChar(255)
   entityType        String? @db.VarChar(255)
   entityName        String? @db.Text
   actionDescription String? @db.Text
   dateAndTime       BigInt?
   actionStatus      String? @db.VarChar(255)
+  entityId          String? @db.VarChar(255)
+  logId             String? @db.VarChar(255)
+  id                Int     @id @default(autoincrement())
 }
