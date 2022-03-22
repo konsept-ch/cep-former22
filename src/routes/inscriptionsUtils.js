@@ -173,9 +173,14 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                 (async () => {
                     const allLearnersToFetchStatus = claro_cursusbundle_course_session_user?.map((inscription) =>
                         (async () => {
-                            const inscriptionWithStatus = await prisma.former22_inscription.findUnique({
+                            const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
                                 where: { inscriptionId: inscription.uuid },
                             })
+                            const inscriptionStatusForIdWhenCancellation = await prisma.former22_inscription.findUnique(
+                                {
+                                    where: { inscriptionId: inscription.inscription_uuid },
+                                }
+                            )
 
                             return {
                                 id: inscription.uuid,
@@ -183,7 +188,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                 type: inscription.registration_type,
                                 deletedInscriptionUuid: inscription.inscription_uuid,
                                 status:
-                                    inscriptionWithStatus?.inscriptionStatus ??
+                                    inscriptionStatusForId?.inscriptionStatus ??
+                                    inscriptionStatusForIdWhenCancellation?.inscriptionStatus ??
                                     transformFlagsToStatus({
                                         validated: inscription.validated,
                                         confirmed: inscription.confirmed,
