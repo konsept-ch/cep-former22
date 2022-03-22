@@ -176,11 +176,12 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
                                 where: { inscriptionId: inscription.uuid },
                             })
-                            const inscriptionStatusForIdWhenCancellation = await prisma.former22_inscription.findUnique(
-                                {
-                                    where: { inscriptionId: inscription.inscription_uuid },
-                                }
-                            )
+                            const inscriptionStatusForIdWhenCancellation =
+                                inscription.registration_type === 'cancellation'
+                                    ? await prisma.former22_inscription.findUnique({
+                                          where: { inscriptionId: inscription.inscription_uuid },
+                                      })
+                                    : null
 
                             return {
                                 id: inscription.uuid,
