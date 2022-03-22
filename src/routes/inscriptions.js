@@ -55,12 +55,6 @@ createService(
         const statusesForAnnulation = [STATUSES.REFUSEE_PAR_CEP, STATUSES.ANNULEE, STATUSES.ECARTEE]
 
         if (typeof currentInscription !== 'undefined') {
-            await prisma.former22_inscription.upsert({
-                where: { inscriptionId: req.params.inscriptionId },
-                update: { inscriptionStatus: req.body.status },
-                create: { inscriptionStatus: req.body.status, inscriptionId: req.params.inscriptionId },
-            })
-
             if (emailTemplateId) {
                 const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
                     req,
@@ -106,6 +100,12 @@ createService(
                     method: 'delete',
                 })
             }
+
+            await prisma.former22_inscription.upsert({
+                where: { inscriptionId: req.params.inscriptionId },
+                update: { inscriptionStatus: req.body.status },
+                create: { inscriptionStatus: req.body.status, inscriptionId: req.params.inscriptionId },
+            })
 
             res.json('Le statut a été modifié')
 

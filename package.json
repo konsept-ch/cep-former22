@@ -16,6 +16,8 @@
     "stop": "pm2 stop middleware",
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
+    "prettier:check": "prettier . --ignore-unknown --check",
+    "prettier:fix": "prettier . --ignore-unknown --write",
     "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start"
   },
   "dependencies": {

@@ -81,6 +81,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
               select: {
                   registration_date: true,
                   uuid: true,
+                  inscription_uuid: true,
                   claro_user: {
                       select: {
                           first_name: true,
@@ -110,6 +111,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                       validated: false,
                       confirmed: false,
                       uuid: current.uuid,
+                      inscription_uuid: current.inscription_uuid,
                       registration_date: current.registration_date,
                       claro_user: current.claro_user,
                   },
@@ -179,6 +181,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                 id: inscription.uuid,
                                 inscriptionDate: inscription.registration_date,
                                 type: inscription.registration_type,
+                                deletedInscriptionUuid: inscription.inscription_uuid,
                                 status:
                                     inscriptionWithStatus?.inscriptionStatus ??
                                     transformFlagsToStatus({
