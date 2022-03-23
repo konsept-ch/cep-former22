@@ -48,6 +48,8 @@ export const sendEmail = async ({
 
     const emailResponse = await result.json()
 
+    console.info(emailResponse)
+
     if (postalSuppressedDomains.some((domain) => destinations[0].includes(domain))) {
         try {
             const mailgunResult = await mailgunClient.messages.create(mailgunDomain, {

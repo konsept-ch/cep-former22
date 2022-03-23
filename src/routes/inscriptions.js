@@ -32,7 +32,7 @@ createService(
     'post',
     '/:inscriptionId',
     async (req, res) => {
-        const { emailTemplateId, status: newStatus } = req.body
+        const { emailTemplateId, shouldSendSms, status: newStatus } = req.body
 
         const inscriptions = await fetchInscriptionsWithStatuses()
 
@@ -63,15 +63,15 @@ createService(
                     inscriptionId: currentInscription.id,
                 })
 
-                const { emailResponse } = await sendEmail({
+                await sendEmail({
                     to: currentInscription.user.email,
                     subject: emailSubject,
                     html_body: emailContent,
                 })
 
-                console.info(emailResponse)
-
-                await sendSms({ to: '359877155302', content: smsContent })
+                if (shouldSendSms) {
+                    await sendSms({ to: currentInscription.user.phone, content: smsContent })
+                }
 
                 // res.json({ emailResponse })
                 // } else {

@@ -10,6 +10,8 @@ export const MIDDLEWARE_URL =
     (process.env.NODE_ENV === 'production' ? 'https://middleware.cep-val.ch' : 'http://localhost:4000')
 
 export const mailerHostUrl = process.env.MAILER_HOST_URL ?? 'https://postal.cep-val.ch'
+export const smsSenderUrl = process.env.SMS_SENDER_URL ?? 'https://api.smsup.ch/send/simulate'
+export const smsSenderToken = process.env.SMS_SENDER_TOKEN ?? ''
 export const mailerApiKey = process.env.MAILER_API_KEY ?? ''
 export const mailerApiKeyClaroline = process.env.MAILER_API_KEY_CLAROLINE ?? ''
 export const mailerTag = process.env.MAILER_TAG ?? 'former22'

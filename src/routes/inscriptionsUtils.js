@@ -60,6 +60,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             last_name: true,
                             mail: true,
                             username: true,
+                            phone: true,
                             uuid: true,
                             id: true,
                             user_organization: {
@@ -88,6 +89,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                           last_name: true,
                           mail: true,
                           username: true,
+                          phone: true,
                           uuid: true,
                       },
                   },
@@ -202,6 +204,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     lastName: inscription.claro_user.last_name,
                                     email: inscription.claro_user.mail,
                                     username: inscription.claro_user.username,
+                                    phone: inscription.claro_user.phone,
                                     userId: inscription.claro_user.uuid,
                                     hierarchy: inscription.claro_user.user_organization
                                         ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)
