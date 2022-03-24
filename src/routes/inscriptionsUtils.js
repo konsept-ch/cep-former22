@@ -33,6 +33,13 @@ const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
     }
 }
 
+export const parsePhoneForSms = ({ phone }) => {
+    // remove (0) and then spaces and chars: -–./)(+ and then starting zeroes
+    const cleanPhone = `${parseInt(phone?.replaceAll('(0)', '').replaceAll(/[-–./)(+\s]/gi, ''))}`
+
+    return cleanPhone.startsWith('41') || cleanPhone.length !== 9 ? cleanPhone : `41${cleanPhone}`
+}
+
 export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { shouldFetchTutors: false }) => {
     const sessionsWithInscriptions = await prisma.claro_cursusbundle_course_session.findMany({
         select: {
@@ -205,6 +212,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     email: inscription.claro_user.mail,
                                     username: inscription.claro_user.username,
                                     phone: inscription.claro_user.phone,
+                                    phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
                                     userId: inscription.claro_user.uuid,
                                     hierarchy: inscription.claro_user.user_organization
                                         ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)

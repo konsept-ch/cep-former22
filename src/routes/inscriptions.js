@@ -6,7 +6,7 @@ import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
-import { fetchInscriptionsWithStatuses, FINAL_STATUSES, STATUSES } from './inscriptionsUtils'
+import { fetchInscriptionsWithStatuses, FINAL_STATUSES, parsePhoneForSms, STATUSES } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
 export const inscriptionsRouter = Router()
@@ -70,7 +70,10 @@ createService(
                 })
 
                 if (shouldSendSms) {
-                    await sendSms({ to: currentInscription.user.phone, content: smsContent })
+                    await sendSms({
+                        to: parsePhoneForSms({ phone: currentInscription.user.phone }),
+                        content: smsContent,
+                    })
                 }
 
                 // res.json({ emailResponse })
