@@ -42,6 +42,7 @@ export const LOG_TYPES = {
     SESSION: 'Session',
     TEMPLATE: 'Model',
     ORGANISATION: 'Organisation',
+    USER: 'Utilisateur',
 }
 
 // TODO: named params
@@ -117,6 +118,8 @@ export const getLogDescriptions = {
             ? `Changed column field "${columnNewData.field}" to "${columnNewData.fieldValue}"`
             : 'Updated description',
     inscription: ({ originalStatus, newStatus }) => `Changed status from "${originalStatus}" to "${newStatus}"`,
+    user: ({ shouldReceiveSms, fullName }) =>
+        shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
 export const fetchSessionsLessons = async ({ req, sessionId }) => {
