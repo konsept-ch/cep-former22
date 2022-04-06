@@ -21,6 +21,8 @@ const postalSuppressedDomains = mailgunWhitelist.split(',')
 
 export const sendEmail = async ({
     to,
+    cc,
+    bcc,
     from = mailerFrom,
     tag = mailerTag,
     subject,
@@ -30,6 +32,8 @@ export const sendEmail = async ({
     // destination will always be only one e-mail address, so it's an array of 1 string,
     // but Claroline sends it as a nested array, so we flatten it here
     const destinations = typeof to === 'string' ? [to] : to.flat()
+    const destinationsCc = typeof cc === 'string' ? [cc] : cc.flat()
+    const destinationsBcc = typeof bcc === 'string' ? [bcc] : bcc.flat()
 
     const result = await fetch(`${mailerHostUrl}/api/v1/send/message`, {
         method: 'post',
@@ -40,6 +44,8 @@ export const sendEmail = async ({
         body: JSON.stringify({
             from,
             to: destinations,
+            cc: destinationsCc,
+            bcc: destinationsBcc,
             subject,
             html_body,
             tag,
@@ -50,13 +56,22 @@ export const sendEmail = async ({
 
     console.info(emailResponse)
 
-    if (postalSuppressedDomains.some((domain) => destinations[0].includes(domain))) {
+    // TODO: refactor to split logic between to, cc and bcc
+    if (
+        postalSuppressedDomains.some(
+            (domain) =>
+                destinations[0].includes(domain) ||
+                destinationsCc[0].includes(domain) ||
+                destinationsBcc[0].includes(domain)
+        )
+    ) {
         try {
             const mailgunResult = await mailgunClient.messages.create(mailgunDomain, {
                 from,
                 to: destinations,
+                cc: destinationsCc,
+                bcc: destinationsBcc,
                 subject,
-                // text: 'Testing some Mailgun awesomness!',
                 html: html_body,
             })
 

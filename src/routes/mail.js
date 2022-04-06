@@ -25,13 +25,22 @@ createService(
     'post',
     '/api/v1/send/message',
     async (req, res) => {
-        const { to, from, tag, subject, html_body } = req.body
+        const { to, cc, bcc, from, tag, subject, html_body } = req.body
         const headers = req.headers
 
         console.info(req.body)
         console.info(req.headers)
 
-        const { emailResponse, mailgunResult } = sendEmail({ to, from, tag, subject, html_body, isFromClaroline: true })
+        const { emailResponse, mailgunResult } = sendEmail({
+            to,
+            cc,
+            bcc,
+            from,
+            tag,
+            subject,
+            html_body,
+            isFromClaroline: true,
+        })
 
         winstonLogger.info(JSON.stringify(req.body))
         winstonLogger.info(JSON.stringify(headers))

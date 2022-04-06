@@ -17,7 +17,7 @@ export const STATUSES = {
     ...FINAL_STATUSES,
 }
 
-export const registrationTypes = {
+const registrationTypes = {
     CANCELLATION: 'cancellation',
 }
 
