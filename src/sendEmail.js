@@ -60,9 +60,9 @@ export const sendEmail = async ({
     if (
         postalSuppressedDomains.some(
             (domain) =>
-                destinations[0].includes(domain) ||
-                destinationsCc[0].includes(domain) ||
-                destinationsBcc[0].includes(domain)
+                destinations.some((destination) => destination.includes(domain)) ||
+                destinationsCc.some((destination) => destination.includes(domain)) ||
+                destinationsBcc.some((destination) => destination.includes(domain))
         )
     ) {
         try {
