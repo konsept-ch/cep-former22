@@ -31,9 +31,9 @@ export const sendEmail = async ({
 }) => {
     // destination will always be only one e-mail address, so it's an array of 1 string,
     // but Claroline sends it as a nested array, so we flatten it here
-    const destinations = typeof to === 'string' ? [to] : to.flat()
-    const destinationsCc = typeof cc === 'string' ? [cc] : cc.flat()
-    const destinationsBcc = typeof bcc === 'string' ? [bcc] : bcc.flat()
+    const destinations = typeof to === 'string' ? [to] : to?.flat()
+    const destinationsCc = typeof cc === 'string' ? [cc] : cc?.flat()
+    const destinationsBcc = typeof bcc === 'string' ? [bcc] : bcc?.flat()
 
     const result = await fetch(`${mailerHostUrl}/api/v1/send/message`, {
         method: 'post',
@@ -60,9 +60,9 @@ export const sendEmail = async ({
     if (
         postalSuppressedDomains.some(
             (domain) =>
-                destinations.some((destination) => destination.includes(domain)) ||
-                destinationsCc.some((destination) => destination.includes(domain)) ||
-                destinationsBcc.some((destination) => destination.includes(domain))
+                destinations?.some((destination) => destination.includes(domain)) ||
+                destinationsCc?.some((destination) => destination.includes(domain)) ||
+                destinationsBcc?.some((destination) => destination.includes(domain))
         )
     ) {
         try {
