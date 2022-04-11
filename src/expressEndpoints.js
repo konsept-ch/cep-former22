@@ -407,7 +407,7 @@ export const generateEndpoints = () => {
         if (inscriptions.length > 0) {
             res.json(inscriptions)
         } else {
-            res.json('Aucune inscription trouvée')
+            res.json('Aucun formateur trouvé')
         }
     })
     // formateurs END

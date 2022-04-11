@@ -60,8 +60,8 @@ export const sendEmail = async ({
                 html: html_body,
             })
 
-            console.log(`E-mail domain is in suppression list, mailgun used: ${to.join(', ')}`)
-            console.log(mailgunResult)
+            console.info(`E-mail domain is in suppression list, mailgun used: ${to.join(', ')}`)
+            console.info(mailgunResult)
 
             return { emailResponse, mailgunResult }
         } catch (error) {

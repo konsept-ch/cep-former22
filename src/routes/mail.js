@@ -12,7 +12,7 @@ createService(
     async (req, res) => {
         const content = req.body
 
-        console.log(content)
+        console.info(content)
 
         res.json(content)
     },
