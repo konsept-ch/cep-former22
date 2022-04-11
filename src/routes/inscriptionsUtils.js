@@ -192,6 +192,11 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                       })
                                     : null
 
+                            const { shouldReceiveSms } =
+                                (await prisma.former22_user.findUnique({
+                                    where: { userId: inscription.claro_user.uuid },
+                                })) ?? {}
+
                             return {
                                 id: inscription.uuid,
                                 inscriptionDate: inscription.registration_date,
@@ -214,6 +219,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     phone: inscription.claro_user.phone,
                                     phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
                                     userId: inscription.claro_user.uuid,
+                                    shouldReceiveSms,
                                     hierarchy: inscription.claro_user.user_organization
                                         ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)
                                         : null,
