@@ -5505,3 +5505,8 @@ model former22_log {
   logId             String? @db.VarChar(255)
   id                Int     @id @default(autoincrement())
 }
+
+model former22_user {
+  userId           String   @id @db.VarChar(255)
+  shouldReceiveSms Boolean?
+}

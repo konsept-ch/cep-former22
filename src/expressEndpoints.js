@@ -73,9 +73,48 @@ export const generateEndpoints = () => {
     // users START
     createService('get', '/allUsers', async (req, res) => {
         const users = await callApi({ req, path: 'user' })
+        const usersSettings = await prisma.former22_user.findMany({})
 
-        res.json(users)
+        const enrichedUsersData = users.map((current) => {
+            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.id)
+
+            if (currentUserSettings) {
+                // eslint-disable-next-line no-unused-vars
+                const { _userId, ...settings } = currentUserSettings
+
+                return { ...current, ...settings }
+            } else {
+                return current
+            }
+        })
+
+        res.json(enrichedUsersData)
     })
+
+    createService(
+        'put',
+        '/user/:userId',
+        async (req, res) => {
+            await prisma.former22_user.upsert({
+                where: { userId: req.params.userId },
+                update: { shouldReceiveSms: req.body.shouldReceiveSms },
+                create: { shouldReceiveSms: req.body.shouldReceiveSms, userId: req.params.userId },
+            })
+
+            res.json("L'utilisateur a été modifié")
+
+            const [user] = await callApi({ req, path: 'user', predicate: ({ id }) => id === req.params.userId })
+
+            return {
+                entityName: user.name,
+                actionDescription: getLogDescriptions.user({
+                    shouldReceiveSms: req.body.shouldReceiveSms,
+                    fullName: user.name,
+                }),
+            }
+        },
+        { entityType: LOG_TYPES.USER }
+    )
 
     createService('get', '/admins', async (req, res) => {
         const users = await callApi({ req, path: 'user' })
@@ -368,7 +407,7 @@ export const generateEndpoints = () => {
         if (inscriptions.length > 0) {
             res.json(inscriptions)
         } else {
-            res.json('Aucune inscription trouvée')
+            res.json('Aucun formateur trouvé')
         }
     })
     // formateurs END
