@@ -8,6 +8,7 @@ CREATE TABLE former22_organization (
   addressTitle TEXT COMMENT 'The address title of the organization',
   postalAddressCountry TEXT COMMENT 'The country of the organization',
   postalAddressCountryCode TEXT COMMENT 'The country code of the organization',
+  postalAddressCode TEXT COMMENT 'The postal code of the organization',
   postalAddressStreet TEXT COMMENT 'The street of the organization',
   postalAddressDepartment TEXT COMMENT 'The department of the organization',
   postalAddressDepartmentCode TEXT COMMENT 'The department code of the organization',

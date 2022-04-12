@@ -5525,4 +5525,5 @@ model former22_organization {
   postalAddressDepartment     String? @db.Text
   postalAddressDepartmentCode String? @db.Text
   postalAddressLocality       String? @db.Text
+  postalAddressCode           String? @db.Text
 }
