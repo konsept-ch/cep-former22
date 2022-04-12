@@ -5513,7 +5513,7 @@ model former22_user {
 
 model former22_organization {
   id                          Int     @id @default(autoincrement())
-  organizationUuid            String? @db.Text
+  organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
   billingMode                 String? @db.Text
   dailyRate                   String? @db.Text
   flyersCount                 Int?
@@ -5521,9 +5521,9 @@ model former22_organization {
   addressTitle                String? @db.Text
   postalAddressCountry        String? @db.Text
   postalAddressCountryCode    String? @db.Text
+  postalAddressCode           String? @db.Text
   postalAddressStreet         String? @db.Text
   postalAddressDepartment     String? @db.Text
   postalAddressDepartmentCode String? @db.Text
   postalAddressLocality       String? @db.Text
-  postalAddressCode           String? @db.Text
 }
