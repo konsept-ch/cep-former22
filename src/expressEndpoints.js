@@ -92,7 +92,7 @@ export const generateEndpoints = () => {
     // users START
     createService('get', '/allUsers', async (req, res) => {
         const users = await callApi({ req, path: 'user' })
-        const usersSettings = await prisma.former22_user.findMany({})
+        const usersSettings = await prisma.former22_user.findMany()
 
         const enrichedUsersData = users.map((current) => {
             const currentUserSettings = usersSettings.find(({ userId }) => userId === current.id)

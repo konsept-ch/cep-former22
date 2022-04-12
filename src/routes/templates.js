@@ -42,7 +42,7 @@ createService(
     'get',
     '/',
     async (_req, res) => {
-        const templates = await prisma.former22_template.findMany({})
+        const templates = await prisma.former22_template.findMany()
 
         const templatesWithDeserializedStatuses = templates.map((template) => ({
             ...template,
