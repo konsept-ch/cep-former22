@@ -5495,18 +5495,34 @@ model former22_session {
 }
 
 model former22_log {
+  id                Int     @id @default(autoincrement())
+  logId             String? @db.VarChar(255)
   userEmail         String? @db.VarChar(255)
   entityType        String? @db.VarChar(255)
   entityName        String? @db.Text
+  entityId          String? @db.VarChar(255)
   actionDescription String? @db.Text
   dateAndTime       BigInt?
   actionStatus      String? @db.VarChar(255)
-  entityId          String? @db.VarChar(255)
-  logId             String? @db.VarChar(255)
-  id                Int     @id @default(autoincrement())
 }
 
 model former22_user {
   userId           String   @id @db.VarChar(255)
   shouldReceiveSms Boolean?
+}
+
+model former22_organization {
+  id                          Int     @id @default(autoincrement())
+  organizationUuid            String? @db.Text
+  billingMode                 String? @db.Text
+  dailyRate                   String? @db.Text
+  flyersCount                 Int?
+  phone                       String? @db.Text
+  addressTitle                String? @db.Text
+  postalAddressCountry        String? @db.Text
+  postalAddressCountryCode    String? @db.Text
+  postalAddressStreet         String? @db.Text
+  postalAddressDepartment     String? @db.Text
+  postalAddressDepartmentCode String? @db.Text
+  postalAddressLocality       String? @db.Text
 }
