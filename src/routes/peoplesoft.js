@@ -92,8 +92,9 @@ createService(
                         const courseAdditionalData = await prisma.former22_course.findUnique({
                             where: { courseId: course.id },
                             select: {
-                                coordinator: true,
-                                responsible: true,
+                                // we don't send coordinator and responsible to peoplesoft
+                                coordinator: false,
+                                responsible: false,
                                 typeStage: true,
                                 teachingMethod: true,
                                 codeCategory: true,
@@ -119,14 +120,12 @@ createService(
                             name,
                             slug,
                             plainDescription,
-                            coordinator,
-                            responsible,
                             typeStage,
                             teachingMethod,
                             codeCategory,
                             pricing: { price },
-                            restrictions,
-                            meta,
+                            // eslint-disable-next-line no-unused-vars -- we don't send course creator data
+                            meta: { creator, created: creationDate, updated: lastUpdatedDate, ...metaRest },
                             tags,
                         }) => ({
                             id,
@@ -134,15 +133,13 @@ createService(
                             name,
                             slug,
                             plainDescription,
-                            coordinator,
-                            responsible,
                             typeStage,
                             teachingMethod,
                             codeCategory,
                             price,
-                            creationDate: meta.created,
-                            restrictions,
-                            meta,
+                            creationDate,
+                            lastUpdatedDate,
+                            meta: { ...metaRest },
                             tags,
                         })
                     )
