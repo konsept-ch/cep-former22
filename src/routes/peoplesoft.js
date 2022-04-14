@@ -81,18 +81,13 @@ createService(
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
-                    // Use prisma instead
-                    const courses = await callApi({
-                        req,
-                        path: 'data_source/all_courses/home',
-                        headers: { [CLAROLINE_TOKEN]: token },
-                    })
+                    const courses = await prisma.claro_cursusbundle_course.findMany()
 
                     const coursesDataToFetch = courses.map(async (course) => {
                         const courseAdditionalData = await prisma.former22_course.findUnique({
-                            where: { courseId: course.id },
+                            where: { courseId: course.uuid },
                             select: {
-                                // we don't send coordinator and responsible to peoplesoft
+                                // note: we don't send coordinator and responsible to peoplesoft
                                 coordinator: false,
                                 responsible: false,
                                 typeStage: true,
@@ -111,24 +106,31 @@ createService(
 
                     const fullCoursesData = fetchedCoursesData.map(({ value }) => value)
 
-                    const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
+                    // const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
+                    // TODO filter out hidden courses, maybe in Prisma finder directly?
+                    const filteredCoursesData = fullCoursesData
+
+                    // TODO session duree - convertir en heures depuis la formation,
+                    // 1 jour -> 7h30min (7.5 heures), faire la somme
+
+                    // TODO sessions - dates only, not hours
 
                     const strippedCoursesData = filteredCoursesData.map(
                         ({
-                            id,
+                            uuid,
                             code,
-                            name,
+                            course_name: name,
                             slug,
                             plainDescription,
                             typeStage,
                             teachingMethod,
                             codeCategory,
-                            pricing: { price },
-                            // eslint-disable-next-line no-unused-vars -- we don't send course creator data
-                            meta: { creator, created: creationDate, updated: lastUpdatedDate, ...metaRest },
+                            price,
+                            createdAt: creationDate,
+                            updatedAt: lastUpdatedDate,
                             tags,
                         }) => ({
-                            id,
+                            id: uuid,
                             code,
                             name,
                             slug,
@@ -139,7 +141,6 @@ createService(
                             price,
                             creationDate,
                             lastUpdatedDate,
-                            meta: { ...metaRest },
                             tags,
                         })
                     )
