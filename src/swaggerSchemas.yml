@@ -40,6 +40,12 @@ components:
         lastUpdatedDate:
           type: string
           description: La date de la dernière modification de la formation
+        maxParticipants:
+          type: string
+          description: La limite de nombre de participants par session
+        durationHours:
+          type: string
+          description: La durée en heures de chaque session
       example:
         id: '01c292b5-43a4-4c59-9619-33a8309cdbf0'
         code: 'ACCESS'

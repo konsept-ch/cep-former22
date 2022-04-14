@@ -81,7 +81,23 @@ createService(
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
-                    const courses = await prisma.claro_cursusbundle_course.findMany()
+                    const courses = await prisma.claro_cursusbundle_course.findMany({
+                        where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
+                        select: {
+                            // TODO: ask CEP if we should send the poster and thumbnail URLs
+                            uuid: true,
+                            slug: true,
+                            code: true,
+                            course_name: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            session_days: true,
+                            session_hours: true,
+                            plainDescription: true,
+                            max_users: true,
+                            price: true,
+                        },
+                    })
 
                     const coursesDataToFetch = courses.map(async (course) => {
                         const courseAdditionalData = await prisma.former22_course.findUnique({
@@ -107,41 +123,29 @@ createService(
                     const fullCoursesData = fetchedCoursesData.map(({ value }) => value)
 
                     // const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
-                    // TODO filter out hidden courses, maybe in Prisma finder directly?
                     const filteredCoursesData = fullCoursesData
-
-                    // TODO session duree - convertir en heures depuis la formation,
-                    // 1 jour -> 7h30min (7.5 heures), faire la somme
 
                     // TODO sessions - dates only, not hours
 
+                    // note: we rename some fields here
                     const strippedCoursesData = filteredCoursesData.map(
                         ({
-                            uuid,
-                            code,
+                            uuid: id,
                             course_name: name,
-                            slug,
-                            plainDescription,
-                            typeStage,
-                            teachingMethod,
-                            codeCategory,
-                            price,
                             createdAt: creationDate,
                             updatedAt: lastUpdatedDate,
-                            tags,
+                            max_users: maxParticipants,
+                            session_days,
+                            session_hours,
+                            ...restCourseData
                         }) => ({
-                            id: uuid,
-                            code,
+                            ...restCourseData,
+                            id,
                             name,
-                            slug,
-                            plainDescription,
-                            typeStage,
-                            teachingMethod,
-                            codeCategory,
-                            price,
                             creationDate,
                             lastUpdatedDate,
-                            tags,
+                            maxParticipants,
+                            durationHours: session_days * 7.5 + session_hours,
                         })
                     )
 
