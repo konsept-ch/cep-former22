@@ -120,7 +120,6 @@ export const getLogDescriptions = {
     inscription: ({ originalStatus, newStatus }) => `Changed status from "${originalStatus}" to "${newStatus}"`,
     user: ({ shouldReceiveSms, fullName }) =>
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
-    organization: (columnNewData) => `Changed column field "${columnNewData.field}" to "${columnNewData.fieldValue}"`,
 }
 
 export const fetchSessionsLessons = async ({ req, sessionId }) => {

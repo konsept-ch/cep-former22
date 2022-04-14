@@ -92,26 +92,20 @@ export const generateEndpoints = () => {
         'put',
         '/organization/:organizationId',
         async (req, res) => {
+            const { organizationName, newData } = req.body
+            const { organizationId: organizationUuid } = req.params
+
             await prisma.former22_organization.upsert({
-                where: { organizationUuid: req.params.organizationId },
-                update: { [req.body.field]: req.body.newValue },
-                create: { [req.body.field]: req.body.newValue, courseId: req.params.courseId },
+                where: { organizationUuid },
+                update: { ...newData },
+                create: { ...newData, organizationUuid },
             })
 
             res.json("L'organisation a été modifié")
 
-            const [organization] = await callApi({
-                req,
-                path: 'organization/list/recursive',
-                predicate: ({ id }) => id === req.params.organizationId,
-            })
-
             return {
-                entityName: organization.name,
-                actionDescription: getLogDescriptions.organisation({
-                    field: req.body.field,
-                    fieldValue: req.body.newValue,
-                }),
+                entityName: organizationName,
+                actionDescription: `Updated organization ${organizationName}`,
             }
         },
         { entityType: LOG_TYPES.ORGANISATION }

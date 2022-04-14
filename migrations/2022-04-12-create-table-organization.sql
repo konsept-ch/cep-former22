@@ -2,7 +2,7 @@ CREATE TABLE former22_organization (
   id int NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary Key',
   organizationUuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'The ID of the organization',
   billingMode TEXT COMMENT 'The billing mode of the organization',
-  dailyRate TEXT COMMENT 'The daily rate of the organization',
+  dailyRate INT COMMENT 'The daily rate of the organization',
   flyersCount INT COMMENT 'The flyers count of the organization',
   phone TEXT COMMENT 'The phone number of the organization',
   addressTitle TEXT COMMENT 'The address title of the organization',
