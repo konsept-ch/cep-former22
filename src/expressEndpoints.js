@@ -87,6 +87,29 @@ export const generateEndpoints = () => {
 
         res.json(populateAdditionalData({ orgsToPopulate: organizations }))
     })
+
+    createService(
+        'put',
+        '/organization/:organizationId',
+        async (req, res) => {
+            const { organizationName, newData } = req.body
+            const { organizationId: organizationUuid } = req.params
+
+            await prisma.former22_organization.upsert({
+                where: { organizationUuid },
+                update: { ...newData },
+                create: { ...newData, organizationUuid },
+            })
+
+            res.json("L'organisation a été modifié")
+
+            return {
+                entityName: organizationName,
+                actionDescription: `Updated organization ${organizationName}`,
+            }
+        },
+        { entityType: LOG_TYPES.ORGANISATION }
+    )
     // organizations END
 
     // users START
