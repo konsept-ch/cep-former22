@@ -81,19 +81,48 @@ createService(
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
-                    // Use prisma instead
-                    const courses = await callApi({
-                        req,
-                        path: 'data_source/all_courses/home',
-                        headers: { [CLAROLINE_TOKEN]: token },
+                    const courses = await prisma.claro_cursusbundle_course.findMany({
+                        where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
+                        select: {
+                            // TODO: ask CEP if we should send the poster and thumbnail URLs
+                            uuid: true,
+                            slug: true,
+                            code: true,
+                            course_name: true,
+                            plainDescription: true,
+                            price: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            session_days: true,
+                            session_hours: true,
+                            claro_cursusbundle_course_session: {
+                                where: { hidden: false },
+                                select: {
+                                    uuid: true,
+                                    code: true,
+                                    course_name: true,
+                                    plainDescription: true,
+                                    price: true,
+                                    max_users: true,
+                                    createdAt: true,
+                                    updatedAt: true,
+                                    start_date: true,
+                                    end_date: true,
+                                    used_by_quotas: true,
+                                    quota_days: true,
+                                    // TODO location
+                                },
+                            },
+                        },
                     })
 
                     const coursesDataToFetch = courses.map(async (course) => {
                         const courseAdditionalData = await prisma.former22_course.findUnique({
-                            where: { courseId: course.id },
+                            where: { courseId: course.uuid },
                             select: {
-                                coordinator: true,
-                                responsible: true,
+                                // note: we don't send coordinator and responsible to peoplesoft
+                                coordinator: false,
+                                responsible: false,
                                 typeStage: true,
                                 teachingMethod: true,
                                 codeCategory: true,
@@ -110,44 +139,59 @@ createService(
 
                     const fullCoursesData = fetchedCoursesData.map(({ value }) => value)
 
-                    const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
+                    // TODO: ask CEP about other filters based on business logic
+                    // const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
+                    const filteredCoursesData = fullCoursesData
 
-                    const strippedCoursesData = filteredCoursesData.map(
+                    // TODO sessions - dates only, not hours
+
+                    // note: we rename some fields here for clarity and consistency
+                    const renamedFieldsCoursesData = filteredCoursesData.map(
                         ({
-                            id,
-                            code,
-                            name,
-                            slug,
-                            plainDescription,
-                            coordinator,
-                            responsible,
-                            typeStage,
-                            teachingMethod,
-                            codeCategory,
-                            pricing: { price },
-                            restrictions,
-                            meta,
-                            tags,
+                            uuid: id,
+                            course_name: name,
+                            createdAt: creationDate,
+                            updatedAt: lastUpdatedDate,
+                            plainDescription: summary,
+                            session_days,
+                            session_hours,
+                            claro_cursusbundle_course_session,
+                            ...restCourseData
                         }) => ({
+                            ...restCourseData,
                             id,
-                            code,
                             name,
-                            slug,
-                            plainDescription,
-                            coordinator,
-                            responsible,
-                            typeStage,
-                            teachingMethod,
-                            codeCategory,
-                            price,
-                            creationDate: meta.created,
-                            restrictions,
-                            meta,
-                            tags,
+                            creationDate,
+                            lastUpdatedDate,
+                            summary,
+                            durationHours: session_days * 7.5 + session_hours,
+                            sessions: claro_cursusbundle_course_session.map(
+                                ({
+                                    uuid: sessionId,
+                                    course_name: sessionName,
+                                    createdAt: sessionCreationDate,
+                                    updatedAt: sessionLastUpdatedDate,
+                                    plainDescription: sessionSummary,
+                                    max_users: maxParticipants,
+                                    start_date: startDate,
+                                    end_date: endDate,
+                                    ...restSessionData
+                                }) => ({
+                                    ...restSessionData,
+                                    id: sessionId,
+                                    name: sessionName,
+                                    creationDate: sessionCreationDate,
+                                    lastUpdatedDate: sessionLastUpdatedDate,
+                                    summary: sessionSummary,
+                                    maxParticipants,
+                                    startDate,
+                                    endDate, // TODO: check if endDate format is OK or if we should set it to 23h59min later
+                                })
+                            ),
                         })
                     )
 
-                    respondToPeopleSoft(res, strippedCoursesData ?? 'Aucun cours trouvé')
+                    respondToPeopleSoft(res, renamedFieldsCoursesData ?? 'Aucun cours trouvé')
                 }
             }
         }
