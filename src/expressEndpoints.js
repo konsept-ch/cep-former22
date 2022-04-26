@@ -77,7 +77,7 @@ export const generateEndpoints = () => {
 
                 if (currentOrgData) {
                     // eslint-disable-next-line no-unused-vars
-                    const { _organizationUuid, _id, ...neededData } = currentOrgData
+                    const { organizationUuid, id, ...neededData } = currentOrgData
 
                     return { ...currentOrg, ...neededData, children: populatedChildren }
                 } else {
