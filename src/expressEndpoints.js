@@ -6,7 +6,7 @@ import { sendSms } from './sendSms'
 import { createService, fetchSessionsLessons, delay, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
 import { prisma } from '.'
 import { getTemplatePreviews } from './routes/templatesUtils'
-import { fetchInscriptionsWithStatuses } from './routes/inscriptionsUtils'
+import { fetchInscriptionsWithStatuses, getUserProfession, getProfessionFacetsValues } from './routes/inscriptionsUtils'
 
 const nanoid = customAlphabet('1234567890', 6)
 
@@ -116,19 +116,33 @@ export const generateEndpoints = () => {
     createService('get', '/allUsers', async (req, res) => {
         const users = await callApi({ req, path: 'user' })
         const usersSettings = await prisma.former22_user.findMany()
+        const professionFacetsValues = await getProfessionFacetsValues()
 
-        const enrichedUsersData = users.map((current) => {
+        const enrichedUsersPromises = users.map(async (current) => {
             const currentUserSettings = usersSettings.find(({ userId }) => userId === current.id)
+            const currentUserProfession = await getUserProfession({
+                userId: current.autoId,
+                professionFacetsValues,
+            })
+
+            let enrichedUser = current
 
             if (currentUserSettings) {
                 // eslint-disable-next-line no-unused-vars
                 const { _userId, ...settings } = currentUserSettings
 
-                return { ...current, ...settings }
-            } else {
-                return current
+                enrichedUser = { ...enrichedUser, ...settings }
             }
+
+            if (currentUserProfession) {
+                enrichedUser = { ...enrichedUser, profession: currentUserProfession }
+            }
+
+            return enrichedUser
         })
+
+        const enrichedUsersPromisesSettled = await Promise.allSettled(enrichedUsersPromises)
+        const enrichedUsersData = enrichedUsersPromisesSettled.flatMap(({ value }) => value)
 
         res.json(enrichedUsersData)
     })

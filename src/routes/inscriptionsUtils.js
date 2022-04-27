@@ -40,6 +40,31 @@ export const parsePhoneForSms = ({ phone }) => {
     return cleanPhone.startsWith('41') || cleanPhone.length !== 9 ? cleanPhone : `41${cleanPhone}`
 }
 
+//TODO check how it is in production
+export const getProfessionFacetsValues = async () => {
+    const professionFacets = await prisma.claro_field_facet.findMany({
+        where: { name: { contains: 'FONCTION OCCUP' } },
+    })
+
+    const { id: professionFacetId } = professionFacets.find(({ name }) => name.includes('FONCTION OCCUP'))
+
+    const professionFacetsValues = await prisma.claro_field_facet_value.findMany({
+        where: { fieldFacet_id: professionFacetId },
+    })
+
+    return professionFacetsValues
+}
+
+export const getUserProfession = ({ userId, professionFacetsValues }) => {
+    if (professionFacetsValues.some(({ user_id }) => user_id === userId)) {
+        const { field_value } = professionFacetsValues.find(({ user_id }) => user_id === userId)
+
+        return JSON.parse(field_value).join(', ')
+    } else {
+        return null
+    }
+}
+
 export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { shouldFetchTutors: false }) => {
     const sessionsWithInscriptions = await prisma.claro_cursusbundle_course_session.findMany({
         select: {
@@ -147,23 +172,6 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         return await getHierarchy({ organization: mainOrganization })
     }
 
-    //TODO check how it is in production
-    const professionFacets = await prisma.claro_field_facet.findMany({
-        where: { name: { contains: 'FONCTION OCCUP' } },
-    })
-
-    const { id: professionFacetId } = professionFacets.find(({ name }) => name.includes('FONCTION OCCUP'))
-
-    const professionFacetsValues = await prisma.claro_field_facet_value.findMany({
-        where: { fieldFacet_id: professionFacetId },
-    })
-
-    const getProfession = (userId) => {
-        const { field_value } = professionFacetsValues.find(({ user_id }) => user_id === userId)
-
-        return JSON.parse(field_value).join(', ')
-    }
-
     const getMainOrganization = (organizations) => {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
 
@@ -175,6 +183,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
 
         return mainOrganization?.code
     }
+
+    const professionFacetsValues = await getProfessionFacetsValues()
 
     if (typeof sessionsWithInscriptions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
         const inscriptionsToFetch = [...sessionsWithInscriptions, ...inscriptionCancellations].map(
@@ -229,11 +239,10 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     organizationCode: inscription.claro_user.user_organization
                                         ? getOrganizationCode(inscription.claro_user.user_organization)
                                         : null,
-                                    profession: professionFacetsValues.some(
-                                        ({ user_id }) => user_id === inscription.claro_user.id
-                                    )
-                                        ? getProfession(inscription.claro_user.id)
-                                        : null,
+                                    profession: await getUserProfession({
+                                        userId: inscription.claro_user.id,
+                                        professionFacetsValues,
+                                    }),
                                 },
                             }
                         })()
