@@ -5515,7 +5515,7 @@ model former22_organization {
   id                          Int     @id @default(autoincrement())
   organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
   billingMode                 String? @db.Text
-  dailyRate                   Int?
+  dailyRate                   Float?  @db.Float
   flyersCount                 Int?
   phone                       String? @db.Text
   addressTitle                String? @db.Text
