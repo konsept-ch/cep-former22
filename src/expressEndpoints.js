@@ -312,8 +312,8 @@ export const generateEndpoints = () => {
         async (req, res) => {
             await prisma.former22_course.upsert({
                 where: { courseId: req.params.courseId },
-                update: { [req.body.field]: req.body.newValue },
-                create: { [req.body.field]: req.body.newValue, courseId: req.params.courseId },
+                update: req.body.newData,
+                create: { ...req.body.newData, courseId: req.params.courseId },
             })
 
             res.json('Le cours a été modifié')
