@@ -9,4 +9,6 @@ ADD
 ADD
 	COLUMN pricingType TEXT COMMENT 'The pricing of the course',
 ADD
-	COLUMN baseRate FLOAT COMMENT 'The base rate of the course';
+	COLUMN baseRate FLOAT COMMENT 'The base rate of the course',
+ADD
+	COLUMN isRecurrent BOOLEAN COMMENT 'Is the course recurrent' DEFAULT false;
