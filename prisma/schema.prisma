@@ -5494,10 +5494,12 @@ model former22_error_report {
 }
 
 model former22_session {
-  sessionId      String   @id @db.VarChar(255)
-  sessionName    String?  @db.Text
-  startDate      String?  @db.VarChar(255)
-  areInvitesSent Boolean?
+  sessionId       String   @id @db.VarChar(255)
+  sessionName     String?  @db.Text
+  startDate       String?  @db.VarChar(255)
+  areInvitesSent  Boolean?
+  sessionFormat   String?  @db.Text
+  sessionLocation String?  @db.Text
 }
 
 model former22_log {
