@@ -5473,17 +5473,18 @@ model former22_inscription {
 }
 
 model former22_course {
-  courseId       String  @id @db.VarChar(255)
-  coordinator    String? @db.Text
-  responsible    String? @db.Text
-  typeStage      String? @db.Text
-  teachingMethod String? @db.Text
-  codeCategory   String? @db.Text
-  theme          String? @db.Text
-  targetAudience String? @db.Text
-  billingMode    String? @db.Text
-  pricingType    String? @db.Text
-  baseRate       Float?  @db.Float
+  courseId       String   @id @db.VarChar(255)
+  coordinator    String?  @db.Text
+  responsible    String?  @db.Text
+  typeStage      String?  @db.Text
+  teachingMethod String?  @db.Text
+  codeCategory   String?  @db.Text
+  theme          String?  @db.Text
+  targetAudience String?  @db.Text
+  billingMode    String?  @db.Text
+  pricingType    String?  @db.Text
+  baseRate       Float?   @db.Float
+  isRecurrent    Boolean? @default(false)
 }
 
 model former22_error_report {
