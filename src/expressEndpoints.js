@@ -3,7 +3,7 @@ import { customAlphabet } from 'nanoid'
 import { callApi, CLAROLINE_TOKEN } from './callApi'
 import { sendEmail } from './sendEmail'
 import { sendSms } from './sendSms'
-import { createService, fetchSessionsLessons, delay, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
+import { createService, delay, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
 import { prisma } from '.'
 import { getTemplatePreviews } from './routes/templatesUtils'
 import { fetchInscriptionsWithStatuses, getUserProfession, getProfessionFacetsValues } from './routes/inscriptionsUtils'
@@ -371,22 +371,12 @@ export const generateEndpoints = () => {
     })
 
     createService('put', '/sessions/:sessionId', async (req, res) => {
-        const { sessionFormat, sessionName, startDate } = req.body
         const { sessionId } = req.params
 
         await prisma.former22_session.upsert({
             where: { sessionId },
-            update: {
-                sessionFormat,
-                sessionName,
-                startDate,
-            },
-            create: {
-                sessionId,
-                sessionFormat,
-                sessionName,
-                startDate,
-            },
+            update: { ...req.body },
+            create: { sessionId, ...req.body },
         })
 
         const learners = await callApi({ req, path: `cursus_session/${sessionId}/users/learner` })
