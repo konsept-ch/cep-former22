@@ -6,8 +6,8 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "private": true,
   "engines": {
-    "node": ">=16.14.2",
-    "npm": ">=8.5.0"
+    "node": ">=16.15.0",
+    "npm": ">=8.5.5"
   },
   "type": "module",
   "main": "src/index.js",
