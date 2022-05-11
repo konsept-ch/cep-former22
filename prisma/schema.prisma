@@ -5479,6 +5479,11 @@ model former22_course {
   typeStage      String? @db.Text
   teachingMethod String? @db.Text
   codeCategory   String? @db.Text
+  theme          String? @db.Text
+  targetAudience String? @db.Text
+  billingMode    String? @db.Text
+  pricingType    String? @db.Text
+  baseRate       Float?  @db.Float
 }
 
 model former22_error_report {
