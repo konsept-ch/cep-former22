@@ -352,11 +352,10 @@ export const generateEndpoints = () => {
     // sessions START
     createService('get', '/sessions', async (req, res) => {
         const sessions = await callApi({ req, path: 'cursus_session' })
+        const sessionsAdditionalData = await prisma.former22_session.findMany()
 
         const sessionsDataToFetch = sessions.map(async (session) => {
-            const sessionAdditionalData = await prisma.former22_session.findUnique({
-                where: { sessionId: session.id },
-            })
+            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id)
 
             return {
                 ...session,
@@ -371,29 +370,26 @@ export const generateEndpoints = () => {
         res.json(fullSessionsData ?? 'Aucune session trouvée')
     })
 
-    createService('get', '/sessions/lessons', async (req, res) => {
-        const sessionsLessons = await fetchSessionsLessons({ req })
+    createService('put', '/sessions/:sessionId', async (req, res) => {
+        const { sessionFormat, sessionName, startDate } = req.body
+        const { sessionId } = req.params
 
-        res.json(sessionsLessons ?? 'Aucunes sessions résumé dates trouvées')
-    })
-
-    createService('post', '/sessions/:sessionId', async (req, res) => {
         await prisma.former22_session.upsert({
-            where: { sessionId: req.params.sessionId },
+            where: { sessionId },
             update: {
-                areInvitesSent: req.body.areInvitesSent,
-                sessionName: req.body.sessionName,
-                startDate: req.body.startDate,
+                sessionFormat,
+                sessionName,
+                startDate,
             },
             create: {
-                sessionId: req.params.sessionId,
-                areInvitesSent: req.body.areInvitesSent,
-                sessionName: req.body.sessionName,
-                startDate: req.body.startDate,
+                sessionId,
+                sessionFormat,
+                sessionName,
+                startDate,
             },
         })
 
-        const learners = await callApi({ req, path: `cursus_session/${req.params.sessionId}/users/learner` })
+        const learners = await callApi({ req, path: `cursus_session/${sessionId}/users/learner` })
 
         const templateForSessionInvites = await prisma.former22_template.findFirst({
             where: { isUsedForSessionInvites: true },
@@ -404,7 +400,7 @@ export const generateEndpoints = () => {
                 const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
                     req,
                     templateId: templateForSessionInvites.templateId,
-                    sessionId: req.params.sessionId,
+                    sessionId,
                     inscriptionId: learner.id,
                 })
 
