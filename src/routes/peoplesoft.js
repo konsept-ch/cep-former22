@@ -86,15 +86,14 @@ createService(
                         select: {
                             // TODO: ask CEP if we should send the poster and thumbnail URLs
                             uuid: true,
-                            slug: true,
+                            // slug: true,
                             code: true,
                             course_name: true,
-                            plainDescription: true,
-                            price: true,
                             createdAt: true,
-                            updatedAt: true,
                             session_days: true,
                             session_hours: true,
+                            plainDescription: true,
+                            // updatedAt: true,
                             claro_cursusbundle_course_session: {
                                 where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
                                 select: {
@@ -102,10 +101,9 @@ createService(
                                     code: true,
                                     course_name: true,
                                     plainDescription: true,
-                                    price: true,
                                     max_users: true,
                                     createdAt: true,
-                                    updatedAt: true,
+                                    // updatedAt: true,
                                     start_date: true,
                                     end_date: true,
                                     // used_by_quotas: true,
@@ -122,6 +120,7 @@ createService(
                             typeStage: true,
                             teachingMethod: true,
                             codeCategory: true,
+                            isRecurrent: true,
                             // note: we don't send coordinator and responsible to peoplesoft
                             coordinator: false,
                             responsible: false,
@@ -145,22 +144,32 @@ createService(
                     const renamedFieldsCoursesData = filteredCoursesData.map(
                         ({
                             uuid: id,
+                            code,
                             course_name: name,
                             createdAt: creationDate,
-                            updatedAt: lastUpdatedDate,
-                            plainDescription: summary,
+                            typeStage = null,
+                            teachingMethod = null,
+                            codeCategory = null,
+                            isRecurrent,
                             session_days,
                             session_hours,
+                            plainDescription: summary,
                             claro_cursusbundle_course_session,
                             ...restCourseData
                         }) => ({
                             ...restCourseData,
                             id,
+                            code,
                             name,
+                            isActive: true, // TODO: discuss: statut stage actif/inactif
                             creationDate,
-                            lastUpdatedDate,
-                            summary,
+                            typeStage,
+                            teachingMethod,
+                            codeCategory,
+                            isCertifying: typeStage === 'Certificat',
+                            isRecurrent,
                             durationHours: session_days * 7.5 + session_hours,
+                            summary,
                             sessions: claro_cursusbundle_course_session.map(
                                 ({
                                     uuid: sessionId,
