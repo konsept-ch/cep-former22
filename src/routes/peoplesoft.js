@@ -86,29 +86,19 @@ createService(
                         select: {
                             // TODO: ask CEP if we should send the poster and thumbnail URLs
                             uuid: true,
-                            // slug: true,
                             code: true,
                             course_name: true,
                             createdAt: true,
                             session_days: true,
                             session_hours: true,
                             plainDescription: true,
-                            // updatedAt: true,
                             claro_cursusbundle_course_session: {
                                 where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
                                 select: {
                                     uuid: true,
                                     code: true,
-                                    course_name: true,
-                                    plainDescription: true,
-                                    max_users: true,
                                     createdAt: true,
-                                    // updatedAt: true,
-                                    start_date: true,
-                                    end_date: true,
-                                    // used_by_quotas: true,
-                                    // quota_days: true,
-                                    // TODO location
+                                    max_users: true,
                                 },
                             },
                         },
@@ -127,11 +117,27 @@ createService(
                         },
                     })
 
+                    const sessionsAdditionalData = await prisma.former22_session.findMany({
+                        select: {
+                            sessionId: true,
+                            sessionFormat: true,
+                            sessionLocation: true,
+                        },
+                    })
+
                     const fullCoursesData = courses.map((course) => ({
                         ...course,
                         ...coursesAdditionalData.find(({ courseId }) => courseId === course.uuid),
+                        sessions: course.claro_cursusbundle_course_session.map((session) => ({
+                            ...session,
+                            ...sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid),
+                            // eslint-disable-next-line no-undefined -- unset courseId
+                            sessionId: undefined,
+                        })),
                         // eslint-disable-next-line no-undefined -- unset courseId
                         courseId: undefined,
+                        // eslint-disable-next-line no-undefined -- unset courseId
+                        claro_cursusbundle_course_session: undefined,
                     }))
 
                     // TODO: ask CEP about other filters based on business logic
@@ -154,7 +160,7 @@ createService(
                             session_days,
                             session_hours,
                             plainDescription: summary,
-                            claro_cursusbundle_course_session,
+                            sessions,
                             ...restCourseData
                         }) => ({
                             ...restCourseData,
@@ -170,33 +176,29 @@ createService(
                             isRecurrent,
                             durationHours: session_days * 7.5 + session_hours,
                             summary,
-                            sessions: claro_cursusbundle_course_session.map(
+                            sessions: sessions.map(
                                 ({
                                     uuid: sessionId,
+                                    code: sessionCode,
                                     course_name: sessionName,
                                     createdAt: sessionCreationDate,
-                                    updatedAt: sessionLastUpdatedDate,
-                                    plainDescription: sessionSummary,
                                     max_users: maxParticipants,
-                                    start_date: startDate,
-                                    end_date: endDate,
+                                    sessionFormat,
+                                    sessionLocation,
                                     ...restSessionData
                                 }) => ({
                                     ...restSessionData,
                                     id: sessionId,
+                                    code: sessionCode,
                                     name: sessionName,
                                     creationDate: sessionCreationDate,
-                                    lastUpdatedDate: sessionLastUpdatedDate,
-                                    summary: sessionSummary,
                                     maxParticipants,
-                                    startDate,
-                                    endDate, // TODO: check if endDate format is OK or if we should set it to 23h59min later
+                                    sessionFormat,
+                                    sessionLocation,
                                 })
                             ),
                         })
                     )
-
-                    // respondToPeopleSoft(res, 'additional ok')
 
                     respondToPeopleSoft(res, renamedFieldsCoursesData ?? 'Aucun cours trouvé')
                 }
