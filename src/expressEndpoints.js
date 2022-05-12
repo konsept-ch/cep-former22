@@ -354,18 +354,10 @@ export const generateEndpoints = () => {
         const sessions = await callApi({ req, path: 'cursus_session' })
         const sessionsAdditionalData = await prisma.former22_session.findMany()
 
-        const sessionsDataToFetch = sessions.map(async (session) => {
-            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id)
-
-            return {
-                ...session,
-                ...sessionAdditionalData,
-            }
-        })
-
-        const fetchedSessionsData = await Promise.allSettled(sessionsDataToFetch)
-
-        const fullSessionsData = fetchedSessionsData.map(({ value }) => value)
+        const fullSessionsData = sessions.map((session) => ({
+            ...session,
+            ...sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id),
+        }))
 
         res.json(fullSessionsData ?? 'Aucune session trouvée')
     })
