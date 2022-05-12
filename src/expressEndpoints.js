@@ -114,18 +114,57 @@ export const generateEndpoints = () => {
 
     // users START
     createService('get', '/allUsers', async (req, res) => {
-        const users = await callApi({ req, path: 'user' })
+        // const users = await callApi({ req, path: 'user' })
+        const users = await prisma.claro_user.findMany({
+            select: {
+                uuid: true,
+                first_name: true,
+                last_name: true,
+                mail: true,
+                claro_user_role: {
+                    select: {
+                        claro_role: {
+                            select: {
+                                translation_key: true,
+                            },
+                        },
+                    },
+                },
+                user_organization: {
+                    where: {
+                        is_main: true,
+                    },
+                    select: {
+                        claro__organization: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                phone: true,
+            },
+        })
+
         const usersSettings = await prisma.former22_user.findMany()
         const professionFacetsValues = await getProfessionFacetsValues()
 
-        const enrichedUsersPromises = users.map(async (current) => {
+        const enrichedUsersData = users.map((current) => {
             const currentUserSettings = usersSettings.find(({ userId }) => userId === current.id)
-            const currentUserProfession = await getUserProfession({
+            const currentUserProfession = getUserProfession({
                 userId: current.autoId,
                 professionFacetsValues,
             })
 
-            let enrichedUser = current
+            let enrichedUser = {
+                id: current.uuid,
+                firstName: current.first_name,
+                lastName: current.last_name,
+                email: current.mail,
+                mainOrganizationName: current['user_organization'][0]?.['claro__organization'].name,
+                phone: current.phone,
+                roles: current.claro_user_role,
+            }
 
             if (currentUserSettings) {
                 // eslint-disable-next-line no-unused-vars
@@ -140,9 +179,6 @@ export const generateEndpoints = () => {
 
             return enrichedUser
         })
-
-        const enrichedUsersPromisesSettled = await Promise.allSettled(enrichedUsersPromises)
-        const enrichedUsersData = enrichedUsersPromisesSettled.flatMap(({ value }) => value)
 
         res.json(enrichedUsersData)
     })
@@ -354,10 +390,18 @@ export const generateEndpoints = () => {
         const sessions = await callApi({ req, path: 'cursus_session' })
         const sessionsAdditionalData = await prisma.former22_session.findMany()
 
-        const fullSessionsData = sessions.map((session) => ({
-            ...session,
-            ...sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id),
-        }))
+        const sessionsDataToFetch = sessions.map(async (session) => {
+            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id)
+
+            return {
+                ...session,
+                ...sessionAdditionalData,
+            }
+        })
+
+        const fetchedSessionsData = await Promise.allSettled(sessionsDataToFetch)
+
+        const fullSessionsData = fetchedSessionsData.map(({ value }) => value)
 
         res.json(fullSessionsData ?? 'Aucune session trouvée')
     })
