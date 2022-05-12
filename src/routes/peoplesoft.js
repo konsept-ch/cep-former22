@@ -96,7 +96,7 @@ createService(
                             session_days: true,
                             session_hours: true,
                             claro_cursusbundle_course_session: {
-                                where: { hidden: false },
+                                where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
                                 select: {
                                     uuid: true,
                                     code: true,
@@ -108,36 +108,32 @@ createService(
                                     updatedAt: true,
                                     start_date: true,
                                     end_date: true,
-                                    used_by_quotas: true,
-                                    quota_days: true,
+                                    // used_by_quotas: true,
+                                    // quota_days: true,
                                     // TODO location
                                 },
                             },
                         },
                     })
 
-                    const coursesDataToFetch = courses.map(async (course) => {
-                        const courseAdditionalData = await prisma.former22_course.findUnique({
-                            where: { courseId: course.uuid },
-                            select: {
-                                // note: we don't send coordinator and responsible to peoplesoft
-                                coordinator: false,
-                                responsible: false,
-                                typeStage: true,
-                                teachingMethod: true,
-                                codeCategory: true,
-                            },
-                        })
-
-                        return {
-                            ...course,
-                            ...courseAdditionalData,
-                        }
+                    const coursesAdditionalData = await prisma.former22_course.findMany({
+                        select: {
+                            courseId: true,
+                            typeStage: true,
+                            teachingMethod: true,
+                            codeCategory: true,
+                            // note: we don't send coordinator and responsible to peoplesoft
+                            coordinator: false,
+                            responsible: false,
+                        },
                     })
 
-                    const fetchedCoursesData = await Promise.allSettled(coursesDataToFetch)
-
-                    const fullCoursesData = fetchedCoursesData.map(({ value }) => value)
+                    const fullCoursesData = courses.map((course) => ({
+                        ...course,
+                        ...coursesAdditionalData.find(({ courseId }) => courseId === course.uuid),
+                        // eslint-disable-next-line no-undefined -- unset courseId
+                        courseId: undefined,
+                    }))
 
                     // TODO: ask CEP about other filters based on business logic
                     // const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
@@ -190,6 +186,8 @@ createService(
                             ),
                         })
                     )
+
+                    // respondToPeopleSoft(res, 'additional ok')
 
                     respondToPeopleSoft(res, renamedFieldsCoursesData ?? 'Aucun cours trouvé')
                 }
