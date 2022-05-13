@@ -183,8 +183,8 @@ createService(
                                     course_name: sessionName,
                                     createdAt: sessionCreationDate,
                                     max_users: maxParticipants,
-                                    sessionFormat,
-                                    sessionLocation,
+                                    sessionFormat = null,
+                                    sessionLocation = null,
                                     ...restSessionData
                                 }) => ({
                                     ...restSessionData,
