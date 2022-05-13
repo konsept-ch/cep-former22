@@ -114,7 +114,6 @@ export const generateEndpoints = () => {
 
     // users START
     createService('get', '/allUsers', async (req, res) => {
-        // const users = await callApi({ req, path: 'user' })
         const users = await prisma.claro_user.findMany({
             select: {
                 id: true,
