@@ -99,6 +99,15 @@ createService(
                                     code: true,
                                     createdAt: true,
                                     max_users: true,
+                                    claro_cursusbundle_session_event: {
+                                        select: {
+                                            claro_planned_object: {
+                                                select: {
+                                                    start_date: true,
+                                                },
+                                            },
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -182,6 +191,7 @@ createService(
                                     code: sessionCode,
                                     course_name: sessionName,
                                     createdAt: sessionCreationDate,
+                                    claro_cursusbundle_session_event,
                                     max_users: maxParticipants,
                                     sessionFormat = null,
                                     sessionLocation = null,
@@ -192,6 +202,9 @@ createService(
                                     code: sessionCode,
                                     name: sessionName,
                                     creationDate: sessionCreationDate,
+                                    eventDates: claro_cursusbundle_session_event.map(
+                                        ({ claro_planned_object: { start_date } }) => start_date
+                                    ),
                                     maxParticipants,
                                     sessionFormat,
                                     sessionLocation,
