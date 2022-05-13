@@ -21,25 +21,25 @@ components:
           description: Si la formation est active (true/false)
         creationDate:
           type: string
-          description: La date (en ISO) de création de la formation (e.g.)
+          description: La date de création (en ISO) de la formation (e.g. 2021-05-31T14:33:08.000Z)
         typeStage:
           type: string
-          description: Le type stage de la formation
+          description: Le type stage de la formation ('Attestation', 'Certificat', 'Autre')
         teachingMethod:
           type: string
-          description: La méthode d'enseignement de la formation
+          description: La méthode d'enseignement de la formation ('Présentiel', 'Distanciel', 'E-learning', 'Mixte/Blended')
         codeCategory:
           type: string
-          description: Le code catégorie de la formation
+          description: Le code catégorie de la formation ('Catalogue', 'FSM', 'PS', 'CIE', 'CAS')
         isCertifying:
           type: boolean
-          description: Si la formation est certifiante
+          description: Si la formation est certifiante - si typeStage === 'Certificat' (true/false)
         isRecurrent:
           type: boolean
-          description: Si la formation est cyclique (répétée dans le temps)
+          description: Si la formation est cyclique, répétée dans le temps, comme Mesure d'Urgence (true/false)
         durationHours:
           type: string
-          description: La durée en heures de chaque session
+          description: La durée en heures de chaque session, saisi au niveau de la formation (e.g. 11.25)
         summary:
           type: string
           description: Résumé (description courte) de la formation
@@ -50,20 +50,15 @@ components:
         id: '01c292b5-43a4-4c59-9619-33a8309cdbf0'
         code: 'ACCESS'
         name: 'Access : bien débuter avec les bases de données'
-        slug: 'access-bien-debuter-avec-les-bases-de-donnees'
-        plainDescription: 'Dans cette formation vous découvrirez la construction des bases de données pour bien les exploiter. Vous utiliserez les différents objets: tables, requêtes, formulaires et états, vous permettant de comprendre leurs rôles et interactions dans Access.'
+        isActive: true
         typeStage: 'Certificat'
-        teachingMethod: 'Distanciel'
-        codeCategory: 'FSM'
-        price: 840
-        creationDate: '2021-05-31T14:33:08'
-        lastUpdatedDate: '2021-11-22T13:03:05'
-        meta:
-          tutorRoleName: null
-          learnerRoleName: null
-          days: 2
-          hours: 4
-        tags: ['thème # informatique & numérique', 'thème-bis # bases de données & outils de gestion']
+        teachingMethod: 'Mixte/Blended'
+        codeCategory: 'Catalogue'
+        isCertifying: true
+        isRecurrent: true
+        durationHours: 11.25
+        creationDate: '2021-05-31T14:33:08.000Z'
+        summary: 'Dans cette formation vous découvrirez la construction des bases de données pour bien les exploiter. Vous utiliserez les différents objets : tables, requêtes, formulaires et états, vous permettant de comprendre leurs rôles et interactions dans Access.'
     Inscription:
       type: object
       required:
