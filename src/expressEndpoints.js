@@ -114,18 +114,57 @@ export const generateEndpoints = () => {
 
     // users START
     createService('get', '/allUsers', async (req, res) => {
-        const users = await callApi({ req, path: 'user' })
+        const users = await prisma.claro_user.findMany({
+            select: {
+                id: true,
+                uuid: true,
+                first_name: true,
+                last_name: true,
+                mail: true,
+                claro_user_role: {
+                    select: {
+                        claro_role: {
+                            select: {
+                                translation_key: true,
+                            },
+                        },
+                    },
+                },
+                user_organization: {
+                    where: {
+                        is_main: true,
+                    },
+                    select: {
+                        claro__organization: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                phone: true,
+            },
+        })
+
         const usersSettings = await prisma.former22_user.findMany()
         const professionFacetsValues = await getProfessionFacetsValues()
 
-        const enrichedUsersPromises = users.map(async (current) => {
-            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.id)
-            const currentUserProfession = await getUserProfession({
-                userId: current.autoId,
+        const enrichedUsersData = users.map((current) => {
+            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.uuid)
+            const currentUserProfession = getUserProfession({
+                userId: current.id,
                 professionFacetsValues,
             })
 
-            let enrichedUser = current
+            let enrichedUser = {
+                id: current.uuid,
+                firstName: current.first_name,
+                lastName: current.last_name,
+                email: current.mail,
+                mainOrganizationName: current['user_organization'][0]?.['claro__organization'].name,
+                phone: current.phone,
+                roles: current.claro_user_role.map(({ claro_role: { translation_key } }) => translation_key),
+            }
 
             if (currentUserSettings) {
                 // eslint-disable-next-line no-unused-vars
@@ -140,9 +179,6 @@ export const generateEndpoints = () => {
 
             return enrichedUser
         })
-
-        const enrichedUsersPromisesSettled = await Promise.allSettled(enrichedUsersPromises)
-        const enrichedUsersData = enrichedUsersPromisesSettled.flatMap(({ value }) => value)
 
         res.json(enrichedUsersData)
     })
