@@ -40,7 +40,7 @@ export const parsePhoneForSms = ({ phone }) => {
             ?.replaceAll('(0)', '')
             .replaceAll('o', '0')
             .replaceAll('O', '0')
-            .replaceAll(/[-–./'¨)(+\s]/gi, '')
+            .replaceAll(/[-–.,/'¨)(+\s]/gi, '')
     )}`
 
     return cleanPhone.startsWith('41') || cleanPhone.length !== 9 ? cleanPhone : `41${cleanPhone}`
