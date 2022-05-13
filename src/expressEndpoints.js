@@ -6,7 +6,12 @@ import { sendSms } from './sendSms'
 import { createService, delay, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
 import { prisma } from '.'
 import { getTemplatePreviews } from './routes/templatesUtils'
-import { fetchInscriptionsWithStatuses, getUserProfession, getProfessionFacetsValues } from './routes/inscriptionsUtils'
+import {
+    fetchInscriptionsWithStatuses,
+    getUserProfession,
+    getProfessionFacetsValues,
+    parsePhoneForSms,
+} from './routes/inscriptionsUtils'
 
 const nanoid = customAlphabet('1234567890', 6)
 
@@ -115,6 +120,9 @@ export const generateEndpoints = () => {
     // users START
     createService('get', '/allUsers', async (req, res) => {
         const users = await prisma.claro_user.findMany({
+            where: {
+                is_removed: false,
+            },
             select: {
                 id: true,
                 uuid: true,
@@ -163,6 +171,7 @@ export const generateEndpoints = () => {
                 email: current.mail,
                 mainOrganizationName: current['user_organization'][0]?.['claro__organization'].name,
                 phone: current.phone,
+                phoneForSms: parsePhoneForSms({ phone: current.phone }),
                 roles: current.claro_user_role.map(({ claro_role: { translation_key } }) => translation_key),
             }
 
