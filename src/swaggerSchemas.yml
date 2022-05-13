@@ -9,19 +9,19 @@ components:
       properties:
         id:
           type: string
-          description: L'ID d'une formation, généré automatiquement par Claroline
+          description: L'UUID d'une formation, généré automatiquement par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
         code:
           type: string
-          description: Le code d'une formation, entré par le CEP
+          description: Le code d'une formation, saisi par le CEP dans Claroline (e.g. ACCESS)
         name:
           type: string
-          description: Le nom de la formation
-        slug:
+          description: 'Le nom complet de la formation (e.g. Access : bien débuter avec les bases de données)'
+        isActive:
+          type: boolean
+          description: Si la formation est active (true/false)
+        creationDate:
           type: string
-          description: L'URL relatif de la formation
-        plainDescription:
-          type: string
-          description: Résumé de la formation
+          description: La date (en ISO) de création de la formation (e.g.)
         typeStage:
           type: string
           description: Le type stage de la formation
@@ -31,18 +31,18 @@ components:
         codeCategory:
           type: string
           description: Le code catégorie de la formation
-        price:
-          type: number
-          description: Le prix de la formation
-        creationDate:
-          type: string
-          description: La date de création de la formation
-        lastUpdatedDate:
-          type: string
-          description: La date de la dernière modification de la formation
+        isCertifying:
+          type: boolean
+          description: Si la formation est certifiante
+        isRecurrent:
+          type: boolean
+          description: Si la formation est cyclique (répétée dans le temps)
         durationHours:
           type: string
           description: La durée en heures de chaque session
+        summary:
+          type: string
+          description: Résumé (description courte) de la formation
         # maxParticipants:
         #   type: string
         #   description: La limite de nombre de participants par session
