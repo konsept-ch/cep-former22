@@ -43,10 +43,10 @@ export const parsePhoneForSms = ({ phone }) => {
 //TODO check how it is in production
 export const getProfessionFacetsValues = async () => {
     const professionFacets = await prisma.claro_field_facet.findMany({
-        where: { name: { contains: 'FONCTION OCCUP' } },
+        where: { name: { contains: 'FONCTION PROFESSIONNELLE' } },
     })
 
-    const { id: professionFacetId } = professionFacets.find(({ name }) => name.includes('FONCTION OCCUP'))
+    const { id: professionFacetId } = professionFacets[0]
 
     const professionFacetsValues = await prisma.claro_field_facet_value.findMany({
         where: { fieldFacet_id: professionFacetId },

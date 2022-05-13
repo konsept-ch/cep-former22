@@ -117,6 +117,7 @@ export const generateEndpoints = () => {
         // const users = await callApi({ req, path: 'user' })
         const users = await prisma.claro_user.findMany({
             select: {
+                id: true,
                 uuid: true,
                 first_name: true,
                 last_name: true,
@@ -150,9 +151,9 @@ export const generateEndpoints = () => {
         const professionFacetsValues = await getProfessionFacetsValues()
 
         const enrichedUsersData = users.map((current) => {
-            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.id)
+            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.uuid)
             const currentUserProfession = getUserProfession({
-                userId: current.autoId,
+                userId: current.id,
                 professionFacetsValues,
             })
 
@@ -163,7 +164,7 @@ export const generateEndpoints = () => {
                 email: current.mail,
                 mainOrganizationName: current['user_organization'][0]?.['claro__organization'].name,
                 phone: current.phone,
-                roles: current.claro_user_role,
+                roles: current.claro_user_role.map(({ claro_role: { translation_key } }) => translation_key),
             }
 
             if (currentUserSettings) {
