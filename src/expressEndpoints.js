@@ -243,31 +243,49 @@ export const generateEndpoints = () => {
 
     // courses START
     createService('get', '/courses', async (req, res) => {
-        const courses = await callApi({ req, path: 'data_source/all_courses/home' })
+        const courses = await prisma.claro_cursusbundle_course.findMany({
+            select: {
+                uuid: true,
+                course_name: true,
+                code: true,
+                hidden: true,
+                price: true,
+                createdAt: true,
+                updatedAt: true,
+                session_days: true,
+                description: true,
+                slug: true,
+            },
+        })
 
-        const coursesDataToFetch = courses.map(async (course) => {
-            const courseAdditionalData = await prisma.former22_course.findUnique({
-                where: { courseId: course.id },
-            })
+        const coursesPrismaData = await prisma.former22_course.findMany()
+
+        const fullCoursesData = courses.map((course) => {
+            const courseAdditionalData = coursesPrismaData.find(({ courseId }) => courseId === course.uuid)
 
             return {
-                ...course,
+                ...{
+                    id: course.uuid,
+                    name: course.course_name,
+                    code: course.code,
+                    hidden: course.hidden,
+                    price: course.price,
+                    creationDate: course.createdAt,
+                    lastModifiedDate: course.updatedAt,
+                    duration: course.session_days,
+                    description: course.description,
+                    slug: course.slug,
+                },
                 ...courseAdditionalData,
             }
         })
-
-        const fetchedCoursesData = await Promise.allSettled(coursesDataToFetch)
-
-        const fullCoursesData = fetchedCoursesData.map(({ value }) => value)
 
         res.json(fullCoursesData ?? 'Aucun cours trouvé')
     })
 
     createService('get', '/courseBySlug/:slug', async (req, res) => {
-        const courseDetails = await callApi({
-            req,
-            path: 'cursus_course/find',
-            params: `filters[slug]=${req.params.slug}`,
+        const [courseDetails] = await prisma.claro_cursusbundle_course.findMany({
+            where: { slug: req.params.slug },
         })
 
         res.json(courseDetails ?? "Le cours n'a pas été trouvé")
@@ -277,17 +295,15 @@ export const generateEndpoints = () => {
         'put',
         '/saveCourseById/:id',
         async (req, res) => {
-            const courseDetails = await callApi({
-                req,
-                path: `cursus_course/${req.params.id}`,
-                method: 'put',
-                body: req.body,
+            const courseDetails = await prisma.claro_cursusbundle_course.update({
+                where: { uuid: req.params.id },
+                data: { ...req.body },
             })
 
             res.json(courseDetails ?? "Le cours n'a pas été sauvegardé")
 
             return {
-                entityName: courseDetails.name,
+                entityName: courseDetails.course_name,
                 actionDescription: getLogDescriptions.formation(),
             }
         },
