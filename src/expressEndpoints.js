@@ -195,13 +195,23 @@ export const generateEndpoints = () => {
 
             res.json("L'utilisateur a été modifié")
 
-            const [user] = await callApi({ req, path: 'user', predicate: ({ id }) => id === req.params.userId })
+            const [{ first_name, last_name }] = await prisma.claro_user.findMany({
+                where: {
+                    uuid: req.params.userId,
+                },
+                select: {
+                    first_name: true,
+                    last_name: true,
+                },
+            })
+
+            const userFullName = `${first_name} ${last_name}`
 
             return {
-                entityName: user.name,
+                entityName: userFullName,
                 actionDescription: getLogDescriptions.user({
                     shouldReceiveSms: req.body.shouldReceiveSms,
-                    fullName: user.name,
+                    fullName: userFullName,
                 }),
             }
         },
