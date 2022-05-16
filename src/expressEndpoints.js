@@ -209,16 +209,25 @@ export const generateEndpoints = () => {
     )
 
     createService('get', '/admins', async (req, res) => {
-        const users = await callApi({ req, path: 'user' })
+        const usersPrisma = await prisma.claro_user.findMany({
+            where: {
+                is_removed: false,
+                claro_user_role: {
+                    some: {
+                        claro_role: {
+                            name: 'ROLE_ADMIN',
+                        },
+                    },
+                },
+            },
+            select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+            },
+        })
 
-        const admins = users.reduce((acc, currentUser) => {
-            if (currentUser.roles.some(({ name }) => name === 'ROLE_ADMIN')) {
-                return [...acc, currentUser]
-            }
-            return acc
-        }, [])
-
-        res.json(admins)
+        res.json(usersPrisma)
     })
     // users END
 
