@@ -389,13 +389,15 @@ export const generateEndpoints = () => {
 
             res.json('Le cours a été modifié')
 
-            const currentCourse = await callApi({
-                req,
-                path: `cursus_course/${req.params.courseId}`,
+            const currentCourse = await prisma.claro_cursusbundle_course.findUnique({
+                where: { uuid: req.params.courseId },
+                select: {
+                    course_name: true,
+                },
             })
 
             return {
-                entityName: currentCourse.name,
+                entityName: currentCourse.course_name,
                 actionDescription: getLogDescriptions.formation({
                     field: req.body.header,
                     fieldValue: req.body.newValue,
