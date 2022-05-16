@@ -424,21 +424,41 @@ export const generateEndpoints = () => {
 
     // sessions START
     createService('get', '/sessions', async (req, res) => {
-        const sessions = await callApi({ req, path: 'cursus_session' })
+        const sessions = await prisma.claro_cursusbundle_course_session.findMany({
+            select: {
+                uuid: true,
+                course_name: true,
+                code: true,
+                hidden: true,
+                start_date: true,
+                price: true,
+                createdAt: true,
+                updatedAt: true,
+                quota_days: true,
+                used_by_quotas: true,
+            },
+        })
         const sessionsAdditionalData = await prisma.former22_session.findMany()
 
-        const sessionsDataToFetch = sessions.map(async (session) => {
-            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id)
+        const fullSessionsData = sessions.map((session) => {
+            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid)
 
             return {
-                ...session,
+                ...{
+                    id: session.uuid,
+                    name: session.course_name,
+                    code: session.code,
+                    hidden: session.hidden,
+                    startDate: session.start_date,
+                    price: session.price,
+                    created: session.createdAt,
+                    updated: session.updatedAt,
+                    quotaDays: session.quota_days,
+                    isUsedForQuota: session.used_by_quotas,
+                },
                 ...sessionAdditionalData,
             }
         })
-
-        const fetchedSessionsData = await Promise.allSettled(sessionsDataToFetch)
-
-        const fullSessionsData = fetchedSessionsData.map(({ value }) => value)
 
         res.json(fullSessionsData ?? 'Aucune session trouvée')
     })
