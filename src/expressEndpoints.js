@@ -472,7 +472,18 @@ export const generateEndpoints = () => {
             create: { sessionId, ...req.body },
         })
 
-        const learners = await callApi({ req, path: `cursus_session/${sessionId}/users/learner` })
+        const { claro_cursusbundle_course_session_user: learners } =
+            await prisma.claro_cursusbundle_course_session.findUnique({
+                where: {
+                    uuid: sessionId,
+                },
+                select: {
+                    claro_cursusbundle_course_session_user: {
+                        where: { registration_type: 'learner' },
+                        select: { uuid: true, claro_user: { select: { mail: true } } },
+                    },
+                },
+            })
 
         const templateForSessionInvites = await prisma.former22_template.findFirst({
             where: { isUsedForSessionInvites: true },
@@ -480,15 +491,20 @@ export const generateEndpoints = () => {
 
         if (templateForSessionInvites) {
             const emailsToSend = learners.map(async (learner) => {
+                const {
+                    uuid: learnerId,
+                    claro_user: { mail: learnerEmail },
+                } = learner
+
                 const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
                     req,
                     templateId: templateForSessionInvites.templateId,
                     sessionId,
-                    inscriptionId: learner.id,
+                    inscriptionId: learnerId,
                 })
 
                 const { emailResponse } = await sendEmail({
-                    to: learner.user.email,
+                    to: learnerEmail,
                     subject: emailSubject,
                     html_body: emailContent,
                 })
