@@ -410,12 +410,66 @@ export const generateEndpoints = () => {
 
     // rooms START
     createService('get', '/roomsAndEvents', async (req, res) => {
-        const rooms = await callApi({ req, path: 'location_room' })
+        const roomsPrisma = await prisma.claro_location_room.findMany({
+            select: {
+                event_name: true,
+                uuid: true,
+                claro__location: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
+        })
 
-        if (typeof rooms !== 'undefined') {
-            const events = await callApi({ req, path: `cursus_event` })
+        if (typeof roomsPrisma !== 'undefined') {
+            const rooms = roomsPrisma.map(({ event_name, uuid, claro__location }) => ({
+                name: event_name,
+                id: uuid,
+                location: claro__location,
+            }))
 
-            res.json({ rooms, events })
+            const eventsOld = await callApi({ req, path: `cursus_event` })
+            const eventsPrisma = await prisma.claro_planned_object.findMany({
+                include: {
+                    claro_location_room: true,
+                },
+                // select: {
+                //     entity_name: true,
+                //     start_date: true,
+                //     end_date: true,
+                //     description: true,
+                //     claro_location_room: {
+                //         select: {
+                //             uuid: true,
+                //             event_name: true,
+                //             description: true,
+                //             capacity: true,
+                //         },
+                //     },
+                // },
+            })
+
+            const events = eventsPrisma.map(
+                ({ entity_name, start_date, end_date, description, claro_location_room, uuid, ...rest }) => ({
+                    ...rest,
+                    id: uuid,
+                    name: entity_name,
+                    room: {
+                        id: claro_location_room?.uuid,
+                        name: claro_location_room?.event_name,
+                        description: claro_location_room?.description,
+                        capacity: claro_location_room?.capacity,
+                    },
+                    start: start_date,
+                    end: end_date,
+                    description,
+                })
+            )
+
+            console.log(eventsOld)
+
+            res.json({ rooms, events: eventsOld })
         } else {
             res.json('Aucune salle trouvée')
         }
