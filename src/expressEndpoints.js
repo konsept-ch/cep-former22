@@ -429,25 +429,21 @@ export const generateEndpoints = () => {
                 location: claro__location,
             }))
 
-            const eventsOld = await callApi({ req, path: `cursus_event` })
             const eventsPrisma = await prisma.claro_planned_object.findMany({
-                include: {
-                    claro_location_room: true,
+                select: {
+                    entity_name: true,
+                    start_date: true,
+                    end_date: true,
+                    description: true,
+                    claro_location_room: {
+                        select: {
+                            uuid: true,
+                            event_name: true,
+                            description: true,
+                            capacity: true,
+                        },
+                    },
                 },
-                // select: {
-                //     entity_name: true,
-                //     start_date: true,
-                //     end_date: true,
-                //     description: true,
-                //     claro_location_room: {
-                //         select: {
-                //             uuid: true,
-                //             event_name: true,
-                //             description: true,
-                //             capacity: true,
-                //         },
-                //     },
-                // },
             })
 
             const events = eventsPrisma.map(
@@ -467,9 +463,7 @@ export const generateEndpoints = () => {
                 })
             )
 
-            console.log(eventsOld)
-
-            res.json({ rooms, events: eventsOld })
+            res.json({ rooms, events })
         } else {
             res.json('Aucune salle trouvée')
         }
