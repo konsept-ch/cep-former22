@@ -619,4 +619,37 @@ export const generateEndpoints = () => {
         }
     })
     // formateurs END
+
+    // invoices START
+    createService('get', '/invoice/options', async (req, res) => {
+        const participantsNames = await prisma.claro_cursusbundle_course_session_user.findMany({
+            select: {
+                claro_user: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+            },
+        })
+
+        const coursesNames = await prisma.claro_cursusbundle_course.findMany({
+            select: {
+                course_name: true,
+            },
+        })
+
+        const sessionsNames = await prisma.claro_cursusbundle_course_session.findMany({
+            select: {
+                course_name: true,
+            },
+        })
+
+        res.json({
+            participantsNames: participantsNames.map(({ claro_user }) => claro_user),
+            coursesNames,
+            sessionsNames,
+        })
+    })
+    // invoices END
 }
