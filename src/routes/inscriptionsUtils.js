@@ -35,15 +35,19 @@ const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
 
 export const parsePhoneForSms = ({ phone }) => {
     // remove (0) and then spaces and chars: -–./)(+ and then starting zeroes
-    const cleanPhone = `${parseInt(
-        phone
-            ?.replaceAll('(0)', '')
-            .replaceAll('o', '0')
-            .replaceAll('O', '0')
-            .replaceAll(/[-–.,/'¨)(+\s]/gi, '')
-    )}`
+    if (phone) {
+        const cleanPhone = `${parseInt(
+            phone
+                ?.replaceAll('(0)', '')
+                .replaceAll('o', '0')
+                .replaceAll('O', '0')
+                .replaceAll(/[-–.,/'¨)(+\s]/gi, '')
+        )}`
 
-    return cleanPhone.startsWith('41') || cleanPhone.length !== 9 ? cleanPhone : `41${cleanPhone}`
+        return cleanPhone.startsWith('41') || cleanPhone.length !== 9 ? cleanPhone : `41${cleanPhone}`
+    } else {
+        return phone
+    }
 }
 
 //TODO check how it is in production
