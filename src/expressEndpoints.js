@@ -204,13 +204,23 @@ export const generateEndpoints = () => {
 
             res.json("L'utilisateur a été modifié")
 
-            const [user] = await callApi({ req, path: 'user', predicate: ({ id }) => id === req.params.userId })
+            const [{ first_name, last_name }] = await prisma.claro_user.findMany({
+                where: {
+                    uuid: req.params.userId,
+                },
+                select: {
+                    first_name: true,
+                    last_name: true,
+                },
+            })
+
+            const userFullName = `${first_name} ${last_name}`
 
             return {
-                entityName: user.name,
+                entityName: userFullName,
                 actionDescription: getLogDescriptions.user({
                     shouldReceiveSms: req.body.shouldReceiveSms,
-                    fullName: user.name,
+                    fullName: userFullName,
                 }),
             }
         },
@@ -218,46 +228,73 @@ export const generateEndpoints = () => {
     )
 
     createService('get', '/admins', async (req, res) => {
-        const users = await callApi({ req, path: 'user' })
+        const usersPrisma = await prisma.claro_user.findMany({
+            where: {
+                is_removed: false,
+                claro_user_role: {
+                    some: {
+                        claro_role: {
+                            name: 'ROLE_ADMIN',
+                        },
+                    },
+                },
+            },
+            select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+            },
+        })
 
-        const admins = users.reduce((acc, currentUser) => {
-            if (currentUser.roles.some(({ name }) => name === 'ROLE_ADMIN')) {
-                return [...acc, currentUser]
-            }
-            return acc
-        }, [])
-
-        res.json(admins)
+        res.json(usersPrisma)
     })
     // users END
 
     // courses START
     createService('get', '/courses', async (req, res) => {
-        const courses = await callApi({ req, path: 'data_source/all_courses/home' })
+        const courses = await prisma.claro_cursusbundle_course.findMany({
+            select: {
+                uuid: true,
+                course_name: true,
+                code: true,
+                hidden: true,
+                price: true,
+                createdAt: true,
+                updatedAt: true,
+                session_days: true,
+                description: true,
+                slug: true,
+            },
+        })
 
-        const coursesDataToFetch = courses.map(async (course) => {
-            const courseAdditionalData = await prisma.former22_course.findUnique({
-                where: { courseId: course.id },
-            })
+        const coursesPrismaData = await prisma.former22_course.findMany()
+
+        const fullCoursesData = courses.map((course) => {
+            const courseAdditionalData = coursesPrismaData.find(({ courseId }) => courseId === course.uuid)
 
             return {
-                ...course,
+                ...{
+                    id: course.uuid,
+                    name: course.course_name,
+                    code: course.code,
+                    hidden: course.hidden,
+                    price: course.price,
+                    creationDate: course.createdAt,
+                    lastModifiedDate: course.updatedAt,
+                    duration: course.session_days,
+                    description: course.description,
+                    slug: course.slug,
+                },
                 ...courseAdditionalData,
             }
         })
-
-        const fetchedCoursesData = await Promise.allSettled(coursesDataToFetch)
-
-        const fullCoursesData = fetchedCoursesData.map(({ value }) => value)
 
         res.json(fullCoursesData ?? 'Aucun cours trouvé')
     })
 
     createService('get', '/courseBySlug/:slug', async (req, res) => {
-        const courseDetails = await callApi({
-            req,
-            path: 'cursus_course/find',
-            params: `filters[slug]=${req.params.slug}`,
+        const [courseDetails] = await prisma.claro_cursusbundle_course.findMany({
+            where: { slug: req.params.slug },
         })
 
         res.json(courseDetails ?? "Le cours n'a pas été trouvé")
@@ -267,17 +304,15 @@ export const generateEndpoints = () => {
         'put',
         '/saveCourseById/:id',
         async (req, res) => {
-            const courseDetails = await callApi({
-                req,
-                path: `cursus_course/${req.params.id}`,
-                method: 'put',
-                body: req.body,
+            const courseDetails = await prisma.claro_cursusbundle_course.update({
+                where: { uuid: req.params.id },
+                data: { ...req.body },
             })
 
             res.json(courseDetails ?? "Le cours n'a pas été sauvegardé")
 
             return {
-                entityName: courseDetails.name,
+                entityName: courseDetails.course_name,
                 actionDescription: getLogDescriptions.formation(),
             }
         },
@@ -363,13 +398,15 @@ export const generateEndpoints = () => {
 
             res.json('Le cours a été modifié')
 
-            const currentCourse = await callApi({
-                req,
-                path: `cursus_course/${req.params.courseId}`,
+            const currentCourse = await prisma.claro_cursusbundle_course.findUnique({
+                where: { uuid: req.params.courseId },
+                select: {
+                    course_name: true,
+                },
             })
 
             return {
-                entityName: currentCourse.name,
+                entityName: currentCourse.course_name,
                 actionDescription: getLogDescriptions.formation({
                     field: req.body.header,
                     fieldValue: req.body.newValue,
@@ -382,10 +419,58 @@ export const generateEndpoints = () => {
 
     // rooms START
     createService('get', '/roomsAndEvents', async (req, res) => {
-        const rooms = await callApi({ req, path: 'location_room' })
+        const roomsPrisma = await prisma.claro_location_room.findMany({
+            select: {
+                event_name: true,
+                uuid: true,
+                claro__location: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
+        })
 
-        if (typeof rooms !== 'undefined') {
-            const events = await callApi({ req, path: `cursus_event` })
+        if (typeof roomsPrisma !== 'undefined') {
+            const rooms = roomsPrisma.map(({ event_name, uuid, claro__location }) => ({
+                name: event_name,
+                id: uuid,
+                location: claro__location,
+            }))
+
+            const eventsPrisma = await prisma.claro_planned_object.findMany({
+                select: {
+                    entity_name: true,
+                    start_date: true,
+                    end_date: true,
+                    description: true,
+                    claro_location_room: {
+                        select: {
+                            uuid: true,
+                            event_name: true,
+                            description: true,
+                            capacity: true,
+                        },
+                    },
+                },
+            })
+
+            const events = eventsPrisma.map(
+                ({ entity_name, start_date, end_date, description, claro_location_room, uuid, ...rest }) => ({
+                    ...rest,
+                    id: uuid,
+                    name: entity_name,
+                    room: {
+                        id: claro_location_room?.uuid,
+                        name: claro_location_room?.event_name,
+                        description: claro_location_room?.description,
+                        capacity: claro_location_room?.capacity,
+                    },
+                    start: start_date,
+                    end: end_date,
+                    description,
+                })
+            )
 
             res.json({ rooms, events })
         } else {
@@ -396,21 +481,41 @@ export const generateEndpoints = () => {
 
     // sessions START
     createService('get', '/sessions', async (req, res) => {
-        const sessions = await callApi({ req, path: 'cursus_session' })
+        const sessions = await prisma.claro_cursusbundle_course_session.findMany({
+            select: {
+                uuid: true,
+                course_name: true,
+                code: true,
+                hidden: true,
+                start_date: true,
+                price: true,
+                createdAt: true,
+                updatedAt: true,
+                quota_days: true,
+                used_by_quotas: true,
+            },
+        })
         const sessionsAdditionalData = await prisma.former22_session.findMany()
 
-        const sessionsDataToFetch = sessions.map(async (session) => {
-            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.id)
+        const fullSessionsData = sessions.map((session) => {
+            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid)
 
             return {
-                ...session,
+                ...{
+                    id: session.uuid,
+                    name: session.course_name,
+                    code: session.code,
+                    hidden: session.hidden,
+                    startDate: session.start_date,
+                    price: session.price,
+                    created: session.createdAt,
+                    updated: session.updatedAt,
+                    quotaDays: session.quota_days,
+                    isUsedForQuota: session.used_by_quotas,
+                },
                 ...sessionAdditionalData,
             }
         })
-
-        const fetchedSessionsData = await Promise.allSettled(sessionsDataToFetch)
-
-        const fullSessionsData = fetchedSessionsData.map(({ value }) => value)
 
         res.json(fullSessionsData ?? 'Aucune session trouvée')
     })
@@ -424,7 +529,18 @@ export const generateEndpoints = () => {
             create: { sessionId, ...req.body },
         })
 
-        const learners = await callApi({ req, path: `cursus_session/${sessionId}/users/learner` })
+        const { claro_cursusbundle_course_session_user: learners } =
+            await prisma.claro_cursusbundle_course_session.findUnique({
+                where: {
+                    uuid: sessionId,
+                },
+                select: {
+                    claro_cursusbundle_course_session_user: {
+                        where: { registration_type: 'learner' },
+                        select: { uuid: true, claro_user: { select: { mail: true } } },
+                    },
+                },
+            })
 
         const templateForSessionInvites = await prisma.former22_template.findFirst({
             where: { isUsedForSessionInvites: true },
@@ -432,15 +548,20 @@ export const generateEndpoints = () => {
 
         if (templateForSessionInvites) {
             const emailsToSend = learners.map(async (learner) => {
+                const {
+                    uuid: learnerId,
+                    claro_user: { mail: learnerEmail },
+                } = learner
+
                 const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
                     req,
                     templateId: templateForSessionInvites.templateId,
                     sessionId,
-                    inscriptionId: learner.id,
+                    inscriptionId: learnerId,
                 })
 
                 const { emailResponse } = await sendEmail({
-                    to: learner.user.email,
+                    to: learnerEmail,
                     subject: emailSubject,
                     html_body: emailContent,
                 })
