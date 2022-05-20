@@ -622,14 +622,13 @@ export const generateEndpoints = () => {
 
     // invoices START
     createService('get', '/invoice/options', async (req, res) => {
-        const participantsNames = await prisma.claro_cursusbundle_course_session_user.findMany({
+        const users = await prisma.claro_user.findMany({
+            where: {
+                is_removed: false,
+            },
             select: {
-                claro_user: {
-                    select: {
-                        first_name: true,
-                        last_name: true,
-                    },
-                },
+                first_name: true,
+                last_name: true,
             },
         })
 
@@ -645,11 +644,34 @@ export const generateEndpoints = () => {
             },
         })
 
+        const participantsNames = users
+        const tutorsNames = users
+
         res.json({
-            participantsNames: participantsNames.map(({ claro_user }) => claro_user),
+            participantsNames,
+            tutorsNames,
             coursesNames,
             sessionsNames,
         })
+    })
+
+    createService('get', '/invoices', async (req, res) => {
+        const invoices = await prisma.former22_invoice.findMany()
+
+        res.json(invoices)
+    })
+
+    createService('put', '/invoice/:invoiceId', async (req, res) => {
+        const invoiceData = req.body
+        const { invoiceId } = req.params
+
+        await prisma.former22_invoice.upsert({
+            where: { invoiceId },
+            update: { ...invoiceData },
+            create: { ...invoiceData, invoiceId },
+        })
+
+        res.json('La facturation a été modifié')
     })
     // invoices END
 }

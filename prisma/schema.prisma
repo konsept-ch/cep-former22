@@ -5536,3 +5536,11 @@ model former22_organization {
   postalAddressDepartmentCode String? @db.Text
   postalAddressLocality       String? @db.Text
 }
+
+model former22_invoice {
+  invoiceId       String @id @db.VarChar(255)
+  participantName String @db.VarChar(255)
+  formateurName   String @db.VarChar(255)
+  formation       String @db.VarChar(255)
+  session         String @db.VarChar(255)
+}
