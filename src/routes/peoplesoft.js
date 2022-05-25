@@ -99,6 +99,20 @@ createService(
                                     code: true,
                                     createdAt: true,
                                     max_users: true,
+                                    claro_cursusbundle_course_session_user: {
+                                        where: {
+                                            registration_type: 'learner',
+                                        },
+                                        select: {
+                                            uuid: true,
+                                            registration_date: true,
+                                            claro_user: {
+                                                select: {
+                                                    mail: true,
+                                                },
+                                            },
+                                        },
+                                    },
                                     claro_cursusbundle_session_event: {
                                         select: {
                                             claro_planned_object: {
@@ -195,6 +209,7 @@ createService(
                                     max_users: maxParticipants,
                                     sessionFormat = null,
                                     sessionLocation = null,
+                                    claro_cursusbundle_course_session_user: inscriptions,
                                     ...restSessionData
                                 }) => ({
                                     ...restSessionData,
@@ -208,6 +223,19 @@ createService(
                                     maxParticipants,
                                     sessionFormat,
                                     sessionLocation,
+                                    inscriptions: inscriptions.map(
+                                        ({
+                                            uuid: inscriptionId,
+                                            registration_date,
+                                            claro_user: { mail },
+                                            ...restInscriptionData
+                                        }) => ({
+                                            ...restInscriptionData,
+                                            id: inscriptionId,
+                                            inscriptionDate: registration_date,
+                                            userEmail: mail,
+                                        })
+                                    ),
                                 })
                             ),
                         })
