@@ -6,13 +6,14 @@ components:
         - id
         - code
         - name
+        - creationDate
       properties:
         id:
           type: string
-          description: L'UUID d'une formation, généré automatiquement par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
+          description: L'UUID de la formation, généré automatiquement par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
         code:
           type: string
-          description: Le code d'une formation, saisi par le CEP dans Claroline (e.g. ACCESS)
+          description: Le code de la formation, saisi par le CEP dans Claroline (e.g. ACCESS)
         name:
           type: string
           description: 'Le nom complet de la formation (e.g. Access : bien débuter avec les bases de données)'

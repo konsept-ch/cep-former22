@@ -165,7 +165,7 @@ createService(
                             typeStage = null,
                             teachingMethod = null,
                             codeCategory = null,
-                            isRecurrent,
+                            isRecurrent = false,
                             session_days,
                             session_hours,
                             plainDescription: summary,
