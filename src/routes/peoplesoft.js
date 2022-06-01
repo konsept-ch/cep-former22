@@ -149,18 +149,30 @@ createService(
                         },
                     })
 
+                    const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
+
                     const fullCoursesData = courses.map((course) => ({
                         ...course,
                         ...coursesAdditionalData.find(({ courseId }) => courseId === course.uuid),
                         sessions: course.claro_cursusbundle_course_session.map((session) => ({
                             ...session,
                             ...sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid),
-                            // eslint-disable-next-line no-undefined -- unset courseId
+                            inscriptions: session.claro_cursusbundle_course_session_user.map((inscription) => ({
+                                ...inscription,
+                                ...inscriptionsAdditionalData.find(
+                                    ({ inscriptionId }) => inscriptionId === inscription.uuid
+                                ),
+                                // eslint-disable-next-line no-undefined -- unset inscriptionId
+                                inscriptionId: undefined,
+                            })),
+                            // eslint-disable-next-line no-undefined -- unset sessionId
                             sessionId: undefined,
+                            // eslint-disable-next-line no-undefined -- renamed to inscriptions
+                            claro_cursusbundle_course_session_user: undefined,
                         })),
                         // eslint-disable-next-line no-undefined -- unset courseId
                         courseId: undefined,
-                        // eslint-disable-next-line no-undefined -- unset courseId
+                        // eslint-disable-next-line no-undefined -- renamed to sessions
                         claro_cursusbundle_course_session: undefined,
                     }))
 
@@ -196,7 +208,7 @@ createService(
                             typeStage,
                             teachingMethod,
                             codeCategory,
-                            isCertifying: typeStage === 'Certificat',
+                            isCertifying: typeStage === 'Certificat', // TODO constant
                             isRecurrent,
                             durationHours: session_days * 7.5 + session_hours,
                             summary,
@@ -210,7 +222,7 @@ createService(
                                     max_users: maxParticipants,
                                     sessionFormat = null,
                                     sessionLocation = null,
-                                    claro_cursusbundle_course_session_user: inscriptions,
+                                    inscriptions,
                                     ...restSessionData
                                 }) => ({
                                     ...restSessionData,
@@ -228,11 +240,15 @@ createService(
                                         ({
                                             uuid: inscriptionId,
                                             registration_date,
+                                            inscriptionStatus,
+                                            updatedAt = null,
                                             claro_user: { mail, uuid: userId },
                                             ...restInscriptionData
                                         }) => ({
                                             ...restInscriptionData,
                                             id: inscriptionId,
+                                            status: inscriptionStatus,
+                                            statusUpdatedAt: updatedAt,
                                             inscriptionDate: registration_date,
                                             user: {
                                                 id: userId,
