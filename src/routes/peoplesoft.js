@@ -109,6 +109,7 @@ createService(
                                             claro_user: {
                                                 select: {
                                                     mail: true,
+                                                    uuid: true,
                                                 },
                                             },
                                         },
@@ -227,13 +228,16 @@ createService(
                                         ({
                                             uuid: inscriptionId,
                                             registration_date,
-                                            claro_user: { mail },
+                                            claro_user: { mail, uuid: userId },
                                             ...restInscriptionData
                                         }) => ({
                                             ...restInscriptionData,
                                             id: inscriptionId,
                                             inscriptionDate: registration_date,
-                                            userEmail: mail,
+                                            user: {
+                                                id: userId,
+                                                email: mail,
+                                            },
                                         })
                                     ),
                                 })
@@ -241,53 +245,11 @@ createService(
                         })
                     )
 
+                    // lastStatusChangeDate
+
                     respondToPeopleSoft(res, renamedFieldsCoursesData ?? 'Aucun cours trouvé')
                 }
             }
-        }
-    },
-    null,
-    peoplesoftRouter
-)
-
-/**
- * @openapi
- *
- * /peoplesoft/inscriptions:
- *   get:
- *     summary: Retourne la liste des inscriptions qui concernent PeopleSoft de la Ville de Lausanne
- *     tags: [Inscriptions]
- *     description: Liste des inscriptions qui concernent PeopleSoft de la Ville de Lausanne
- *     parameters:
- *       - name: filter
- *         in: query
- *         required: false
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: La liste des inscriptions a été retourné avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Inscription'
- */
-createService(
-    'get',
-    '/inscriptions',
-    async (_req, res) => {
-        try {
-            const inscriptions = await fetchInscriptionsWithStatuses()
-
-            if (inscriptions.length > 0) {
-                respondToPeopleSoft(res, inscriptions)
-            } else {
-                respondToPeopleSoft(res, 'Aucune inscription trouvée')
-            }
-        } catch (error) {
-            console.error(error)
         }
     },
     null,
