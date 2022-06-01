@@ -5468,8 +5468,9 @@ model former22_template {
 }
 
 model former22_inscription {
-  inscriptionId     String  @id @db.VarChar(255)
-  inscriptionStatus String? @db.Text
+  inscriptionId     String    @id @db.VarChar(255)
+  inscriptionStatus String?   @db.Text
+  updatedAt         DateTime? @db.DateTime(0)
 }
 
 model former22_course {
@@ -5523,7 +5524,7 @@ model former22_organization {
   id                          Int     @id @default(autoincrement())
   organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
   billingMode                 String? @db.Text
-  dailyRate                   Float?  @db.Float
+  dailyRate                   Int?
   flyersCount                 Int?
   phone                       String? @db.Text
   addressTitle                String? @db.Text

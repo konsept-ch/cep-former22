@@ -38,6 +38,12 @@ const respondToPeopleSoft = (res, data) =>
  *         required: false
  *         schema:
  *           type: string
+ *       - name: statusUpdatedSince
+ *         in: query
+ *         required: false
+ *         description: ISO Date format, e.g. 2022-05-31 02:03:05
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: La liste des formations a été retourné avec succès
@@ -62,7 +68,8 @@ createService(
     'get',
     '/formations',
     async (req, res) => {
-        const token = req.header(PEOPLESOFT_TOKEN) ?? req.query.apitoken
+        const { statusUpdatedSince, apitoken } = req.query
+        const token = req.header(PEOPLESOFT_TOKEN) ?? apitoken
 
         if (token == null) {
             respondToPeopleSoft(res, `Vous devez passer le header ${PEOPLESOFT_TOKEN}`)
