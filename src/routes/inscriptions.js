@@ -38,6 +38,16 @@ createService(
 
         const currentInscription = inscriptions.find(({ id }) => id === req.params.inscriptionId)
 
+        const organization = await prisma.former22_organization.findUnique({
+            where: { organizationUuid: currentInscription.user.organizationId },
+        })
+
+        if (organization && organization.billingMode === 'Directe') {
+            console.log('create invoice')
+        } else {
+            console.log('do NOT create invoice')
+        }
+
         if (Object.values(FINAL_STATUSES).includes(currentInscription?.status)) {
             res.json('Ce statut ne peut pas être modifié')
 

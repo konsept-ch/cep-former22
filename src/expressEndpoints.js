@@ -673,5 +673,18 @@ export const generateEndpoints = () => {
 
         res.json('La facturation a été modifié')
     })
+
+    createService('post', '/invoice/', async (req, res) => {
+        const invoiceData = req.body
+        const { invoiceId } = req.params
+
+        console.log(invoiceData, invoiceId)
+
+        await prisma.former22_invoice.create({
+            data: { invoiceId: uuidv4() },
+        })
+
+        res.json('La facturation a été modifié')
+    })
     // invoices END
 }
