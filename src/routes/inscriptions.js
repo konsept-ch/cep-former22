@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import fetch from 'node-fetch'
+import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
 import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
@@ -42,10 +43,16 @@ createService(
             where: { organizationUuid: currentInscription.user.organizationId },
         })
 
-        if (organization && organization.billingMode === 'Directe') {
-            console.log('create invoice')
-        } else {
-            console.log('do NOT create invoice')
+        if (
+            organization?.billingMode === 'Directe' &&
+            (newStatus === STATUSES.PARTICIPATION || newStatus === STATUSES.PARTICIPATION_PARTIELLE)
+        ) {
+            await prisma.former22_invoice.create({
+                data: {
+                    invoiceId: uuidv4(),
+                    inscriptionId: currentInscription.id, // TODO: use inscription id not uuid
+                },
+            })
         }
 
         if (Object.values(FINAL_STATUSES).includes(currentInscription?.status)) {

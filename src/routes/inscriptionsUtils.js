@@ -14,6 +14,9 @@ export const STATUSES = {
     REFUSEE_PAR_CEP: 'Refusée par CEP',
     INVITEE: 'Invitée',
     PROPOSEE: 'Proposée',
+    PARTICIPATION: 'Participation', // generate invoice
+    PARTICIPATION_PARTIELLE: 'Participation Partielle', // generate invoice
+    NON_PARTICIPATION: 'Non-participation',
     ...FINAL_STATUSES,
 }
 
