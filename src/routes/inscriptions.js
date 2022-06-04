@@ -7,7 +7,13 @@ import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
-import { fetchInscriptionsWithStatuses, FINAL_STATUSES, parsePhoneForSms, STATUSES } from './inscriptionsUtils'
+import {
+    fetchInscriptionsWithStatuses,
+    FINAL_STATUSES,
+    parsePhoneForSms,
+    STATUSES,
+    transformFlagsToStatus,
+} from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
 export const inscriptionsRouter = Router()
@@ -35,12 +41,45 @@ createService(
     async (req, res) => {
         const { emailTemplateId, shouldSendSms, status: newStatus } = req.body
 
-        const inscriptions = await fetchInscriptionsWithStatuses()
+        const currentInscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
+            where: { uuid: req.params.inscriptionId },
+            select: {
+                id: true,
+                uuid: true,
+                validated: true,
+                confirmed: true,
+                registration_type: true,
+                claro_cursusbundle_course_session: {
+                    select: {
+                        uuid: true,
+                        course_name: true,
+                    },
+                },
+                claro_user: {
+                    select: {
+                        mail: true,
+                        username: true,
+                        phone: true,
+                        uuid: true,
+                        user_organization: {
+                            where: {
+                                is_main: true,
+                            },
+                            select: {
+                                claro__organization: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
 
-        const currentInscription = inscriptions.find(({ id }) => id === req.params.inscriptionId)
+        const session = currentInscription.claro_cursusbundle_course_session
+        const user = currentInscription.claro_user
+        const mainOrganization = user.user_organization[0]?.claro__organization
 
         const organization = await prisma.former22_organization.findUnique({
-            where: { organizationUuid: currentInscription.user.organizationId },
+            where: { organizationUuid: mainOrganization?.uuid },
         })
 
         if (
@@ -50,18 +89,30 @@ createService(
             await prisma.former22_invoice.create({
                 data: {
                     invoiceId: uuidv4(),
-                    inscriptionId: currentInscription.id, // TODO: use inscription id not uuid
+                    inscriptionId: currentInscription.id,
                 },
             })
         }
 
-        if (Object.values(FINAL_STATUSES).includes(currentInscription?.status)) {
+        const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
+            where: { inscriptionId: currentInscription.uuid },
+        })
+
+        const currentInscriptionStatus =
+            inscriptionStatusForId.inscriptionStatus ??
+            transformFlagsToStatus({
+                validated: currentInscription.validated,
+                confirmed: currentInscription.confirmed,
+                registrationType: currentInscription.registration_type,
+            })
+
+        if (Object.values(FINAL_STATUSES).includes(currentInscriptionStatus)) {
             res.json('Ce statut ne peut pas être modifié')
 
             return {
-                entityName: `${currentInscription.user.username} => ${currentInscription.session.name}`,
+                entityName: `${user.username} => ${session.course_name}`,
                 actionDescription: getLogDescriptions.inscription({
-                    originalStatus: currentInscription.status,
+                    originalStatus: currentInscriptionStatus,
                     newStatus: req.body.status,
                 }),
             }
@@ -76,47 +127,43 @@ createService(
                 const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
                     req,
                     templateId: emailTemplateId,
-                    sessionId: currentInscription.session.id,
-                    inscriptionId: currentInscription.id,
+                    sessionId: session.uuid,
+                    inscriptionId: currentInscription.uuid,
                 })
 
                 await sendEmail({
-                    to: currentInscription.user.email,
+                    to: user.mail,
                     subject: emailSubject,
                     html_body: emailContent,
                 })
 
                 if (shouldSendSms) {
                     await sendSms({
-                        to: parsePhoneForSms({ phone: currentInscription.user.phone }),
+                        to: parsePhoneForSms({ phone: user?.phone }),
                         content: smsContent,
                     })
                 }
-
-                // res.json({ emailResponse })
-                // } else {
-                // res.json('Le statut a été modifié')
             }
 
             if (statusesForRefusalRh.includes(newStatus)) {
                 await callApi({
                     req,
-                    path: `cursus_session/${currentInscription.session.id}/pending`,
-                    params: { 'ids[0]': currentInscription.user.id },
+                    path: `cursus_session/${session.uuid}/pending`,
+                    params: { 'ids[0]': user.uuid },
                     method: 'patch',
                 })
             } else if (statusesForValidation.includes(newStatus)) {
                 await callApi({
                     req,
-                    path: `cursus_session/${currentInscription.session.id}/pending/validate`,
-                    params: { 'ids[0]': currentInscription.id },
+                    path: `cursus_session/${session.uuid}/pending/validate`,
+                    params: { 'ids[0]': currentInscription.uuid },
                     method: 'put',
                 })
             } else if (statusesForAnnulation.includes(newStatus)) {
                 await callApi({
                     req,
-                    path: `cursus_session/${currentInscription.session.id}/users/learner`,
-                    params: { 'ids[0]': currentInscription.id },
+                    path: `cursus_session/${session.uuid}/users/learner`,
+                    params: { 'ids[0]': currentInscription.uuid },
                     method: 'delete',
                 })
             }
@@ -130,9 +177,9 @@ createService(
             res.json('Le statut a été modifié')
 
             return {
-                entityName: `${currentInscription.user.username} => ${currentInscription.session.name}`,
+                entityName: `${user.username} => ${session.course_name}`,
                 actionDescription: getLogDescriptions.inscription({
-                    originalStatus: currentInscription.status,
+                    originalStatus: currentInscriptionStatus,
                     newStatus: req.body.status,
                 }),
             }

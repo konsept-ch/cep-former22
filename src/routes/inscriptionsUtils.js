@@ -24,7 +24,7 @@ const registrationTypes = {
     CANCELLATION: 'cancellation',
 }
 
-const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
+export const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
     if (registrationType === registrationTypes.CANCELLATION) {
         return STATUSES.ANNULEE
     } else if (!confirmed) {
