@@ -621,73 +621,57 @@ export const generateEndpoints = () => {
     // formateurs END
 
     // invoices START
-    createService('get', '/invoice/options', async (req, res) => {
-        const users = await prisma.claro_user.findMany({
-            where: {
-                is_removed: false,
-            },
-            select: {
-                first_name: true,
-                last_name: true,
-            },
-        })
-
-        const coursesNames = await prisma.claro_cursusbundle_course.findMany({
-            select: {
-                course_name: true,
-            },
-        })
-
-        const sessionsNames = await prisma.claro_cursusbundle_course_session.findMany({
-            select: {
-                course_name: true,
-            },
-        })
-
-        const participantsNames = users
-        const tutorsNames = users
-
-        res.json({
-            participantsNames,
-            tutorsNames,
-            coursesNames,
-            sessionsNames,
-        })
-    })
-
     createService('get', '/invoices', async (req, res) => {
-        const invoices = await prisma.former22_invoice.findMany()
+        const invoicesPrisma = await prisma.former22_invoice.findMany({
+            include: {
+                claro_cursusbundle_course_session_user: {
+                    include: {
+                        claro_user: true,
+                        claro_cursusbundle_course_session: {
+                            include: {
+                                claro_cursusbundle_course_session_user: {
+                                    include: {
+                                        claro_user: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        const invoices = invoicesPrisma.map(
+            ({
+                claro_cursusbundle_course_session_user: {
+                    claro_cursusbundle_course_session: { claro_cursusbundle_course_session_user },
+                    claro_user,
+                },
+                ...rest
+            }) => {
+                const formateurs = claro_cursusbundle_course_session_user
+                    ?.filter(({ registration_type }) => registration_type === 'tutor')
+                    ?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
+                    .join(', ')
+
+                return {
+                    ...rest,
+                    participantName: rest.participantName ?? `${claro_user.first_name} ${claro_user.last_name}`,
+                    tutorsNames: rest.tutorsNames ?? formateurs,
+                }
+            }
+        )
 
         res.json(invoices)
     })
 
-    createService('put', '/invoice/:invoiceId', async (req, res) => {
+    createService('put', '/invoice/:id', async (req, res) => {
         const invoiceData = req.body
-        const { invoiceId } = req.params
+        const { id } = req.params
 
-        await prisma.former22_invoice.upsert({
-            where: { invoiceId },
-            update: { ...invoiceData },
-            create: { ...invoiceData, invoiceId },
-        })
-
-        res.json('La facturation a été modifié')
-    })
-
-    // TODO check if this service is needed
-    createService('post', '/invoice/', async (req, res) => {
-        const invoiceData = req.body
-
-        console.log(invoiceData)
-
-        await prisma.former22_invoice.create({
-            data: {
-                invoiceId: uuidv4(),
-                participantName: 'Test',
-                formateurName: 'Test',
-                formation: 'Test',
-                session: 'Test',
-            },
+        await prisma.former22_invoice.update({
+            where: { id: Number(id) },
+            data: { ...invoiceData },
         })
 
         res.json('La facturation a été modifié')

@@ -5539,9 +5539,14 @@ model former22_organization {
 }
 
 model former22_invoice {
-  invoiceId                              String                                 @id @db.VarChar(255)
+  id                                     Int                                    @id @default(autoincrement())
+  invoiceId                              String                                 @db.VarChar(255)
   inscriptionId                          Int
-  claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_inscription")
+  participantName                        String?                                @db.VarChar(255)
+  tutorsNames                            String?                                @db.VarChar(255)
+  courseName                             String?                                @db.VarChar(255)
+  sessionName                            String?                                @db.VarChar(255)
+  claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription")
 
   @@index([inscriptionId], map: "inscription_index")
 }
