@@ -634,6 +634,9 @@ export const generateEndpoints = () => {
                                         claro_user: true,
                                     },
                                 },
+                                claro_cursusbundle_course: {
+                                    select: { course_name: true },
+                                },
                             },
                         },
                     },
@@ -644,20 +647,26 @@ export const generateEndpoints = () => {
         const invoices = invoicesPrisma.map(
             ({
                 claro_cursusbundle_course_session_user: {
-                    claro_cursusbundle_course_session: { claro_cursusbundle_course_session_user },
+                    claro_cursusbundle_course_session: {
+                        claro_cursusbundle_course_session_user,
+                        course_name: sessionName,
+                        claro_cursusbundle_course: { course_name },
+                    },
                     claro_user,
                 },
                 ...rest
             }) => {
                 const formateurs = claro_cursusbundle_course_session_user
                     ?.filter(({ registration_type }) => registration_type === 'tutor')
-                    ?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
+                    ?.map(({ claro_user: { first_name, last_name } }) => `${last_name} ${first_name}`)
                     .join(', ')
 
                 return {
-                    ...rest,
-                    participantName: rest.participantName ?? `${claro_user.first_name} ${claro_user.last_name}`,
+                    participantName: rest.participantName ?? `${claro_user.last_name} ${claro_user.first_name} `,
                     tutorsNames: rest.tutorsNames ?? formateurs,
+                    sessionName: rest.sessionName ?? sessionName,
+                    courseName: rest.courseName ?? course_name,
+                    id: rest.id,
                 }
             }
         )
