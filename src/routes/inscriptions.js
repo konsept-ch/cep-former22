@@ -40,6 +40,7 @@ createService(
     '/:inscriptionId',
     async (req, res) => {
         const { emailTemplateId, shouldSendSms, status: newStatus } = req.body
+        let isInvoiceCreated = false
 
         const currentInscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
             where: { uuid: req.params.inscriptionId },
@@ -82,16 +83,19 @@ createService(
             where: { organizationUuid: mainOrganization?.uuid },
         })
 
-        if (
+        const conditionForInvoiceCreation =
             organization?.billingMode === 'Directe' &&
-            (newStatus === STATUSES.PARTICIPATION || newStatus === STATUSES.PARTICIPATION_PARTIELLE)
-        ) {
+            [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
+
+        if (newStatus === STATUSES.NON_PARTICIPATION || conditionForInvoiceCreation) {
             await prisma.former22_invoice.create({
                 data: {
                     invoiceId: uuidv4(),
                     inscriptionId: currentInscription.id,
                 },
             })
+
+            isInvoiceCreated = true
         }
 
         const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
@@ -174,7 +178,7 @@ createService(
                 create: { inscriptionStatus: req.body.status, inscriptionId: req.params.inscriptionId },
             })
 
-            res.json('Le statut a été modifié')
+            res.json({ isInvoiceCreated })
 
             return {
                 entityName: `${user.username} => ${session.course_name}`,
@@ -196,21 +200,31 @@ createService(
     '/mass/update',
     async (req, res) => {
         const { emailTemplateId, status: newStatus, inscriptionsIds } = req.body
+        let createdInvoicesCount = 0
 
-        inscriptionsIds.forEach(
-            async (id) =>
-                // TODO: create a separate callOwnService function
-                await fetch(`${MIDDLEWARE_URL}/inscriptions/${id}`, {
-                    method: 'post',
-                    headers: req.headers,
-                    body: JSON.stringify({
-                        emailTemplateId,
-                        status: newStatus,
-                    }),
-                })
-        )
+        for (const id of inscriptionsIds) {
+            // TODO: create a separate callOwnService function
+            const response = await fetch(`${MIDDLEWARE_URL}/inscriptions/${id}`, {
+                method: 'post',
+                headers: req.headers,
+                body: JSON.stringify({
+                    emailTemplateId,
+                    status: newStatus,
+                }),
+            })
 
-        res.json('Les statuts ont été modifiés')
+            const { isInvoiceCreated } = await response.json()
+
+            if (isInvoiceCreated) {
+                createdInvoicesCount += 1
+            }
+        }
+
+        if (createdInvoicesCount > 0) {
+            res.json({ createdInvoicesCount })
+        } else {
+            res.json('Les statuts ont été modifiés')
+        }
     },
     null,
     inscriptionsRouter
