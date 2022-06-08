@@ -99,7 +99,7 @@ createService(
         })
 
         const currentInscriptionStatus =
-            inscriptionStatusForId.inscriptionStatus ??
+            inscriptionStatusForId?.inscriptionStatus ??
             transformFlagsToStatus({
                 validated: currentInscription.validated,
                 confirmed: currentInscription.confirmed,
