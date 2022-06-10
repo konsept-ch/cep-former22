@@ -81,6 +81,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
             uuid: true,
             start_date: true,
             course_name: true,
+            quota_days: true,
+            used_by_quotas: true,
             claro_cursusbundle_course_session_user: {
                 // eslint-disable-next-line no-undefined
                 where: shouldFetchTutors
@@ -140,6 +142,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                           uuid: true,
                           start_date: true,
                           course_name: true,
+                          quota_days: true,
+                          used_by_quotas: true,
                       },
                   },
               },
@@ -198,7 +202,14 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
 
     if (typeof sessionsWithInscriptions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
         const inscriptionsToFetch = [...sessionsWithInscriptions, ...inscriptionCancellations].map(
-            ({ claro_cursusbundle_course_session_user, course_name, start_date, uuid: sessionUuid }) =>
+            ({
+                claro_cursusbundle_course_session_user,
+                course_name,
+                quota_days,
+                used_by_quotas,
+                start_date,
+                uuid: sessionUuid,
+            }) =>
                 (async () => {
                     const allLearnersToFetchStatus = claro_cursusbundle_course_session_user?.map((inscription) =>
                         (async () => {
@@ -230,7 +241,13 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                         confirmed: inscription.confirmed,
                                         registrationType: inscription.registration_type,
                                     }),
-                                session: { id: sessionUuid, name: course_name, startDate: start_date },
+                                session: {
+                                    id: sessionUuid,
+                                    name: course_name,
+                                    startDate: start_date,
+                                    quotaDays: quota_days,
+                                    isUsedForQuota: used_by_quotas,
+                                },
                                 user: {
                                     firstName: inscription.claro_user.first_name,
                                     lastName: inscription.claro_user.last_name,
