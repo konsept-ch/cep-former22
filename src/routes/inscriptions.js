@@ -83,6 +83,10 @@ createService(
             where: { organizationUuid: mainOrganization?.uuid },
         })
 
+        const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
+            where: { inscriptionId: currentInscription.uuid },
+        })
+
         const conditionForInvoiceCreation =
             organization?.billingMode === 'Directe' &&
             [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
@@ -92,15 +96,13 @@ createService(
                 data: {
                     invoiceId: uuidv4(),
                     inscriptionId: currentInscription.id,
+                    inscriptionStatus: inscriptionStatusForId?.inscriptionStatus,
+                    createdAt: Date.now(),
                 },
             })
 
             isInvoiceCreated = true
         }
-
-        const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
-            where: { inscriptionId: currentInscription.uuid },
-        })
 
         const currentInscriptionStatus =
             inscriptionStatusForId?.inscriptionStatus ??

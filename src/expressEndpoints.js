@@ -629,6 +629,15 @@ export const generateEndpoints = () => {
                         claro_user: true,
                         claro_cursusbundle_course_session: {
                             include: {
+                                claro_cursusbundle_session_event: {
+                                    select: {
+                                        claro_planned_object: {
+                                            select: {
+                                                start_date: true,
+                                            },
+                                        },
+                                    },
+                                },
                                 claro_cursusbundle_course_session_user: {
                                     include: {
                                         claro_user: true,
@@ -646,8 +655,12 @@ export const generateEndpoints = () => {
 
         const invoices = invoicesPrisma.map(
             ({
+                createdAt,
+                invoiceId,
+                inscriptionStatus,
                 claro_cursusbundle_course_session_user: {
                     claro_cursusbundle_course_session: {
+                        claro_cursusbundle_session_event,
                         claro_cursusbundle_course_session_user,
                         course_name: sessionName,
                         claro_cursusbundle_course: { course_name },
@@ -661,12 +674,24 @@ export const generateEndpoints = () => {
                     ?.map(({ claro_user: { first_name, last_name } }) => `${last_name} ${first_name}`)
                     .join(', ')
 
+                const seances = claro_cursusbundle_session_event
+                    .map(({ claro_planned_object: { start_date } }) =>
+                        formatDate({
+                            dateObject: start_date,
+                            isDateVisible: true,
+                        })
+                    )
+                    .join(', ')
+
                 return {
                     participantName: rest.participantName ?? `${claro_user.last_name} ${claro_user.first_name} `,
                     tutorsNames: rest.tutorsNames ?? formateurs,
                     sessionName: rest.sessionName ?? sessionName,
                     courseName: rest.courseName ?? course_name,
-                    id: rest.id,
+                    id: invoiceId,
+                    seances,
+                    createdAt,
+                    inscriptionStatus,
                 }
             }
         )
