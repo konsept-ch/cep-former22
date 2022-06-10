@@ -83,10 +83,6 @@ createService(
             where: { organizationUuid: mainOrganization?.uuid },
         })
 
-        const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
-            where: { inscriptionId: currentInscription.uuid },
-        })
-
         const conditionForInvoiceCreation =
             organization?.billingMode === 'Directe' &&
             [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
@@ -96,13 +92,17 @@ createService(
                 data: {
                     invoiceId: uuidv4(),
                     inscriptionId: currentInscription.id,
-                    inscriptionStatus: inscriptionStatusForId?.inscriptionStatus,
-                    createdAt: Date.now(),
+                    inscriptionStatus: newStatus,
+                    createdAt: Date.now().toString(),
                 },
             })
 
             isInvoiceCreated = true
         }
+
+        const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
+            where: { inscriptionId: currentInscription.uuid },
+        })
 
         const currentInscriptionStatus =
             inscriptionStatusForId?.inscriptionStatus ??
@@ -119,7 +119,7 @@ createService(
                 entityName: `${user.username} => ${session.course_name}`,
                 actionDescription: getLogDescriptions.inscription({
                     originalStatus: currentInscriptionStatus,
-                    newStatus: req.body.status,
+                    newStatus,
                 }),
             }
         }
@@ -176,8 +176,8 @@ createService(
 
             await prisma.former22_inscription.upsert({
                 where: { inscriptionId: req.params.inscriptionId },
-                update: { inscriptionStatus: req.body.status },
-                create: { inscriptionStatus: req.body.status, inscriptionId: req.params.inscriptionId },
+                update: { inscriptionStatus: newStatus },
+                create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
 
             res.json({ isInvoiceCreated })
@@ -186,7 +186,7 @@ createService(
                 entityName: `${user.username} => ${session.course_name}`,
                 actionDescription: getLogDescriptions.inscription({
                     originalStatus: currentInscriptionStatus,
-                    newStatus: req.body.status,
+                    newStatus,
                 }),
             }
         } else {

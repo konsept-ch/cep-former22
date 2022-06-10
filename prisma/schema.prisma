@@ -5546,7 +5546,7 @@ model former22_invoice {
   tutorsNames                            String?                                @db.VarChar(255)
   courseName                             String?                                @db.VarChar(255)
   sessionName                            String?                                @db.VarChar(255)
-  createdAt                              BigInt?
+  createdAt                              String?                                @db.Text
   seances                                String?                                @db.Text
   inscriptionStatus                      String?                                @db.Text
   claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription")

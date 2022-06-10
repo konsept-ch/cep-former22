@@ -1,7 +1,7 @@
 ALTER TABLE
     former22_invoice
 ADD
-    COLUMN createdAt BIGINT COMMENT 'The date and time of the creation of the invoice',
+    COLUMN createdAt TEXT COMMENT 'The date and time of the creation of the invoice',
 ADD
     COLUMN seances TEXT COMMENT 'Session events',
 ADD
