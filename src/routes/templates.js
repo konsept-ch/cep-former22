@@ -76,7 +76,7 @@ createService(
 
         return {
             entityName: req.body.title,
-            actionDescription: 'Added a template',
+            actionName: 'Added a template',
         }
     },
     { entityType: LOG_TYPES.TEMPLATE },
@@ -96,7 +96,7 @@ createService(
 
         return {
             entityName: req.body.title,
-            actionDescription: `Updated template ${req.body.title}`,
+            actionName: `Updated template ${req.body.title}`,
         }
     },
     { entityType: LOG_TYPES.TEMPLATE },
@@ -115,7 +115,7 @@ createService(
 
         return {
             entityName: template.title,
-            actionDescription: `Deleted template ${template.title}`,
+            actionName: `Deleted template ${template.title}`,
         }
     },
     { entityType: LOG_TYPES.TEMPLATE },

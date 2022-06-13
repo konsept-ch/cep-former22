@@ -79,7 +79,7 @@ export const createService = (method, url, handlerFunction, logHelper, router = 
                     where: { id: logId },
                     data: {
                         entityName: logPayload.entityName,
-                        actionDescription: logPayload.actionDescription,
+                        actionName: logPayload.actionName,
                         actionStatus: LOG_STATUSES.COMPLETE,
                     },
                 })
@@ -102,7 +102,7 @@ export const createService = (method, url, handlerFunction, logHelper, router = 
                     data: {
                         actionStatus: LOG_STATUSES.FAIL,
                         entityName: error.message,
-                        actionDescription: error.stack,
+                        actionName: error.stack,
                     },
                 })
             }

@@ -117,7 +117,7 @@ createService(
 
             return {
                 entityName: `${user.username} => ${session.course_name}`,
-                actionDescription: getLogDescriptions.inscription({
+                actionName: getLogDescriptions.inscription({
                     originalStatus: currentInscriptionStatus,
                     newStatus,
                 }),
@@ -184,7 +184,7 @@ createService(
 
             return {
                 entityName: `${user.username} => ${session.course_name}`,
-                actionDescription: getLogDescriptions.inscription({
+                actionName: getLogDescriptions.inscription({
                     originalStatus: currentInscriptionStatus,
                     newStatus,
                 }),

@@ -110,7 +110,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: organizationName,
-                actionDescription: `Updated organization ${organizationName}`,
+                actionName: `Updated organization ${organizationName}`,
             }
         },
         { entityType: LOG_TYPES.ORGANISATION }
@@ -218,7 +218,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: userFullName,
-                actionDescription: getLogDescriptions.user({
+                actionName: getLogDescriptions.user({
                     shouldReceiveSms: req.body.shouldReceiveSms,
                     fullName: userFullName,
                 }),
@@ -313,7 +313,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: courseDetails.course_name,
-                actionDescription: getLogDescriptions.formation(),
+                actionName: getLogDescriptions.formation(),
             }
         },
         { entityType: LOG_TYPES.FORMATION }
@@ -343,7 +343,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: 'Organisations',
-                actionDescription: 'Added organisations',
+                actionName: 'Added organisations',
             }
         },
         { entityType: LOG_TYPES.ORGANISATION }
@@ -380,7 +380,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: 'Organisations',
-                actionDescription: 'Deleted organisations',
+                actionName: 'Deleted organisations',
             }
         },
         { entityType: LOG_TYPES.ORGANISATION }
@@ -407,7 +407,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: currentCourse.course_name,
-                actionDescription: getLogDescriptions.formation({
+                actionName: getLogDescriptions.formation({
                     field: req.body.header,
                     fieldValue: req.body.newValue,
                 }),
