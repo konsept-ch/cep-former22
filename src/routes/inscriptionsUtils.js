@@ -14,6 +14,9 @@ export const STATUSES = {
     REFUSEE_PAR_CEP: 'Refusée par CEP',
     INVITEE: 'Invitée',
     PROPOSEE: 'Proposée',
+    PARTICIPATION: 'Participation',
+    PARTICIPATION_PARTIELLE: 'Participation Partielle',
+    NON_PARTICIPATION: 'Non-participation',
     ...FINAL_STATUSES,
 }
 
@@ -21,7 +24,7 @@ const registrationTypes = {
     CANCELLATION: 'cancellation',
 }
 
-const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
+export const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
     if (registrationType === registrationTypes.CANCELLATION) {
         return STATUSES.ANNULEE
     } else if (!confirmed) {
@@ -189,7 +192,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
     const getMainOrganization = (organizations) => {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
 
-        return mainOrganization?.name
+        return mainOrganization
     }
 
     const getOrganizationCode = (organizations) => {
@@ -261,7 +264,10 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                         ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)
                                         : null,
                                     organization: inscription.claro_user.user_organization
-                                        ? getMainOrganization(inscription.claro_user.user_organization)
+                                        ? getMainOrganization(inscription.claro_user.user_organization)?.name
+                                        : null,
+                                    organizationId: inscription.claro_user.user_organization
+                                        ? getMainOrganization(inscription.claro_user.user_organization)?.uuid
                                         : null,
                                     organizationCode: inscription.claro_user.user_organization
                                         ? getOrganizationCode(inscription.claro_user.user_organization)

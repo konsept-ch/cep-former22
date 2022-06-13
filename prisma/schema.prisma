@@ -1138,6 +1138,7 @@ model claro_cursusbundle_course_session_user {
   remark                            String                            @db.LongText
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120F613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120FA76ED395")
+  former22_invoice                  former22_invoice[]
 
   @@unique([session_id, user_id], map: "training_session_unique_user")
   @@index([session_id], map: "IDX_80B4120F613FECDF")
@@ -5524,7 +5525,7 @@ model former22_organization {
   id                          Int     @id @default(autoincrement())
   organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
   billingMode                 String? @db.Text
-  dailyRate                   Int?
+  dailyRate                   Float?  @db.Float
   flyersCount                 Int?
   phone                       String? @db.Text
   addressTitle                String? @db.Text
@@ -5535,4 +5536,20 @@ model former22_organization {
   postalAddressDepartment     String? @db.Text
   postalAddressDepartmentCode String? @db.Text
   postalAddressLocality       String? @db.Text
+}
+
+model former22_invoice {
+  id                                     Int                                    @id @default(autoincrement())
+  invoiceId                              String                                 @unique(map: "invoiceId") @db.VarChar(255)
+  inscriptionId                          Int
+  participantName                        String?                                @db.VarChar(255)
+  tutorsNames                            String?                                @db.VarChar(255)
+  courseName                             String?                                @db.VarChar(255)
+  sessionName                            String?                                @db.VarChar(255)
+  createdAt                              String?                                @db.Text
+  seances                                String?                                @db.Text
+  inscriptionStatus                      String?                                @db.Text
+  claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription")
+
+  @@index([inscriptionId], map: "inscription_index")
 }
