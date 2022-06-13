@@ -699,12 +699,22 @@ export const generateEndpoints = () => {
         res.json(invoices)
     })
 
+    createService('delete', '/invoice/:id', async (req, res) => {
+        const { id } = req.params
+
+        await prisma.former22_invoice.delete({
+            where: { invoiceId: id },
+        })
+
+        res.json('La facturation a été modifié')
+    })
+
     createService('put', '/invoice/:id', async (req, res) => {
         const invoiceData = req.body
         const { id } = req.params
 
         await prisma.former22_invoice.update({
-            where: { id: Number(id) },
+            where: { invoiceId: id },
             data: { ...invoiceData },
         })
 

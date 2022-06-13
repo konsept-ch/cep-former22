@@ -5540,7 +5540,7 @@ model former22_organization {
 
 model former22_invoice {
   id                                     Int                                    @id @default(autoincrement())
-  invoiceId                              String                                 @db.VarChar(255)
+  invoiceId                              String                                 @unique(map: "invoiceId") @db.VarChar(255)
   inscriptionId                          Int
   participantName                        String?                                @db.VarChar(255)
   tutorsNames                            String?                                @db.VarChar(255)

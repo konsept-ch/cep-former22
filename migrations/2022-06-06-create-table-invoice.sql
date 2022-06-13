@@ -17,3 +17,5 @@ ALTER TABLE
     former22_invoice
 ADD
     CONSTRAINT fk_inscription FOREIGN KEY (inscriptionId) REFERENCES claro_cursusbundle_course_session_user (id);
+
+ALTER TABLE former22_invoice ADD UNIQUE INDEX (invoiceId);
