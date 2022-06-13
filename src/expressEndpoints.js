@@ -289,7 +289,7 @@ export const generateEndpoints = () => {
             }
         })
 
-        res.json(fullCoursesData ?? 'Aucun cours trouvé')
+        res.json(fullCoursesData ?? 'Aucuns cours trouvés')
     })
 
     createService('get', '/courseBySlug/:slug', async (req, res) => {
@@ -474,7 +474,7 @@ export const generateEndpoints = () => {
 
             res.json({ rooms, events })
         } else {
-            res.json('Aucune salle trouvée')
+            res.json('Aucunes salle trouvées')
         }
     })
     // rooms END
@@ -517,7 +517,7 @@ export const generateEndpoints = () => {
             }
         })
 
-        res.json(fullSessionsData ?? 'Aucune session trouvée')
+        res.json(fullSessionsData ?? 'Aucunes session trouvées')
     })
 
     createService('put', '/sessions/:sessionId', async (req, res) => {
@@ -615,7 +615,7 @@ export const generateEndpoints = () => {
         if (inscriptions.length > 0) {
             res.json(inscriptions)
         } else {
-            res.json('Aucun formateur trouvé')
+            res.json('Aucuns formateurs trouvés')
         }
     })
     // formateurs END
