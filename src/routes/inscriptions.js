@@ -124,7 +124,7 @@ createService(
                 if (shouldSendSms) {
                     await sendSms({
                         to: parsePhoneForSms({ phone: user?.phone }),
-                        content: smsContent,
+                        content: smsContent.replace(/<br\s*\/?>/gi, '\n'),
                     })
                 }
             }
