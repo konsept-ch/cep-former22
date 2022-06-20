@@ -43,6 +43,7 @@ export const LOG_TYPES = {
     TEMPLATE: 'Model',
     ORGANISATION: 'Organisation',
     USER: 'Utilisateur',
+    INVOICE: 'Facture',
 }
 
 // TODO: named params
@@ -51,12 +52,19 @@ export const createService = (method, url, handlerFunction, logHelper, router = 
         let logId
         try {
             if (logHelper) {
+                const userDetails = await callApi({
+                    req,
+                    path: 'user/find',
+                    params: `filters[email]=${req.headers['x-login-email-address']}`,
+                })
+
                 const log = await prisma.former22_log.create({
                     data: {
                         logId: uuidv4(),
-                        userEmail: req.headers['x-login-email-address'],
+                        userEmail: `${userDetails.name} <${userDetails.email}>`,
                         entityType: logHelper.entityType,
-                        dateAndTime: Date.now(),
+                        // dateAndTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                        dateAndTime: new Date(),
                         actionStatus: LOG_STATUSES.PENDING,
                     },
                 })
@@ -79,6 +87,7 @@ export const createService = (method, url, handlerFunction, logHelper, router = 
                     where: { id: logId },
                     data: {
                         entityName: logPayload.entityName,
+                        entityId: logPayload.entityId || 'no-id',
                         actionName: logPayload.actionName,
                         actionStatus: LOG_STATUSES.COMPLETE,
                     },
@@ -113,10 +122,7 @@ export const createService = (method, url, handlerFunction, logHelper, router = 
 }
 
 export const getLogDescriptions = {
-    formation: (columnNewData) =>
-        columnNewData
-            ? `Changed column field "${columnNewData.field}" to "${columnNewData.fieldValue}"`
-            : 'Updated description',
+    formation: ({ isUpdatedDetails }) => (isUpdatedDetails ? `Updated course details` : 'Updated description'),
     inscription: ({ originalStatus, newStatus }) => `Changed status from "${originalStatus}" to "${newStatus}"`,
     user: ({ shouldReceiveSms, fullName }) =>
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,

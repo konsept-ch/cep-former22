@@ -40,7 +40,6 @@ createService(
     '/:inscriptionId',
     async (req, res) => {
         const { emailTemplateId, shouldSendSms, status: newStatus } = req.body
-        let isInvoiceCreated = false
 
         const currentInscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
             where: { uuid: req.params.inscriptionId },
@@ -77,28 +76,6 @@ createService(
 
         const session = currentInscription.claro_cursusbundle_course_session
         const user = currentInscription.claro_user
-        const mainOrganization = user.user_organization[0]?.claro__organization
-
-        const organization = await prisma.former22_organization.findUnique({
-            where: { organizationUuid: mainOrganization?.uuid },
-        })
-
-        const conditionForInvoiceCreation =
-            organization?.billingMode === 'Directe' &&
-            [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
-
-        if (newStatus === STATUSES.NON_PARTICIPATION || conditionForInvoiceCreation) {
-            await prisma.former22_invoice.create({
-                data: {
-                    invoiceId: uuidv4(),
-                    inscriptionId: currentInscription.id,
-                    inscriptionStatus: newStatus,
-                    createdAt: Date.now().toString(),
-                },
-            })
-
-            isInvoiceCreated = true
-        }
 
         const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
             where: { inscriptionId: currentInscription.uuid },
@@ -116,7 +93,8 @@ createService(
             res.json('Ce statut ne peut pas être modifié')
 
             return {
-                entityName: `${user.username} => ${session.course_name}`,
+                entityName: 'Inscription',
+                entityId: req.params.inscriptionId,
                 actionName: getLogDescriptions.inscription({
                     originalStatus: currentInscriptionStatus,
                     newStatus,
@@ -180,10 +158,36 @@ createService(
                 create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
 
+            const mainOrganization = user.user_organization[0]?.claro__organization
+
+            const organization = await prisma.former22_organization.findUnique({
+                where: { organizationUuid: mainOrganization?.uuid },
+            })
+
+            const conditionForInvoiceCreation =
+                organization?.billingMode === 'Directe' &&
+                [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
+
+            let isInvoiceCreated = false
+
+            if (newStatus === STATUSES.NON_PARTICIPATION || conditionForInvoiceCreation) {
+                await prisma.former22_invoice.create({
+                    data: {
+                        invoiceId: uuidv4(),
+                        inscriptionId: currentInscription.id,
+                        inscriptionStatus: newStatus,
+                        createdAt: Date.now().toString(),
+                    },
+                })
+
+                isInvoiceCreated = true
+            }
+
             res.json({ isInvoiceCreated })
 
             return {
-                entityName: `${user.username} => ${session.course_name}`,
+                entityName: 'Inscription',
+                entityId: req.params.inscriptionId,
                 actionName: getLogDescriptions.inscription({
                     originalStatus: currentInscriptionStatus,
                     newStatus,

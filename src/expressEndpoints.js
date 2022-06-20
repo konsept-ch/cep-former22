@@ -110,6 +110,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: organizationName,
+                entityId: organizationUuid,
                 actionName: `Updated organization ${organizationName}`,
             }
         },
@@ -218,6 +219,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: userFullName,
+                entityId: req.params.userId,
                 actionName: getLogDescriptions.user({
                     shouldReceiveSms: req.body.shouldReceiveSms,
                     fullName: userFullName,
@@ -313,7 +315,8 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: courseDetails.course_name,
-                actionName: getLogDescriptions.formation(),
+                entityId: req.params.id,
+                actionName: getLogDescriptions.formation({ isUpdatedDetails: false }),
             }
         },
         { entityType: LOG_TYPES.FORMATION }
@@ -407,10 +410,8 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: currentCourse.course_name,
-                actionName: getLogDescriptions.formation({
-                    field: req.body.header,
-                    fieldValue: req.body.newValue,
-                }),
+                entityId: req.params.courseId,
+                actionName: getLogDescriptions.formation({ isUpdatedDetails: true }),
             }
         },
         { entityType: LOG_TYPES.FORMATION }
@@ -520,66 +521,77 @@ export const generateEndpoints = () => {
         res.json(fullSessionsData ?? 'Aucunes session trouvées')
     })
 
-    createService('put', '/sessions/:sessionId', async (req, res) => {
-        const { sessionId } = req.params
+    createService(
+        'put',
+        '/sessions/:sessionId',
+        async (req, res) => {
+            const { sessionId } = req.params
 
-        await prisma.former22_session.upsert({
-            where: { sessionId },
-            update: { ...req.body },
-            create: { sessionId, ...req.body },
-        })
+            await prisma.former22_session.upsert({
+                where: { sessionId },
+                update: { ...req.body },
+                create: { sessionId, ...req.body },
+            })
 
-        const { claro_cursusbundle_course_session_user: learners } =
-            await prisma.claro_cursusbundle_course_session.findUnique({
-                where: {
-                    uuid: sessionId,
-                },
-                select: {
-                    claro_cursusbundle_course_session_user: {
-                        where: { registration_type: 'learner' },
-                        select: { uuid: true, claro_user: { select: { mail: true } } },
+            const { claro_cursusbundle_course_session_user: learners } =
+                await prisma.claro_cursusbundle_course_session.findUnique({
+                    where: {
+                        uuid: sessionId,
                     },
-                },
-            })
-
-        const templateForSessionInvites = await prisma.former22_template.findFirst({
-            where: { isUsedForSessionInvites: true },
-        })
-
-        if (templateForSessionInvites) {
-            const emailsToSend = learners.map(async (learner) => {
-                const {
-                    uuid: learnerId,
-                    claro_user: { mail: learnerEmail },
-                } = learner
-
-                const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                    req,
-                    templateId: templateForSessionInvites.templateId,
-                    sessionId,
-                    inscriptionId: learnerId,
+                    select: {
+                        claro_cursusbundle_course_session_user: {
+                            where: { registration_type: 'learner' },
+                            select: { uuid: true, claro_user: { select: { mail: true } } },
+                        },
+                    },
                 })
 
-                const { emailResponse } = await sendEmail({
-                    to: learnerEmail,
-                    subject: emailSubject,
-                    html_body: emailContent,
-                })
-
-                await sendSms({ to: '359877155302', content: smsContent })
-
-                return { emailResponse }
+            const templateForSessionInvites = await prisma.former22_template.findFirst({
+                where: { isUsedForSessionInvites: true },
             })
 
-            const sentEmails = await Promise.allSettled(emailsToSend)
+            if (templateForSessionInvites) {
+                const emailsToSend = learners.map(async (learner) => {
+                    const {
+                        uuid: learnerId,
+                        claro_user: { mail: learnerEmail },
+                    } = learner
 
-            const data = sentEmails.map(({ value }) => value)
+                    const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
+                        req,
+                        templateId: templateForSessionInvites.templateId,
+                        sessionId,
+                        inscriptionId: learnerId,
+                    })
 
-            res.json(data ?? 'Aucun e-mail envoyé')
-        } else {
-            res.json("Aucun modèle pour sessions invitées n'a été trouvé")
-        }
-    })
+                    const { emailResponse } = await sendEmail({
+                        to: learnerEmail,
+                        subject: emailSubject,
+                        html_body: emailContent,
+                    })
+
+                    await sendSms({ to: '359877155302', content: smsContent })
+
+                    return { emailResponse }
+                })
+
+                const sentEmails = await Promise.allSettled(emailsToSend)
+
+                const data = sentEmails.map(({ value }) => value)
+
+                res.json(data ?? 'Aucun e-mail envoyé')
+            } else {
+                res.json("Aucun modèle pour sessions invitées n'a été trouvé")
+            }
+
+            return {
+                entityName: req.body.sessionName,
+                entityId: sessionId,
+                actionName: 'Session updated',
+            }
+        },
+        { entityType: LOG_TYPES.SESSION }
+    )
     // sessions END
 
     // reportError START
@@ -699,26 +711,56 @@ export const generateEndpoints = () => {
         res.json(invoices)
     })
 
-    createService('delete', '/invoice/:id', async (req, res) => {
-        const { id } = req.params
+    createService(
+        'delete',
+        '/invoice/:id',
+        async (req, res) => {
+            const { id } = req.params
 
-        await prisma.former22_invoice.delete({
-            where: { invoiceId: id },
-        })
+            await prisma.former22_invoice.delete({
+                where: { invoiceId: id },
+            })
 
-        res.json('La facturation a été modifié')
-    })
+            res.json('La facturation a été modifié')
 
-    createService('put', '/invoice/:id', async (req, res) => {
-        const invoiceData = req.body
-        const { id } = req.params
+            return {
+                entityName: 'Facture',
+                entityId: id,
+                actionName: 'Invoice deleted',
+            }
+        },
+        { entityType: LOG_TYPES.INVOICE }
+    )
 
-        await prisma.former22_invoice.update({
-            where: { invoiceId: id },
-            data: { ...invoiceData },
-        })
+    createService(
+        'put',
+        '/invoice/:id',
+        async (req, res) => {
+            const invoiceData = req.body
+            const { id } = req.params
 
-        res.json('La facturation a été modifié')
-    })
+            await prisma.former22_invoice.update({
+                where: { invoiceId: id },
+                data: { ...invoiceData },
+            })
+
+            res.json('La facturation a été modifié')
+
+            return {
+                entityName: 'Facture',
+                entityId: id,
+                actionName: 'Invoice updated',
+            }
+        },
+        { entityType: LOG_TYPES.INVOICE }
+    )
     // invoices END
+
+    // logs START
+    createService('get', '/logs', async (_req, res) => {
+        const logs = await prisma.former22_log.findMany()
+
+        res.json(logs ? 'Des logs trouvés' : 'Aucuns logs trouvés')
+    })
+    // logs END
 }

@@ -76,6 +76,7 @@ createService(
 
         return {
             entityName: req.body.title,
+            entityId: req.body.templateId,
             actionName: 'Added a template',
         }
     },
@@ -96,6 +97,7 @@ createService(
 
         return {
             entityName: req.body.title,
+            entityId: req.params.templateId,
             actionName: `Updated template ${req.body.title}`,
         }
     },
@@ -115,6 +117,7 @@ createService(
 
         return {
             entityName: template.title,
+            entityId: req.params.templateId,
             actionName: `Deleted template ${template.title}`,
         }
     },
