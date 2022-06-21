@@ -1,6 +1,6 @@
 components:
   schemas:
-    Course:
+    Formation:
       type: object
       required:
         - id
@@ -60,6 +60,16 @@ components:
         durationHours: 11.25
         creationDate: '2021-05-31T14:33:08.000Z'
         summary: 'Dans cette formation vous découvrirez la construction des bases de données pour bien les exploiter. Vous utiliserez les différents objets : tables, requêtes, formulaires et états, vous permettant de comprendre leurs rôles et interactions dans Access.'
+    Session:
+      type: object
+      required:
+        - id
+        - code
+        - name
+      properties:
+        id:
+          type: string
+          description: L'ID d'une session, généré automatiquement par Claroline
     Inscription:
       type: object
       required:

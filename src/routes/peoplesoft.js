@@ -59,7 +59,7 @@ const respondToPeopleSoft = (res, data) =>
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Course'
+ *                 $ref: '#/components/schemas/Formation'
  *           application/xml:
  *             schema:
  *               type: object
@@ -69,7 +69,7 @@ const respondToPeopleSoft = (res, data) =>
  *                 formation:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Course'
+ *                     $ref: '#/components/schemas/Formation'
  */
 createService(
     'get',
