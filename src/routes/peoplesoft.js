@@ -4,7 +4,6 @@ import convert from 'xml-js'
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
 import { createService } from '../utils'
 import { prisma } from '..'
-import { fetchInscriptionsWithStatuses } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
@@ -29,9 +28,17 @@ const respondToPeopleSoft = (res, data) =>
  *
  * /peoplesoft/formations:
  *   get:
- *     summary: Retourne la liste des formations
+ *     summary: Retourne l'arborescence des formations, sessions et inscriptions
  *     tags: [Formations]
- *     description: Liste des formations proposées par le CEP
+ *     description: Liste des <strong>formations</strong> proposées par le CEP avec les <strong>sessions</strong> de chaque formation et les <strong>inscriptions</strong> dans chaque session.
+ *       <br>Le filtre par date de dernière modification du statut d'inscription <strong>statusUpdatedSince</strong> retourne toutes les inscriptions qui ont été créées ou modifiées après la date du filtre.
+ *       <br>Ce filtre est appliqué <em>uniquement</em> sur les <strong>inscriptions</strong>.
+ *       <br>Toutes les <strong>formations</strong> <em>non-cachées</em> et leurs <strong>sessions</strong> <em>non-cachées</em> sont toujours retournées, même s'il n'y a aucune <strong>inscription</strong> dedans.
+ *       <br>Si une <strong>formation</strong> n'est plus retournée, elle a probablement été cachée/archivée/supprimée.
+ *       <br>Si une <strong>session</strong> n'est plus retournée, elle (ou sa formation parente) a probablement été cachée/archivée/supprimée.
+ *       <br>Si une <strong>inscription</strong> n'est plus retournée, elle a probablement été annulée ou sa session parente (ou sa formation parente) a probablement été cachée/archivée/supprimée.
+ *       <br>Si une <strong>formation</strong> ou <strong>session</strong> a été renommée, normalement son <strong>id</strong> reste le même.
+ *       <br>Quand une <strong>inscription</strong> est annulée et ensuite elle est refaite (même <strong>utilisateur</strong> et même <strong>session</strong>), l'<strong>id</strong> de la nouvelle <strong>inscription</strong> est <em>different</em>.
  *     parameters:
  *       - name: X-Former22-API-Key
  *         in: header
@@ -46,7 +53,7 @@ const respondToPeopleSoft = (res, data) =>
  *           type: string
  *     responses:
  *       200:
- *         description: La liste des formations a été retourné avec succès
+ *         description: Succès - l'arborescence des formations, sessions et inscriptions a été retournée
  *         content:
  *           application/json:
  *             schema:
@@ -70,6 +77,8 @@ createService(
     async (req, res) => {
         const { statusUpdatedSince, apitoken } = req.query
         const token = req.header(PEOPLESOFT_TOKEN) ?? apitoken
+
+        console.log('statusUpdatedSince', statusUpdatedSince)
 
         if (token == null) {
             respondToPeopleSoft(res, `Vous devez passer le header ${PEOPLESOFT_TOKEN}`)
