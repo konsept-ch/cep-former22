@@ -154,8 +154,12 @@ createService(
 
             await prisma.former22_inscription.upsert({
                 where: { inscriptionId: req.params.inscriptionId },
-                update: { inscriptionStatus: newStatus },
-                create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
+                update: { inscriptionStatus: newStatus, updatedAt: Date.now() },
+                create: {
+                    inscriptionStatus: newStatus,
+                    updatedAt: Date.now(),
+                    inscriptionId: req.params.inscriptionId,
+                },
             })
 
             const mainOrganization = user.user_organization[0]?.claro__organization
