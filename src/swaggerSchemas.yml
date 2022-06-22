@@ -11,7 +11,7 @@ components:
       properties:
         id:
           type: string
-          description: L'UUID de la formation, généré automatiquement par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
+          description: L'UUID de la formation, généré automatiquement lors de sa création par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
         code:
           type: string
           description: Le code de la formation, saisi par le CEP dans Claroline (e.g. ACCESS)
@@ -58,14 +58,31 @@ components:
         code: 'ACCESS'
         name: 'Access : bien débuter avec les bases de données'
         isActive: true
+        creationDate: '2021-05-31T14:33:08.000Z'
         typeStage: 'Certificat'
         teachingMethod: 'Mixte/Blended'
         codeCategory: 'Catalogue'
         isCertifying: true
         isRecurrent: true
         durationHours: 11.25
-        creationDate: '2021-05-31T14:33:08.000Z'
         summary: 'Dans cette formation vous découvrirez la construction des bases de données pour bien les exploiter. Vous utiliserez les différents objets : tables, requêtes, formulaires et états, vous permettant de comprendre leurs rôles et interactions dans Access.'
+        sessions:
+          - id: 'd2da752f-b0b6-4ead-884c-71299c1a0254'
+            code: 'ACCESS/22/01'
+            creationDate: '2021-07-21T09:24:30.000Z'
+            eventDates: ['2022-09-02T06:30:00.000Z', '2022-09-16T06:30:00.000Z', '2022-09-23T06:30:00.000Z']
+            maxParticipants: 10
+            sessionFormat: 'Visioconférence'
+            sessionLocation: 'Hors-Lausanne'
+            inscriptions:
+              - id: 'a67d4ade-6807-4a99-8418-425aa471c71a'
+                status: 'Refusée par CEP'
+                statusUpdatedAt: '2022-05-31T02:03:05.000Z'
+                inscriptionDate: '2022-03-02T00:01:13.000Z'
+                user:
+                  id: 'b344ea3b-d492-4f50-af7b-d17e752e50a7'
+                  email: 'claroline@example.com'
+
     Session:
       type: object
       required:
@@ -75,7 +92,7 @@ components:
       properties:
         id:
           type: string
-          description: L'ID d'une session, généré automatiquement par Claroline
+          description: L'UUID d'une session, généré automatiquement lors de sa création par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
         inscriptions:
           type: array
           description: Toutes les inscriptions dans la session qui ont été modifiés depuis la date du filtre statusUpdatedSince
@@ -90,7 +107,7 @@ components:
       properties:
         id:
           type: string
-          description: L'ID d'une inscription, généré automatiquement par Claroline
+          description: L'UUID d'une inscription, généré automatiquement lors de sa création par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
       # example:
       #   id: 01c292b5-43a4-4c59-9619-33a8309cdbf0
       #   code: ACCESS
