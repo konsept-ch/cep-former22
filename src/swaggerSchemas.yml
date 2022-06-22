@@ -2,6 +2,7 @@ components:
   schemas:
     Formation:
       type: object
+      description: Toutes les formations non-cachées
       required:
         - id
         - code
@@ -44,6 +45,11 @@ components:
         summary:
           type: string
           description: Résumé (description courte) de la formation
+        sessions:
+          type: array
+          description: Toutes les sessions non-cachées de la formation
+          items:
+            $ref: '#/components/schemas/Session'
         # maxParticipants:
         #   type: string
         #   description: La limite de nombre de participants par session
@@ -70,6 +76,11 @@ components:
         id:
           type: string
           description: L'ID d'une session, généré automatiquement par Claroline
+        inscriptions:
+          type: array
+          description: Toutes les inscriptions dans la session qui ont été modifiés depuis la date du filtre statusUpdatedSince
+          items:
+            $ref: '#/components/schemas/Inscription'
     Inscription:
       type: object
       required:
