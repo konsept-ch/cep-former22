@@ -6,7 +6,7 @@ import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
+import { createService, getCurrentDateTimeInMysqlFormat, getLogDescriptions, LOG_TYPES } from '../utils'
 import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,
@@ -154,12 +154,8 @@ createService(
 
             await prisma.former22_inscription.upsert({
                 where: { inscriptionId: req.params.inscriptionId },
-                update: { inscriptionStatus: newStatus, updatedAt: Date.now() },
-                create: {
-                    inscriptionStatus: newStatus,
-                    updatedAt: Date.now(),
-                    inscriptionId: req.params.inscriptionId,
-                },
+                update: { inscriptionStatus: newStatus, updatedAt: new Date() },
+                create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
 
             const mainOrganization = user.user_organization[0]?.claro__organization
@@ -180,7 +176,7 @@ createService(
                         invoiceId: uuidv4(),
                         inscriptionId: currentInscription.id,
                         inscriptionStatus: newStatus,
-                        createdAt: Date.now().toString(),
+                        createdAt: new Date(),
                     },
                 })
 

@@ -48,7 +48,7 @@ const respondToPeopleSoft = (res, data) =>
  *       - name: statusUpdatedSince
  *         in: query
  *         required: false
- *         description: ISO Date format, e.g. 2022-05-31 02:03:05
+ *         description: ISO Date format, UTC, e.g. 2022-06-22T21:15:21.000Z
  *         schema:
  *           type: string
  *     responses:
@@ -173,14 +173,25 @@ createService(
                         sessions: course.claro_cursusbundle_course_session.map((session) => ({
                             ...session,
                             ...sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid),
-                            inscriptions: session.claro_cursusbundle_course_session_user.map((inscription) => ({
-                                ...inscription,
-                                ...inscriptionsAdditionalData.find(
-                                    ({ inscriptionId }) => inscriptionId === inscription.uuid
+                            inscriptions: session.claro_cursusbundle_course_session_user
+                                .map((inscription) => ({
+                                    ...inscription,
+                                    ...inscriptionsAdditionalData.find(
+                                        ({ inscriptionId }) => inscriptionId === inscription.uuid
+                                    ),
+                                    // eslint-disable-next-line no-undefined -- unset inscriptionId
+                                    inscriptionId: undefined,
+                                }))
+                                .filter(
+                                    ({ updatedAt }) =>
+                                        console.log(
+                                            process.env.TZ,
+                                            new Date(updatedAt),
+                                            new Date(updatedAt).getTime(),
+                                            new Date(statusUpdatedSince),
+                                            new Date(statusUpdatedSince).getTime()
+                                        ) || new Date(updatedAt).getTime() > new Date(statusUpdatedSince).getTime()
                                 ),
-                                // eslint-disable-next-line no-undefined -- unset inscriptionId
-                                inscriptionId: undefined,
-                            })),
                             // eslint-disable-next-line no-undefined -- unset sessionId
                             sessionId: undefined,
                             // eslint-disable-next-line no-undefined -- renamed to inscriptions
