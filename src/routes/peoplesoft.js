@@ -32,6 +32,7 @@ const respondToPeopleSoft = (res, data) =>
  *     tags: [Formations]
  *     description: Liste des <strong>formations</strong> proposées par le CEP avec les <strong>sessions</strong> de chaque formation et les <strong>inscriptions</strong> dans chaque session.
  *       <br>Le filtre par date de dernière modification du statut d'inscription <strong>statusUpdatedSince</strong> retourne toutes les inscriptions qui ont été créées ou modifiées après la date du filtre.
+ *       <br>Pour le premier appel de PeopleSoft (juillet 2022), ce filtre doit être vide, pour que le système retourne toutes les inscriptions.
  *       <br>Ce filtre est appliqué <em>uniquement</em> sur les <strong>inscriptions</strong>.
  *       <br>Toutes les <strong>formations</strong> <em>non-cachées</em> et leurs <strong>sessions</strong> <em>non-cachées</em> sont toujours retournées, même s'il n'y a aucune <strong>inscription</strong> dedans.
  *       <br>Si une <strong>formation</strong> n'est plus retournée, elle a probablement été cachée/archivée/supprimée.
@@ -43,12 +44,13 @@ const respondToPeopleSoft = (res, data) =>
  *       - name: X-Former22-API-Key
  *         in: header
  *         required: false
+ *         description: "La clé API fournie par le CEP. <strong>Format</strong> : 066775dba16dae057a8247e83864f93c71e9"
  *         schema:
  *           type: string
  *       - name: statusUpdatedSince
  *         in: query
  *         required: false
- *         description: ISO Date format, UTC, e.g. 2022-06-22T21:15:21.000Z
+ *         description: "ISO Date, UTC. <strong>Format</strong> : 2022-06-22T21:15:21.000Z"
  *         schema:
  *           type: string
  *     responses:

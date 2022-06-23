@@ -293,3 +293,38 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         return []
     }
 }
+
+const biologyGrades = [
+    { studentId: 54, grade: 4 },
+    { studentId: 32, grade: 4 },
+    { studentId: 1616, grade: 4 },
+    { studentId: 1616, grade: 2 },
+    { studentId: 54, grade: 6 },
+    { studentId: 54, grade: 5 },
+]
+
+Object.entries(
+    biologyGrades.reduce(
+        (gradesByStudentId, { studentId, grade }) => ({
+            ...gradesByStudentId,
+            [studentId]: [...(gradesByStudentId[studentId] ?? []), grade],
+        }),
+        {}
+    )
+)
+    .map(([studentId, grades]) => ({
+        studentId,
+        averageGrade: grades.reduce((a, b) => a + b, 0) / grades.length,
+    }))
+    .sort(({ averageGrade: a }, { averageGrade: b }) => a - b)
+
+Object.keys(
+    biologyGrades
+        .filter(
+            ({ studentId }) =>
+                !biologyGrades.some(
+                    ({ studentId: foundStudentId, grade }) => foundStudentId === studentId && grade === 2
+                )
+        )
+        .reduce((acc, { studentId }) => ({ ...acc, [studentId]: true }), {})
+).map((studentId) => Number(studentId))

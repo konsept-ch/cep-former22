@@ -11,19 +11,19 @@ components:
       properties:
         id:
           type: string
-          description: L'UUID de la formation, généré automatiquement lors de sa création par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
+          description: L'UUID de la formation, généré automatiquement lors de sa création par Claroline, e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0
         code:
           type: string
-          description: Le code de la formation, saisi par le CEP dans Claroline (e.g. ACCESS)
+          description: Le code de la formation, saisi par le CEP dans Claroline, e.g. ACCESS
         name:
           type: string
-          description: 'Le nom complet de la formation (e.g. Access : bien débuter avec les bases de données)'
+          description: 'Le nom complet de la formation, e.g. Access : bien débuter avec les bases de données'
         isActive:
           type: boolean
           description: Si la formation est active (true/false)
         creationDate:
           type: string
-          description: La date de création (en ISO) de la formation (e.g. 2021-05-31T14:33:08.000Z)
+          description: La date de création (en ISO) de la formation, e.g. 2021-05-31T14:33:08.000Z
         typeStage:
           type: string
           description: Le type stage de la formation ('Attestation', 'Certificat', 'Autre')
@@ -40,8 +40,8 @@ components:
           type: boolean
           description: Si la formation est cyclique, répétée dans le temps, comme Mesure d'Urgence (true/false)
         durationHours:
-          type: string
-          description: La durée en heures de chaque session, saisi au niveau de la formation (e.g. 11.25)
+          type: number
+          description: La durée en heures de chaque session, saisi au niveau de la formation (nombre décimal), e.g. 11.25
         summary:
           type: string
           description: Résumé (description courte) de la formation
@@ -92,7 +92,27 @@ components:
       properties:
         id:
           type: string
-          description: L'UUID d'une session, généré automatiquement lors de sa création par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
+          description: L'UUID de la session, généré automatiquement lors de sa création par Claroline, e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0
+        code:
+          type: string
+          description: Le code de la session, saisi par le CEP dans Claroline, e.g. ACCESS/22/01
+        creationDate:
+          type: string
+          description: La date de création (en ISO) de la session, e.g. 2021-07-21T09:24:30.000Z
+        eventDates:
+          type: array
+          description: Dates éparses - la liste de toutes les dates (en ISO) de séances de la session, e.g. ["2022-09-02T06:30:00.000Z", "2022-09-16T06:30:00.000Z"]
+          items:
+            type: string
+        maxParticipants:
+          type: number
+          description: La limite du maximum nombre de participants dans la session (nombre entier), e.g. 10
+        sessionFormat:
+          type: string
+          description: Le format de la session ('Présentiel', 'Visioconférence', 'Mixte', 'E-learning')
+        sessionLocation:
+          type: string
+          description: Le lieu de la session ('Lausanne', 'Hors-Lausanne')
         inscriptions:
           type: array
           description: Toutes les inscriptions dans la session qui ont été modifiés depuis la date du filtre statusUpdatedSince
@@ -107,7 +127,16 @@ components:
       properties:
         id:
           type: string
-          description: L'UUID d'une inscription, généré automatiquement lors de sa création par Claroline (e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0)
+          description: L'UUID de l'inscription, généré automatiquement lors de sa création par Claroline, e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0
+        status:
+          type: string
+          description: Le statut de l'inscription, géré dans Claroline et dans Former22 ('En attente', 'À traiter par RH', 'Réfusée par RH', 'Entrée Web', 'Acceptée par CEP', 'Refusée par CEP', 'Invitée', 'Proposée', 'Participation', 'Participation Partielle', 'Non-participation', 'Annulée', 'Écartée')
+        statusUpdatedAt:
+          type: string
+          description: La date (en ISO) de la dernière modification du statut, e.g. 2022-05-31T02:03:05.000Z
+        inscriptionDate:
+          type: string
+          description: La date (en ISO) de la création de l'inscription, e.g. 2022-03-02T00:01:13.000Z
       # example:
       #   id: 01c292b5-43a4-4c59-9619-33a8309cdbf0
       #   code: ACCESS
