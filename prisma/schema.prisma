@@ -5491,16 +5491,16 @@ model former22_session {
 }
 
 model former22_log {
-  id                Int     @id @default(autoincrement())
-  logId             String? @db.VarChar(255)
-  userEmail         String? @db.VarChar(255)
-  entityType        String? @db.VarChar(255)
-  entityName        String? @db.Text
-  entityId          String? @db.VarChar(255)
-  actionDescription String? @db.Text
-  dateAndTime       BigInt?
-  actionStatus      String? @db.VarChar(255)
-  actionName        String? @db.Text
+  id                Int       @id @default(autoincrement())
+  logId             String?   @db.VarChar(255)
+  userEmail         String?   @db.VarChar(255)
+  entityType        String?   @db.VarChar(255)
+  entityName        String?   @db.Text
+  entityId          String?   @db.VarChar(255)
+  actionDescription String?   @db.Text
+  dateAndTime       DateTime? @db.DateTime(0)
+  actionStatus      String?   @db.VarChar(255)
+  actionName        String?   @db.Text
 }
 
 model former22_user {
@@ -5512,7 +5512,7 @@ model former22_organization {
   id                          Int     @id @default(autoincrement())
   organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
   billingMode                 String? @db.Text
-  dailyRate                   Int?
+  dailyRate                   Float?
   flyersCount                 Int?
   phone                       String? @db.Text
   addressTitle                String? @db.Text
