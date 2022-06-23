@@ -80,8 +80,6 @@ createService(
         const { statusUpdatedSince, apitoken } = req.query
         const token = req.header(PEOPLESOFT_TOKEN) ?? apitoken
 
-        console.log('statusUpdatedSince', statusUpdatedSince)
-
         if (token == null) {
             respondToPeopleSoft(res, `Vous devez passer le header ${PEOPLESOFT_TOKEN}`)
         } else {
@@ -186,13 +184,8 @@ createService(
                                 }))
                                 .filter(
                                     ({ updatedAt }) =>
-                                        console.log(
-                                            process.env.TZ,
-                                            new Date(updatedAt),
-                                            new Date(updatedAt).getTime(),
-                                            new Date(statusUpdatedSince),
-                                            new Date(statusUpdatedSince).getTime()
-                                        ) || new Date(updatedAt).getTime() > new Date(statusUpdatedSince).getTime()
+                                        statusUpdatedSince == null ||
+                                        new Date(updatedAt).getTime() >= new Date(statusUpdatedSince).getTime()
                                 ),
                             // eslint-disable-next-line no-undefined -- unset sessionId
                             sessionId: undefined,
@@ -209,7 +202,8 @@ createService(
                     // const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
                     const filteredCoursesData = fullCoursesData
 
-                    // TODO sessions - dates only, not hours
+                    // TODO sessions - dates only, not hours?
+                    // maybe better to return everything, in order to avoid timezone confusion?
 
                     // note: we rename some fields here for clarity and consistency
                     const renamedFieldsCoursesData = filteredCoursesData.map(
@@ -289,8 +283,6 @@ createService(
                             ),
                         })
                     )
-
-                    // lastStatusChangeDate
 
                     respondToPeopleSoft(res, renamedFieldsCoursesData ?? 'Aucun cours trouvé')
                 }
