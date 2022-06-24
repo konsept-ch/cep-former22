@@ -39,7 +39,7 @@ const respondToPeopleSoft = (res, data) =>
  *       <br>Si une <strong>session</strong> n'est plus retournée, elle (ou sa formation parente) a probablement été cachée/archivée/supprimée.
  *       <br>Si une <strong>inscription</strong> n'est plus retournée, elle a probablement été annulée ou sa session parente (ou sa formation parente) a probablement été cachée/archivée/supprimée.
  *       <br>Si une <strong>formation</strong> ou <strong>session</strong> a été renommée, normalement son <strong>id</strong> reste le même.
- *       <br>Quand une <strong>inscription</strong> est annulée et ensuite elle est recréée (même <strong>utilisateur</strong> et même <strong>session</strong>), l'<strong>id</strong> de la nouvelle <strong>inscription</strong> est <em>différent</em>.
+ *       <br>Quand une <strong>inscription</strong> est annulée puis recréée (même <strong>utilisateur</strong> et même <strong>session</strong>), l'<strong>id</strong> de la nouvelle <strong>inscription</strong> est <em>différent</em>.
  *     parameters:
  *       - name: X-Former22-API-Key
  *         in: header
