@@ -5498,9 +5498,9 @@ model former22_log {
   entityName        String?   @db.Text
   entityId          String?   @db.VarChar(255)
   actionDescription String?   @db.Text
-  dateAndTime       DateTime? @db.DateTime(0)
   actionStatus      String?   @db.VarChar(255)
   actionName        String?   @db.Text
+  dateAndTime       DateTime? @default(now()) @db.DateTime(0)
 }
 
 model former22_user {
