@@ -6,7 +6,7 @@ import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, getCurrentDateTimeInMysqlFormat, getLogDescriptions, LOG_TYPES } from '../utils'
+import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
 import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,

@@ -6,8 +6,6 @@ import { winstonLogger } from './winston'
 // for testing/development purposes only
 export const delay = (ms) => new Promise((res) => setTimeout(res, ms))
 
-export const getCurrentDateTimeInMysqlFormat = () => new Date().toISOString().slice(0, 19)
-
 export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }) => {
     const date = dateObject ?? (dateString ? new Date(dateString) : new Date())
     const getDay = () => (date.getDate() < 10 ? `0${date.getDate()}` : date.getDate())
