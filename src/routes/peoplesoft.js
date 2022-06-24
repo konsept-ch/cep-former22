@@ -32,14 +32,14 @@ const respondToPeopleSoft = (res, data) =>
  *     tags: [Formations]
  *     description: Liste des <strong>formations</strong> proposées par le CEP avec les <strong>sessions</strong> de chaque formation et les <strong>inscriptions</strong> dans chaque session.
  *       <br>Le filtre par date de dernière modification du statut d'inscription <strong>statusUpdatedSince</strong> retourne toutes les inscriptions qui ont été créées ou modifiées après la date du filtre.
- *       <br>Pour le premier appel de PeopleSoft (juillet 2022), ce filtre doit être vide, pour que le système retourne toutes les inscriptions.
+ *       <br>Si le filtre est vide, le système retourne toutes les inscriptions.
  *       <br>Ce filtre est appliqué <em>uniquement</em> sur les <strong>inscriptions</strong>.
  *       <br>Toutes les <strong>formations</strong> <em>non-cachées</em> et leurs <strong>sessions</strong> <em>non-cachées</em> sont toujours retournées, même s'il n'y a aucune <strong>inscription</strong> dedans.
  *       <br>Si une <strong>formation</strong> n'est plus retournée, elle a probablement été cachée/archivée/supprimée.
  *       <br>Si une <strong>session</strong> n'est plus retournée, elle (ou sa formation parente) a probablement été cachée/archivée/supprimée.
  *       <br>Si une <strong>inscription</strong> n'est plus retournée, elle a probablement été annulée ou sa session parente (ou sa formation parente) a probablement été cachée/archivée/supprimée.
  *       <br>Si une <strong>formation</strong> ou <strong>session</strong> a été renommée, normalement son <strong>id</strong> reste le même.
- *       <br>Quand une <strong>inscription</strong> est annulée et ensuite elle est refaite (même <strong>utilisateur</strong> et même <strong>session</strong>), l'<strong>id</strong> de la nouvelle <strong>inscription</strong> est <em>différent</em>.
+ *       <br>Quand une <strong>inscription</strong> est annulée et ensuite elle est recréée (même <strong>utilisateur</strong> et même <strong>session</strong>), l'<strong>id</strong> de la nouvelle <strong>inscription</strong> est <em>différent</em>.
  *     parameters:
  *       - name: X-Former22-API-Key
  *         in: header
