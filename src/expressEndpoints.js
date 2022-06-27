@@ -754,6 +754,24 @@ export const generateEndpoints = () => {
         },
         { entityType: LOG_TYPES.INVOICE }
     )
+
+    createService(
+        'post',
+        '/invoice/biannual',
+        async (req, res) => {
+            const inscriptions = await fetchInscriptionsWithStatuses()
+
+            console.log(inscriptions)
+
+            res.json('La facturation semestrielle a été créée')
+
+            return {
+                entityName: 'Biannual factures',
+                actionName: 'Create biannual factures',
+            }
+        },
+        { entityType: LOG_TYPES.INVOICE }
+    )
     // invoices END
 
     // logs START
