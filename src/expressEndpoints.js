@@ -232,14 +232,33 @@ export const generateEndpoints = () => {
     createService('get', '/admins', async (req, res) => {
         const usersPrisma = await prisma.claro_user.findMany({
             where: {
-                is_removed: false,
-                claro_user_role: {
-                    some: {
-                        claro_role: {
-                            name: 'ROLE_ADMIN',
+                OR: [
+                    {
+                        is_removed: false,
+                        claro_user_role: {
+                            some: {
+                                claro_role: {
+                                    name: 'ROLE_ADMIN',
+                                },
+                            },
                         },
                     },
-                },
+                    {
+                        claro_user_group: {
+                            some: {
+                                claro_group: {
+                                    claro_group_role: {
+                                        some: {
+                                            claro_role: {
+                                                name: 'ROLE_ADMIN',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ],
             },
             select: {
                 id: true,
