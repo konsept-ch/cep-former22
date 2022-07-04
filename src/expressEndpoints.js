@@ -713,7 +713,7 @@ export const generateEndpoints = () => {
 
     createService(
         'delete',
-        '/invoice/:id',
+        '/invoice/direct/:id',
         async (req, res) => {
             const { id } = req.params
 
@@ -734,7 +734,7 @@ export const generateEndpoints = () => {
 
     createService(
         'put',
-        '/invoice/:id',
+        '/invoice/direct/:id',
         async (req, res) => {
             const invoiceData = req.body
             const { id } = req.params
