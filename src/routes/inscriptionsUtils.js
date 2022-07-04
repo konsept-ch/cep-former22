@@ -3,20 +3,20 @@ import { prisma } from '..'
 export const FINAL_STATUSES = {
     ANNULEE: 'Annulée',
     ECARTEE: 'Écartée',
+    PARTICIPATION: 'Participation',
+    PARTICIPATION_PARTIELLE: 'Participation Partielle',
+    NON_PARTICIPATION: 'Non-participation',
+    REFUSEE_PAR_RH: 'Réfusée par RH',
+    REFUSEE_PAR_CEP: 'Refusée par CEP',
 }
 
 export const STATUSES = {
     EN_ATTENTE: 'En attente',
     A_TRAITER_PAR_RH: 'À traiter par RH',
-    REFUSEE_PAR_RH: 'Réfusée par RH',
     ENTREE_WEB: 'Entrée Web',
     ACCEPTEE_PAR_CEP: 'Acceptée par CEP',
-    REFUSEE_PAR_CEP: 'Refusée par CEP',
     INVITEE: 'Invitée',
     PROPOSEE: 'Proposée',
-    PARTICIPATION: 'Participation',
-    PARTICIPATION_PARTIELLE: 'Participation Partielle',
-    NON_PARTICIPATION: 'Non-participation',
     ...FINAL_STATUSES,
 }
 
