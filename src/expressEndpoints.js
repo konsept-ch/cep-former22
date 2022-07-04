@@ -633,7 +633,7 @@ export const generateEndpoints = () => {
     // formateurs END
 
     // invoices START
-    createService('get', '/invoices', async (req, res) => {
+    createService('get', '/invoices/direct', async (req, res) => {
         const invoicesPrisma = await prisma.former22_invoice.findMany({
             include: {
                 claro_cursusbundle_course_session_user: {
