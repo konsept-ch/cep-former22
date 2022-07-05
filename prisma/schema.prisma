@@ -5190,8 +5190,8 @@ model ujm_question_grid {
   id           Int           @id @default(autoincrement())
   question_id  Int?          @unique(map: "UNIQ_2412DE371E27F6BF")
   sumMode      String        @db.VarChar(255)
-  rows         Int
-  columns      Int
+  grid_rows    Int
+  grid_columns Int
   borderWidth  Int
   borderColor  String        @db.VarChar(255)
   penalty      Float
@@ -5512,7 +5512,7 @@ model former22_organization {
   id                          Int     @id @default(autoincrement())
   organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
   billingMode                 String? @db.Text
-  dailyRate                   Float?
+  dailyRate                   Float?  @db.Float
   flyersCount                 Int?
   phone                       String? @db.Text
   addressTitle                String? @db.Text
