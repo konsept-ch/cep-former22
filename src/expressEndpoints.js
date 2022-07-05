@@ -8,8 +8,8 @@ import { prisma } from '.'
 import { getTemplatePreviews } from './routes/templatesUtils'
 import {
     fetchInscriptionsWithStatuses,
-    getUserProfession,
-    getProfessionFacetsValues,
+    // getUserProfession,
+    // getProfessionFacetsValues,
     parsePhoneForSms,
 } from './routes/inscriptionsUtils'
 
@@ -155,14 +155,11 @@ export const generateEndpoints = () => {
         })
 
         const usersSettings = await prisma.former22_user.findMany()
-        const professionFacetsValues = await getProfessionFacetsValues()
+        // const professionFacetsValues = await getProfessionFacetsValues()
 
         const enrichedUsersData = users.map((current) => {
             const currentUserSettings = usersSettings.find(({ userId }) => userId === current.uuid)
-            const currentUserProfession = getUserProfession({
-                userId: current.id,
-                professionFacetsValues,
-            })
+            const currentUserProfession = ''
 
             let enrichedUser = {
                 id: current.uuid,

@@ -198,7 +198,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         return mainOrganization?.code
     }
 
-    const professionFacetsValues = await getProfessionFacetsValues()
+    // const professionFacetsValues = await getProfessionFacetsValues()
 
     if (typeof sessionsWithInscriptions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
         const inscriptionsToFetch = [...sessionsWithInscriptions, ...inscriptionCancellations].map(
@@ -266,10 +266,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     organizationCode: inscription.claro_user.user_organization
                                         ? getOrganizationCode(inscription.claro_user.user_organization)
                                         : null,
-                                    profession: await getUserProfession({
-                                        userId: inscription.claro_user.id,
-                                        professionFacetsValues,
-                                    }),
+                                    profession: '',
                                 },
                             }
                         })()
