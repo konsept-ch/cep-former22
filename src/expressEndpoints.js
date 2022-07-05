@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { customAlphabet } from 'nanoid'
+import Papa from 'papaparse'
 import { callApi, CLAROLINE_TOKEN } from './callApi'
 import { sendEmail } from './sendEmail'
 import { sendSms } from './sendSms'
@@ -728,6 +729,96 @@ export const generateEndpoints = () => {
         )
 
         res.json(invoices)
+    })
+
+    createService('get', '/invoices/cresus/:invoiceId', async (req, res) => {
+        const { invoiceId } = req.params
+
+        const invoicePrisma = await prisma.former22_invoice.findUnique({
+            where: { invoiceId },
+            include: {
+                claro_cursusbundle_course_session_user: {
+                    include: {
+                        claro_user: {
+                            include: {
+                                user_organization: {
+                                    where: {
+                                        is_main: true,
+                                    },
+                                    select: {
+                                        claro__organization: {
+                                            select: {
+                                                name: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        const { claro_cursusbundle_course_session_user: inscription } = invoicePrisma
+        const { claro_user } = inscription
+        const { claro__organization } = claro_user.user_organization[0]
+
+        const userPrisma = await prisma.claro_user.findUnique({
+            where: { uuid: claro_user.uuid },
+            include: {
+                user_location: {
+                    select: {
+                        claro__location: true,
+                    },
+                },
+                claro_cursusbundle_course_session_user: true,
+            },
+        })
+
+        console.log(userPrisma)
+
+        const userData = await callApi({ req, path: `profile/${claro_user.username}` })
+
+        let userCivility = ''
+
+        if (userData.user.profile) {
+            userData.facets.forEach(({ sections }) =>
+                sections.forEach(({ fields }) =>
+                    fields.forEach(({ name, id }) => {
+                        if (name.includes('civilit')) {
+                            if (userData.user.profile[id]) {
+                                userCivility = userData.user.profile[id]
+                            }
+                        }
+                    })
+                )
+            )
+        }
+
+        const clientData = [
+            {
+                Numéro: userPrisma.uuid,
+                Firme: claro__organization.name,
+                Titre: userCivility,
+                Nom: userPrisma.last_name,
+                Prénom: userPrisma.first_name,
+                'Adresse 1': userPrisma.user_location?.claro__location?.address_street1,
+                'Adresse 2': userPrisma.user_location?.claro__location?.address_street2,
+                NPA: userPrisma.user_location?.claro__location?.address_postal_code,
+                Localité: userPrisma.user_location?.claro__location?.address_city,
+                Pays: 'CH',
+                'Tel Prof': '',
+                Natel: userPrisma.phone,
+                'E-mail': userPrisma.mail,
+                Internet: '',
+                Notes: '',
+            },
+        ]
+
+        const csvArray = [{ csv: Papa.unparse(clientData), fileName: 'Données client' }]
+
+        res.json(csvArray)
     })
 
     createService(
