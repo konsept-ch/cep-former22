@@ -776,8 +776,6 @@ export const generateEndpoints = () => {
             },
         })
 
-        console.log(userPrisma)
-
         const userData = await callApi({ req, path: `profile/${claro_user.username}` })
 
         let userCivility = ''
