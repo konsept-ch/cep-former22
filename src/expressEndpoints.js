@@ -785,15 +785,15 @@ export const generateEndpoints = () => {
         const clientData = [
             {
                 Numéro: invoiceNumber,
-                Code: '', // check
+                Code: '',
                 Firme: mainOrganizationName,
                 Titre: userCivility,
                 Nom: userPrisma.last_name,
                 Prénom: userPrisma.first_name,
                 'Adresse 1': userPrisma.user_location?.claro__location?.address_street1,
                 'Adresse 2': userPrisma.user_location?.claro__location?.address_street2,
-                'Adresse 3': '', // check
-                'Adresse 4': '', // check
+                'Adresse 3': '',
+                'Adresse 4': '',
                 NPA: userPrisma.user_location?.claro__location?.address_postal_code,
                 Localité: userPrisma.user_location?.claro__location?.address_city,
                 Pays: 'CH',
@@ -802,10 +802,10 @@ export const generateEndpoints = () => {
                 'E-mail': userPrisma.mail,
                 Internet: '',
                 Notes: '',
-                'HT-TTC': '', // check
-                Exonéré: '', // check
-                Export: '', // check
-                Cpt: '', // check
+                'HT-TTC': '',
+                Exonéré: '',
+                Export: '',
+                Cpt: '',
             },
         ]
 
@@ -827,9 +827,11 @@ export const generateEndpoints = () => {
             },
         ]
 
+        const date = new Date().toJSON().slice(0, 10)
+
         const csvArray = [
-            { csv: Papa.unparse(clientData), fileName: 'Données client' },
-            { csv: Papa.unparse(articleData), fileName: 'Données article' },
+            { csv: Papa.unparse(clientData), fileName: `Données client ${date}` },
+            { csv: Papa.unparse(articleData), fileName: `Données article ${date}` },
         ]
 
         res.json(csvArray)
