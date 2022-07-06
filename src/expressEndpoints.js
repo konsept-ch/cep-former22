@@ -796,7 +796,7 @@ export const generateEndpoints = () => {
 
         const clientData = [
             {
-                Numéro: userPrisma.uuid,
+                Numéro: invoicePrisma.id,
                 // Code
                 Firme: claro__organization.name,
                 Titre: userCivility,
