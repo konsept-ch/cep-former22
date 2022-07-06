@@ -797,12 +797,15 @@ export const generateEndpoints = () => {
         const clientData = [
             {
                 Numéro: userPrisma.uuid,
+                // Code
                 Firme: claro__organization.name,
                 Titre: userCivility,
                 Nom: userPrisma.last_name,
                 Prénom: userPrisma.first_name,
                 'Adresse 1': userPrisma.user_location?.claro__location?.address_street1,
                 'Adresse 2': userPrisma.user_location?.claro__location?.address_street2,
+                // Adresse 3
+                // Adresse 4
                 NPA: userPrisma.user_location?.claro__location?.address_postal_code,
                 Localité: userPrisma.user_location?.claro__location?.address_city,
                 Pays: 'CH',
@@ -811,6 +814,10 @@ export const generateEndpoints = () => {
                 'E-mail': userPrisma.mail,
                 Internet: '',
                 Notes: '',
+                // HT-TTC
+                // Exonéré
+                // Export
+                // Cpt
             },
         ]
 
