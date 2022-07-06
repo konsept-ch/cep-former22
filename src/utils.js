@@ -171,3 +171,25 @@ export const getSessionAddress = ({ sessions, wantedSessionId }) => {
 
     return location
 }
+
+export const getUserCivility = async ({ req, userName, defaultCivility }) => {
+    const userData = await callApi({ req, path: `profile/${userName}` })
+
+    let userCivility = defaultCivility
+
+    if (userData.user.profile) {
+        userData.facets.forEach(({ sections }) =>
+            sections.forEach(({ fields }) =>
+                fields.forEach(({ name, id }) => {
+                    if (name.includes('civilit')) {
+                        if (userData.user.profile[id]) {
+                            userCivility = userData.user.profile[id]
+                        }
+                    }
+                })
+            )
+        )
+    }
+
+    return userCivility
+}

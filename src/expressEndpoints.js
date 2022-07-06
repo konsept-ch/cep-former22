@@ -4,7 +4,7 @@ import Papa from 'papaparse'
 import { callApi, CLAROLINE_TOKEN } from './callApi'
 import { sendEmail } from './sendEmail'
 import { sendSms } from './sendSms'
-import { createService, delay, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
+import { createService, delay, formatDate, getLogDescriptions, LOG_TYPES, getUserCivility } from './utils'
 import { prisma } from '.'
 import { getTemplatePreviews } from './routes/templatesUtils'
 import {
@@ -755,14 +755,18 @@ export const generateEndpoints = () => {
                                 },
                             },
                         },
+                        claro_cursusbundle_course_session: true,
                     },
                 },
             },
         })
 
-        const { claro_cursusbundle_course_session_user: inscription } = invoicePrisma
-        const { claro_user } = inscription
-        const { claro__organization } = claro_user.user_organization[0]
+        const {
+            claro_cursusbundle_course_session_user: { claro_user, claro_cursusbundle_course_session: session },
+            id: invoiceNumber,
+        } = invoicePrisma
+
+        const mainOrganizationName = claro_user.user_organization[0]?.['claro__organization'].name
 
         const userPrisma = await prisma.claro_user.findUnique({
             where: { uuid: claro_user.uuid },
@@ -776,36 +780,20 @@ export const generateEndpoints = () => {
             },
         })
 
-        const userData = await callApi({ req, path: `profile/${claro_user.username}` })
-
-        let userCivility = ''
-
-        if (userData.user.profile) {
-            userData.facets.forEach(({ sections }) =>
-                sections.forEach(({ fields }) =>
-                    fields.forEach(({ name, id }) => {
-                        if (name.includes('civilit')) {
-                            if (userData.user.profile[id]) {
-                                userCivility = userData.user.profile[id]
-                            }
-                        }
-                    })
-                )
-            )
-        }
+        const userCivility = await getUserCivility({ req, userName: claro_user.username, defaultCivility: '' })
 
         const clientData = [
             {
-                Numéro: invoicePrisma.id,
-                // Code
-                Firme: claro__organization.name,
+                Numéro: invoiceNumber,
+                Code: '', // check
+                Firme: mainOrganizationName,
                 Titre: userCivility,
                 Nom: userPrisma.last_name,
                 Prénom: userPrisma.first_name,
                 'Adresse 1': userPrisma.user_location?.claro__location?.address_street1,
                 'Adresse 2': userPrisma.user_location?.claro__location?.address_street2,
-                // Adresse 3
-                // Adresse 4
+                'Adresse 3': '', // check
+                'Adresse 4': '', // check
                 NPA: userPrisma.user_location?.claro__location?.address_postal_code,
                 Localité: userPrisma.user_location?.claro__location?.address_city,
                 Pays: 'CH',
@@ -814,14 +802,35 @@ export const generateEndpoints = () => {
                 'E-mail': userPrisma.mail,
                 Internet: '',
                 Notes: '',
-                // HT-TTC
-                // Exonéré
-                // Export
-                // Cpt
+                'HT-TTC': '', // check
+                Exonéré: '', // check
+                Export: '', // check
+                Cpt: '', // check
             },
         ]
 
-        const csvArray = [{ csv: Papa.unparse(clientData), fileName: 'Données client' }]
+        const articleData = [
+            {
+                '`Numéro': invoiceNumber,
+                '`CodeTVADFN': '',
+                '`CodePersonnel': 'Service',
+                '`CodeTVAAchat': '',
+                '`CodeTVAVente': '',
+                '`CompteCrédit': '',
+                '`CompteDébit': '',
+                '`Désignation': session.course_name,
+                '`PrixVenteCatég0': 'CH',
+                '`PrixVenteCatég1': session.price,
+                '`QuantitéParDéfaut': session.entity_order,
+                '`RabaisSurArticle': '',
+                '`Unité': '',
+            },
+        ]
+
+        const csvArray = [
+            { csv: Papa.unparse(clientData), fileName: 'Données client' },
+            { csv: Papa.unparse(articleData), fileName: 'Données article' },
+        ]
 
         res.json(csvArray)
     })
