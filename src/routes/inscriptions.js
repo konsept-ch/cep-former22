@@ -11,6 +11,7 @@ import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,
     parsePhoneForSms,
+    REGISTRATION_TYPES,
     STATUSES,
     transformFlagsToStatus,
 } from './inscriptionsUtils'
@@ -27,6 +28,34 @@ createService(
 
         if (inscriptions.length > 0) {
             res.json(inscriptions)
+        } else {
+            res.json('Aucunes inscriptions trouvées')
+        }
+    },
+    null,
+    inscriptionsRouter
+)
+
+createService(
+    'get',
+    '/annulations',
+    async (req, res) => {
+        const inscriptions = await fetchInscriptionsWithStatuses()
+
+        const inscriptionCancellationsRecords = inscriptions.reduce((acc, inscription) => {
+            if (inscription) {
+                if (inscription.type === REGISTRATION_TYPES.CANCELLATION) {
+                    return [...acc, inscription]
+                } else {
+                    return [...acc]
+                }
+            } else {
+                return [...acc]
+            }
+        }, [])
+
+        if (inscriptionCancellationsRecords.length > 0) {
+            res.json(inscriptionCancellationsRecords)
         } else {
             res.json('Aucunes inscriptions trouvées')
         }

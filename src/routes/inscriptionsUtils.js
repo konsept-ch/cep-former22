@@ -20,12 +20,12 @@ export const STATUSES = {
     ...FINAL_STATUSES,
 }
 
-const registrationTypes = {
+export const REGISTRATION_TYPES = {
     CANCELLATION: 'cancellation',
 }
 
 export const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
-    if (registrationType === registrationTypes.CANCELLATION) {
+    if (registrationType === REGISTRATION_TYPES.CANCELLATION) {
         return STATUSES.ANNULEE
     } else if (!confirmed) {
         return STATUSES.PROPOSEE
@@ -158,7 +158,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
               ...current.claro_cursusbundle_course_session,
               claro_cursusbundle_course_session_user: [
                   {
-                      registration_type: registrationTypes.CANCELLATION,
+                      registration_type: REGISTRATION_TYPES.CANCELLATION,
                       validated: false,
                       confirmed: false,
                       uuid: current.uuid,
