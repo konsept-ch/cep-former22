@@ -472,24 +472,78 @@ export const generateEndpoints = () => {
                             capacity: true,
                         },
                     },
+                    claro_cursusbundle_session_event: {
+                        select: {
+                            claro_cursusbundle_session_event_user: {
+                                include: {
+                                    claro_user: {
+                                        select: {
+                                            first_name: true,
+                                            last_name: true,
+                                        },
+                                    },
+                                },
+                            },
+                            claro_cursusbundle_course_session: {
+                                select: {
+                                    claro_cursusbundle_session_event: {
+                                        include: {
+                                            claro_planned_object: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             })
 
             const events = eventsPrisma.map(
-                ({ entity_name, start_date, end_date, description, claro_location_room, uuid, ...rest }) => ({
-                    ...rest,
-                    id: uuid,
-                    name: entity_name,
-                    room: {
-                        id: claro_location_room?.uuid,
-                        name: claro_location_room?.event_name,
-                        description: claro_location_room?.description,
-                        capacity: claro_location_room?.capacity,
-                    },
-                    start: start_date,
-                    end: end_date,
+                ({
+                    entity_name,
+                    start_date,
+                    end_date,
                     description,
-                })
+                    claro_location_room,
+                    claro_cursusbundle_session_event,
+                    uuid,
+                    ...rest
+                }) => {
+                    let studentsCount
+                    let teachers
+
+                    if (claro_cursusbundle_session_event?.claro_cursusbundle_session_event_user) {
+                        const { claro_cursusbundle_session_event_user: users } = claro_cursusbundle_session_event
+
+                        studentsCount = users.filter(({ registration_type }) => registration_type === 'learner').length
+                        teachers = users
+                            .filter(({ registration_type }) => registration_type === 'tutor')
+                            .map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
+                    }
+
+                    const seances =
+                        claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_session_event
+                            ?.filter(({ claro_planned_object }) => claro_planned_object.entity_name !== entity_name)
+                            ?.map(({ claro_planned_object }) => claro_planned_object.entity_name)
+
+                    return {
+                        ...rest,
+                        id: uuid,
+                        name: entity_name,
+                        room: {
+                            id: claro_location_room?.uuid,
+                            name: claro_location_room?.event_name,
+                            description: claro_location_room?.description?.replace(/(<([^>]+)>)/gi, ''),
+                            capacity: claro_location_room?.capacity,
+                        },
+                        start: start_date,
+                        end: end_date,
+                        description: description?.replace(/(<([^>]+)>)/gi, ''),
+                        studentsCount,
+                        teachers,
+                        seances,
+                    }
+                }
             )
 
             res.json({ rooms, events })
