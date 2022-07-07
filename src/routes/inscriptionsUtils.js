@@ -8,10 +8,10 @@ export const FINAL_STATUSES = {
     NON_PARTICIPATION: 'Non-participation',
     REFUSEE_PAR_RH: 'Réfusée par RH',
     REFUSEE_PAR_CEP: 'Refusée par CEP',
+    EN_ATTENTE: 'En attente',
 }
 
 export const STATUSES = {
-    EN_ATTENTE: 'En attente',
     A_TRAITER_PAR_RH: 'À traiter par RH',
     ENTREE_WEB: 'Entrée Web',
     ACCEPTEE_PAR_CEP: 'Acceptée par CEP',
