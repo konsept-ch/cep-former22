@@ -25,9 +25,10 @@ createService(
     '/',
     async (req, res) => {
         const inscriptions = await fetchInscriptionsWithStatuses()
+        const participants = inscriptions.filter(({ type }) => type === REGISTRATION_TYPES.LEARNER)
 
-        if (inscriptions.length > 0) {
-            res.json(inscriptions)
+        if (participants.length > 0) {
+            res.json(participants)
         } else {
             res.json('Aucunes inscriptions trouvées')
         }

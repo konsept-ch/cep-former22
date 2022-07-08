@@ -22,6 +22,8 @@ export const STATUSES = {
 
 export const REGISTRATION_TYPES = {
     CANCELLATION: 'cancellation',
+    LEARNER: 'learner',
+    TUTOR: 'tutor',
 }
 
 export const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
