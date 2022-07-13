@@ -117,6 +117,11 @@ createService(
                                     max_users: true,
                                     claro_cursusbundle_course_session_user: {
                                         where: {
+                                            claro_user: {
+                                                mail: {
+                                                    contains: '@lausanne.ch',
+                                                },
+                                            },
                                             registration_type: 'learner',
                                         },
                                         select: {
