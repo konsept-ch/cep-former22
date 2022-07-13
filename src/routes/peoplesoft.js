@@ -233,7 +233,7 @@ createService(
                             codeCategory,
                             isCertifying: typeStage === 'Certificat', // TODO constant
                             isRecurrent,
-                            durationHours: session_days * 7.5 + session_hours,
+                            durationHours: session_days * 8 + session_hours,
                             summary,
                             sessions: sessions.map(
                                 ({
