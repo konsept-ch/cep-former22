@@ -195,6 +195,7 @@ createService(
                                 .filter(
                                     ({ updatedAt }) =>
                                         statusUpdatedSince == null ||
+                                        updatedAt == null ||
                                         new Date(updatedAt).getTime() >= new Date(statusUpdatedSince).getTime()
                                 ),
                             // eslint-disable-next-line no-undefined -- unset sessionId
