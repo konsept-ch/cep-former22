@@ -8,6 +8,11 @@ module.exports = {
             node_args: '--experimental-specifier-resolution=node',
             env: {
                 TZ: 'UTC',
+                NODE_ENV: 'development',
+            },
+            env_production: {
+                TZ: 'UTC',
+                NODE_ENV: 'production',
             },
         },
     ],
