@@ -115,7 +115,7 @@ components:
           description: Le lieu de la session ('Lausanne', 'Hors-Lausanne')
         inscriptions:
           type: array
-          description: Toutes les inscriptions dans la session qui ont été modifiés depuis la date du filtre statusUpdatedSince
+          description: Toutes les inscriptions dans la session qui ont un e-mail qui contient "@lausanne.ch" et qui ont été modifiées depuis la date du filtre statusUpdatedSince
           items:
             $ref: '#/components/schemas/Inscription'
     Inscription:
