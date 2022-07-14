@@ -119,9 +119,12 @@ createService(
                                     claro_cursusbundle_course_session_user: {
                                         where: {
                                             claro_user: {
-                                                mail: {
-                                                    contains: '@lausanne.ch',
-                                                },
+                                                OR: [
+                                                    '@lausanne.ch',
+                                                    '@tridel.ch',
+                                                    '@si-ren.ch',
+                                                    '@spsl-lausanne.ch',
+                                                ].map((emailDomain) => ({ mail: { contains: emailDomain } })),
                                             },
                                             registration_type: 'learner',
                                         },
