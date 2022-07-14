@@ -4,6 +4,7 @@ import convert from 'xml-js'
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
 import { createService } from '../utils'
 import { prisma } from '..'
+import { transformFlagsToStatus } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
@@ -272,8 +273,15 @@ createService(
                                         ({
                                             uuid: inscriptionId,
                                             registration_date,
-                                            inscriptionStatus,
-                                            updatedAt = null,
+                                            validated,
+                                            confirmed,
+                                            registration_type,
+                                            inscriptionStatus = transformFlagsToStatus({
+                                                validated,
+                                                confirmed,
+                                                registrationType: registration_type,
+                                            }),
+                                            updatedAt = registration_date,
                                             claro_user: { mail, uuid: userId },
                                             ...restInscriptionData
                                         }) => ({
