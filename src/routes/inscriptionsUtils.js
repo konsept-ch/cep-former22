@@ -120,6 +120,13 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             },
                         },
                     },
+                    claro_cursusbundle_course_session: {
+                        select: {
+                            claro_cursusbundle_course: {
+                                select: { uuid: true, course_name: true },
+                            },
+                        },
+                    },
                 },
             },
         },
@@ -149,6 +156,9 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                           course_name: true,
                           quota_days: true,
                           used_by_quotas: true,
+                          claro_cursusbundle_course: {
+                              select: { uuid: true, course_name: true },
+                          },
                       },
                   },
               },
@@ -156,20 +166,29 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
 
     const inscriptionCancellations = shouldFetchTutors
         ? []
-        : inscriptionCancellationsRecords.map((current) => ({
-              ...current.claro_cursusbundle_course_session,
-              claro_cursusbundle_course_session_user: [
-                  {
-                      registration_type: REGISTRATION_TYPES.CANCELLATION,
-                      validated: false,
-                      confirmed: false,
-                      uuid: current.uuid,
-                      inscription_uuid: current.inscription_uuid,
-                      registration_date: current.registration_date,
-                      claro_user: current.claro_user,
-                  },
-              ],
-          }))
+        : inscriptionCancellationsRecords.map((current) => {
+              const { claro_cursusbundle_course, ...sessionData } = current.claro_cursusbundle_course_session
+              return {
+                  ...sessionData,
+                  claro_cursusbundle_course_session_user: [
+                      {
+                          registration_type: REGISTRATION_TYPES.CANCELLATION,
+                          validated: false,
+                          confirmed: false,
+                          uuid: current.uuid,
+                          inscription_uuid: current.inscription_uuid,
+                          registration_date: current.registration_date,
+                          claro_user: current.claro_user,
+                          claro_cursusbundle_course_session: {
+                              claro_cursusbundle_course: {
+                                  uuid: claro_cursusbundle_course.uuid,
+                                  course_name: claro_cursusbundle_course.course_name,
+                              },
+                          },
+                      },
+                  ],
+              }
+          })
 
     const formatOrganizationsHierarchy = async (organizations) => {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
@@ -205,6 +224,13 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
 
     const professionFacetsValues = await getProfessionFacetsValues()
 
+    const coursesAdditionalData = await prisma.former22_course.findMany({
+        select: {
+            courseId: true,
+            coordinator: true,
+        },
+    })
+
     if (typeof sessionsWithInscriptions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
         const inscriptionsToFetch = [...sessionsWithInscriptions, ...inscriptionCancellations].map(
             ({
@@ -233,11 +259,18 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     where: { userId: inscription.claro_user.uuid },
                                 })) ?? {}
 
+                            const courseData = inscription.claro_cursusbundle_course_session.claro_cursusbundle_course
+
+                            const coordinator = coursesAdditionalData.find(
+                                ({ courseId }) => courseId === courseData.uuid
+                            )?.coordinator
+
                             return {
                                 id: inscription.uuid,
                                 inscriptionDate: inscription.registration_date,
                                 type: inscription.registration_type,
                                 deletedInscriptionUuid: inscription.inscription_uuid,
+                                coordinator,
                                 status:
                                     inscriptionStatusForId?.inscriptionStatus ??
                                     inscriptionStatusForIdWhenCancellation?.inscriptionStatus ??
@@ -252,6 +285,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     startDate: start_date,
                                     quotaDays: quota_days,
                                     isUsedForQuota: used_by_quotas,
+                                    courseName: courseData.course_name,
+                                    startYear: new Date(start_date).getFullYear(),
                                 },
                                 user: {
                                     firstName: inscription.claro_user.first_name,
