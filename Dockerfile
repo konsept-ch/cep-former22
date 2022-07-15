@@ -13,4 +13,4 @@ COPY . .
 
 RUN npx prisma generate
 
-CMD [ "npm", "start-prod" ]
+CMD [ "npm", "run start-prod" ]
