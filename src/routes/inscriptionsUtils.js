@@ -14,6 +14,7 @@ export const FINAL_STATUSES = {
 export const STATUSES = {
     A_TRAITER_PAR_RH: 'À traiter par RH',
     ENTREE_WEB: 'Entrée Web',
+    VALIDE_PAR_RH: 'Validée par RH',
     ACCEPTEE_PAR_CEP: 'Acceptée par CEP',
     INVITEE: 'Invitée',
     PROPOSEE: 'Proposée',
@@ -26,15 +27,32 @@ export const REGISTRATION_TYPES = {
     TUTOR: 'tutor',
 }
 
-export const transformFlagsToStatus = ({ validated, confirmed, registrationType }) => {
+export const transformFlagsToStatus = ({ validated, registrationType, hrValidationStatus, isHrValidationEnabled }) => {
     if (registrationType === REGISTRATION_TYPES.CANCELLATION) {
         return STATUSES.ANNULEE
-    } else if (!confirmed) {
-        return STATUSES.PROPOSEE
     } else if (!validated) {
-        return STATUSES.EN_ATTENTE
+        return STATUSES.REFUSEE_PAR_RH
+    } else if (isHrValidationEnabled) {
+        if (hrValidationStatus === 1) {
+            return STATUSES.REFUSEE_PAR_RH
+        } else if (hrValidationStatus === 2 || hrValidationStatus === 3) {
+            return STATUSES.VALIDE_PAR_RH
+        } else {
+            // if (hrValidationStatus === 0)
+            return STATUSES.A_TRAITER_PAR_RH
+        }
     } else {
         return STATUSES.ENTREE_WEB
+    }
+}
+
+export const getMainOrganization = (organizations) => {
+    if (organizations != null) {
+        const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+
+        return mainOrganization
+    } else {
+        return null
     }
 }
 
@@ -100,7 +118,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                 select: {
                     uuid: true,
                     validated: true,
-                    confirmed: true,
+                    status: true,
                     registration_date: true,
                     registration_type: true,
                     claro_user: {
@@ -115,7 +133,11 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             user_organization: {
                                 select: {
                                     is_main: true,
-                                    claro__organization: true,
+                                    claro__organization: {
+                                        include: {
+                                            claro_cursusbundle_quota: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -174,7 +196,6 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                       {
                           registration_type: REGISTRATION_TYPES.CANCELLATION,
                           validated: false,
-                          confirmed: false,
                           uuid: current.uuid,
                           inscription_uuid: current.inscription_uuid,
                           registration_date: current.registration_date,
@@ -210,12 +231,6 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         return await getHierarchy({ organization: mainOrganization })
     }
 
-    const getMainOrganization = (organizations) => {
-        const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
-
-        return mainOrganization
-    }
-
     const getOrganizationCode = (organizations) => {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
 
@@ -244,76 +259,90 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                 (async () => {
                     const allLearnersToFetchStatus = claro_cursusbundle_course_session_user?.map((inscription) =>
                         (async () => {
-                            const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
-                                where: { inscriptionId: inscription.uuid },
-                            })
-                            const inscriptionStatusForIdWhenCancellation =
-                                inscription.registration_type === 'cancellation'
-                                    ? await prisma.former22_inscription.findUnique({
-                                          where: { inscriptionId: inscription.inscription_uuid },
-                                      })
-                                    : null
+                            try {
+                                const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
+                                    where: { inscriptionId: inscription.uuid },
+                                })
+                                const inscriptionStatusForIdWhenCancellation =
+                                    inscription.registration_type === 'cancellation'
+                                        ? await prisma.former22_inscription.findUnique({
+                                              where: { inscriptionId: inscription.inscription_uuid },
+                                          })
+                                        : null
 
-                            const { shouldReceiveSms } =
-                                (await prisma.former22_user.findUnique({
-                                    where: { userId: inscription.claro_user.uuid },
-                                })) ?? {}
+                                const { shouldReceiveSms } =
+                                    (await prisma.former22_user.findUnique({
+                                        where: { userId: inscription.claro_user.uuid },
+                                    })) ?? {}
 
-                            const courseData = inscription.claro_cursusbundle_course_session.claro_cursusbundle_course
+                                const courseData =
+                                    inscription.claro_cursusbundle_course_session.claro_cursusbundle_course
 
-                            const coordinator = coursesAdditionalData.find(
-                                ({ courseId }) => courseId === courseData.uuid
-                            )?.coordinator
+                                const coordinator = coursesAdditionalData.find(
+                                    ({ courseId }) => courseId === courseData.uuid
+                                )?.coordinator
 
-                            return {
-                                id: inscription.uuid,
-                                inscriptionDate: inscription.registration_date,
-                                type: inscription.registration_type,
-                                deletedInscriptionUuid: inscription.inscription_uuid,
-                                coordinator,
-                                status:
-                                    inscriptionStatusForId?.inscriptionStatus ??
-                                    inscriptionStatusForIdWhenCancellation?.inscriptionStatus ??
-                                    transformFlagsToStatus({
-                                        validated: inscription.validated,
-                                        confirmed: inscription.confirmed,
-                                        registrationType: inscription.registration_type,
-                                    }),
-                                session: {
-                                    id: sessionUuid,
-                                    name: course_name,
-                                    startDate: start_date,
-                                    quotaDays: quota_days,
-                                    isUsedForQuota: used_by_quotas,
-                                    courseName: courseData.course_name,
-                                    startYear: new Date(start_date).getFullYear(),
-                                },
-                                user: {
-                                    firstName: inscription.claro_user.first_name,
-                                    lastName: inscription.claro_user.last_name,
-                                    email: inscription.claro_user.mail,
-                                    username: inscription.claro_user.username,
-                                    phone: inscription.claro_user.phone,
-                                    phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
-                                    userId: inscription.claro_user.uuid,
-                                    shouldReceiveSms,
-                                    hierarchy: inscription.claro_user.user_organization
-                                        ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)
-                                        : null,
-                                    organization: inscription.claro_user.user_organization
-                                        ? getMainOrganization(inscription.claro_user.user_organization)?.name
-                                        : null,
-                                    organizationId: inscription.claro_user.user_organization
-                                        ? getMainOrganization(inscription.claro_user.user_organization)?.uuid
-                                        : null,
-                                    organizationCode: inscription.claro_user.user_organization
-                                        ? getOrganizationCode(inscription.claro_user.user_organization)
-                                        : null,
-                                    profession: await getUserProfession({
-                                        userId: inscription.claro_user.id,
-                                        professionFacetsValues,
-                                    }),
-                                },
+                                const userMainOrganization = getMainOrganization(
+                                    inscription.claro_user.user_organization
+                                )
+
+                                const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
+
+                                return {
+                                    id: inscription.uuid,
+                                    inscriptionDate: inscription.registration_date,
+                                    type: inscription.registration_type,
+                                    deletedInscriptionUuid: inscription.inscription_uuid,
+                                    coordinator,
+                                    status:
+                                        inscriptionStatusForId?.inscriptionStatus ??
+                                        inscriptionStatusForIdWhenCancellation?.inscriptionStatus ??
+                                        transformFlagsToStatus({
+                                            validated: inscription.validated,
+                                            registrationType: inscription.registration_type,
+                                            hrValidationStatus: inscription.status,
+                                            isHrValidationEnabled,
+                                        }),
+                                    session: {
+                                        id: sessionUuid,
+                                        name: course_name,
+                                        startDate: start_date,
+                                        quotaDays: quota_days,
+                                        isUsedForQuota: used_by_quotas,
+                                        courseName: courseData.course_name,
+                                        startYear: new Date(start_date).getFullYear(),
+                                    },
+                                    user: {
+                                        firstName: inscription.claro_user.first_name,
+                                        lastName: inscription.claro_user.last_name,
+                                        email: inscription.claro_user.mail,
+                                        username: inscription.claro_user.username,
+                                        phone: inscription.claro_user.phone,
+                                        phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
+                                        userId: inscription.claro_user.uuid,
+                                        shouldReceiveSms,
+                                        hierarchy: inscription.claro_user.user_organization
+                                            ? await formatOrganizationsHierarchy(
+                                                  inscription.claro_user.user_organization
+                                              )
+                                            : null,
+                                        organization: inscription.claro_user.user_organization
+                                            ? userMainOrganization?.name
+                                            : null,
+                                        organizationId: inscription.claro_user.user_organization
+                                            ? userMainOrganization?.uuid
+                                            : null,
+                                        organizationCode: inscription.claro_user.user_organization
+                                            ? getOrganizationCode(inscription.claro_user.user_organization)
+                                            : null,
+                                        profession: await getUserProfession({
+                                            userId: inscription.claro_user.id,
+                                            professionFacetsValues,
+                                        }),
+                                    },
+                                }
+                            } catch (error) {
+                                console.error(error)
                             }
                         })()
                     )

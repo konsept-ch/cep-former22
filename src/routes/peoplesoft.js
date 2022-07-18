@@ -4,7 +4,7 @@ import convert from 'xml-js'
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
 import { createService } from '../utils'
 import { prisma } from '..'
-import { transformFlagsToStatus } from './inscriptionsUtils'
+import { getMainOrganization, transformFlagsToStatus } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
@@ -132,10 +132,21 @@ createService(
                                         select: {
                                             uuid: true,
                                             registration_date: true,
+                                            validated: true,
+                                            status: true,
                                             claro_user: {
                                                 select: {
                                                     mail: true,
                                                     uuid: true,
+                                                    user_organization: {
+                                                        include: {
+                                                            claro__organization: {
+                                                                include: {
+                                                                    claro_cursusbundle_quota: true,
+                                                                },
+                                                            },
+                                                        },
+                                                    },
                                                 },
                                             },
                                         },
@@ -275,15 +286,18 @@ createService(
                                             uuid: inscriptionId,
                                             registration_date,
                                             validated,
-                                            confirmed,
+                                            status,
                                             registration_type,
+                                            updatedAt = registration_date,
+                                            claro_user: { mail, uuid: userId, user_organization },
                                             inscriptionStatus = transformFlagsToStatus({
                                                 validated,
-                                                confirmed,
                                                 registrationType: registration_type,
+                                                hrValidationStatus: status,
+                                                isHrValidationEnabled:
+                                                    getMainOrganization(user_organization)?.claro_cursusbundle_quota !=
+                                                    null,
                                             }),
-                                            updatedAt = registration_date,
-                                            claro_user: { mail, uuid: userId },
                                             ...restInscriptionData
                                         }) => ({
                                             ...restInscriptionData,
