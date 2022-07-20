@@ -11,6 +11,4 @@ RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
-
 CMD [ "npm", "run start-prod" ]
