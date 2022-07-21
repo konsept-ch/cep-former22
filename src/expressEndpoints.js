@@ -288,24 +288,22 @@ export const generateEndpoints = () => {
             },
         })
 
-        const coursesPrismaData = await prisma.former22_course.findMany()
+        const coursesFormer22Data = await prisma.former22_course.findMany()
 
         const fullCoursesData = courses.map((course) => {
-            const courseAdditionalData = coursesPrismaData.find(({ courseId }) => courseId === course.uuid)
+            const courseAdditionalData = coursesFormer22Data.find(({ courseId }) => courseId === course.uuid)
 
             return {
-                ...{
-                    id: course.uuid,
-                    name: course.course_name,
-                    code: course.code,
-                    hidden: course.hidden,
-                    price: course.price,
-                    creationDate: course.createdAt,
-                    lastModifiedDate: course.updatedAt,
-                    duration: course.session_days,
-                    description: course.description,
-                    slug: course.slug,
-                },
+                id: course.uuid,
+                name: course.course_name,
+                code: course.code,
+                hidden: course.hidden,
+                price: course.price,
+                creationDate: course.createdAt,
+                lastModifiedDate: course.updatedAt,
+                duration: course.session_days,
+                description: course.description,
+                slug: course.slug,
                 ...courseAdditionalData,
             }
         })
@@ -409,19 +407,22 @@ export const generateEndpoints = () => {
     )
 
     createService(
-        'post',
+        'put',
         '/course/:courseId',
         async (req, res) => {
+            const { courseId } = req.params
+            const { newData } = req.body
+
             await prisma.former22_course.upsert({
-                where: { courseId: req.params.courseId },
-                update: req.body.newData,
-                create: { ...req.body.newData, courseId: req.params.courseId },
+                where: { courseId },
+                update: newData,
+                create: { ...newData, courseId },
             })
 
             res.json('Le cours a été modifié')
 
             const currentCourse = await prisma.claro_cursusbundle_course.findUnique({
-                where: { uuid: req.params.courseId },
+                where: { uuid: courseId },
                 select: {
                     course_name: true,
                 },
@@ -429,7 +430,7 @@ export const generateEndpoints = () => {
 
             return {
                 entityName: currentCourse.course_name,
-                entityId: req.params.courseId,
+                entityId: courseId,
                 actionName: getLogDescriptions.formation({ isUpdatedDetails: true }),
             }
         },
