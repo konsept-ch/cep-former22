@@ -197,10 +197,13 @@ export const generateEndpoints = () => {
         'put',
         '/user/:userId',
         async (req, res) => {
+            const { userId } = req.params
+            const { shouldReceiveSms, colorCode } = req.body
+
             await prisma.former22_user.upsert({
-                where: { userId: req.params.userId },
-                update: { shouldReceiveSms: req.body.shouldReceiveSms },
-                create: { shouldReceiveSms: req.body.shouldReceiveSms, userId: req.params.userId },
+                where: { userId },
+                update: { shouldReceiveSms, colorCode },
+                create: { shouldReceiveSms, colorCode, userId },
             })
 
             res.json("L'utilisateur a été modifié")

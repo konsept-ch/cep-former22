@@ -5506,6 +5506,7 @@ model former22_log {
 model former22_user {
   userId           String   @id @db.VarChar(255)
   shouldReceiveSms Boolean?
+  colorCode        String?  @db.VarChar(255)
 }
 
 model former22_organization {
