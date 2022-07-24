@@ -299,7 +299,7 @@ createService(
                                         }) => ({
                                             ...restInscriptionData,
                                             id: inscriptionId,
-                                            status: inscriptionStatus,
+                                            status: inscriptionStatus.replace('Réfusée par RH', 'Refusée par RH'), // patch typo until fixed in db
                                             statusUpdatedAt: updatedAt,
                                             inscriptionDate: registration_date,
                                             user: {
