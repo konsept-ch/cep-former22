@@ -273,7 +273,7 @@ createService(
                                     name: sessionName,
                                     creationDate: sessionCreationDate,
                                     eventDates: claro_cursusbundle_session_event
-                                        .map(({ claro_planned_object: { start_date } }) => start_date)
+                                        .map(({ claro_planned_object: { start_date } }) => start_date?.toISOString())
                                         .sort(),
                                     maxParticipants,
                                     sessionFormat,
