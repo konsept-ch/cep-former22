@@ -4,7 +4,7 @@ import convert from 'xml-js'
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
 import { createService } from '../utils'
 import { prisma } from '..'
-import { getMainOrganization, transformFlagsToStatus } from './inscriptionsUtils'
+import { deriveInscriptionStatus, getMainOrganization, transformFlagsToStatus } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
@@ -287,19 +287,22 @@ createService(
                                             registration_type,
                                             updatedAt = registration_date,
                                             claro_user: { mail, uuid: userId, user_organization },
-                                            inscriptionStatus = transformFlagsToStatus({
-                                                validated,
-                                                registrationType: registration_type,
-                                                hrValidationStatus: status,
-                                                isHrValidationEnabled:
-                                                    getMainOrganization(user_organization)?.claro_cursusbundle_quota !=
-                                                    null,
-                                            }),
+                                            inscriptionStatus,
                                             ...restInscriptionData
                                         }) => ({
                                             ...restInscriptionData,
                                             id: inscriptionId,
-                                            status: inscriptionStatus.replace('Réfusée par RH', 'Refusée par RH'), // patch typo until fixed in db
+                                            status: deriveInscriptionStatus({
+                                                savedStatus: inscriptionStatus,
+                                                transformedStatus: transformFlagsToStatus({
+                                                    validated,
+                                                    registrationType: registration_type,
+                                                    hrValidationStatus: status,
+                                                    isHrValidationEnabled:
+                                                        getMainOrganization(user_organization)
+                                                            ?.claro_cursusbundle_quota != null,
+                                                }),
+                                            }).replace('Réfusée par RH', 'Refusée par RH'), // patch typo until fixed in db
                                             statusUpdatedAt: updatedAt,
                                             inscriptionDate: registration_date,
                                             user: {

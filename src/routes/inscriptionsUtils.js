@@ -52,6 +52,11 @@ export const transformFlagsToStatus = ({ validated, registrationType, hrValidati
     }
 }
 
+export const deriveInscriptionStatus = ({ savedStatus, transformedStatus }) =>
+    transformedStatus === STATUSES.A_TRAITER_PAR_RH || transformedStatus === STATUSES.REFUSEE_PAR_RH
+        ? transformedStatus
+        : savedStatus ?? transformedStatus
+
 export const getMainOrganization = (organizations) => {
     if (organizations != null) {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
@@ -300,15 +305,17 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     type: inscription.registration_type,
                                     deletedInscriptionUuid: inscription.inscription_uuid,
                                     coordinator,
-                                    status:
-                                        inscriptionStatusForId?.inscriptionStatus ??
-                                        inscriptionStatusForIdWhenCancellation?.inscriptionStatus ??
-                                        transformFlagsToStatus({
+                                    status: deriveInscriptionStatus({
+                                        savedStatus:
+                                            inscriptionStatusForId?.inscriptionStatus ??
+                                            inscriptionStatusForIdWhenCancellation?.inscriptionStatus,
+                                        transformedStatus: transformFlagsToStatus({
                                             validated: inscription.validated,
                                             registrationType: inscription.registration_type,
                                             hrValidationStatus: inscription.status,
                                             isHrValidationEnabled,
                                         }),
+                                    }),
                                     session: {
                                         id: sessionUuid,
                                         name: course_name,
