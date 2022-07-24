@@ -132,9 +132,14 @@ createService(
             }
         }
 
-        const statusesForRefusalRh = [STATUSES.REFUSEE_PAR_RH]
-        const statusesForValidation = [STATUSES.A_TRAITER_PAR_RH, STATUSES.ENTREE_WEB, STATUSES.ACCEPTEE_PAR_CEP]
-        const statusesForAnnulation = [STATUSES.REFUSEE_PAR_CEP, STATUSES.ANNULEE, STATUSES.ECARTEE]
+        // const statusesForRefusalRh = [STATUSES.REFUSEE_PAR_RH]
+        // const statusesForValidation = [STATUSES.A_TRAITER_PAR_RH, STATUSES.ENTREE_WEB, STATUSES.ACCEPTEE_PAR_CEP]
+        const statusesForAnnulation = [
+            STATUSES.NON_PARTICIPATION,
+            STATUSES.ANNULEE,
+            STATUSES.REFUSEE_PAR_CEP,
+            STATUSES.ECARTEE,
+        ]
 
         if (typeof currentInscription !== 'undefined') {
             if (emailTemplateId) {
@@ -159,21 +164,22 @@ createService(
                 }
             }
 
-            if (statusesForRefusalRh.includes(newStatus)) {
-                await callApi({
-                    req,
-                    path: `cursus_session/${session.uuid}/pending`,
-                    params: { 'ids[0]': user.uuid },
-                    method: 'patch',
-                })
-            } else if (statusesForValidation.includes(newStatus)) {
-                await callApi({
-                    req,
-                    path: `cursus_session/${session.uuid}/pending/validate`,
-                    params: { 'ids[0]': currentInscription.uuid },
-                    method: 'put',
-                })
-            } else if (statusesForAnnulation.includes(newStatus)) {
+            // if (statusesForRefusalRh.includes(newStatus)) {
+            //     await callApi({
+            //         req,
+            //         path: `cursus_session/${session.uuid}/pending`,
+            //         params: { 'ids[0]': user.uuid },
+            //         method: 'patch',
+            //     })
+            // } else if (statusesForValidation.includes(newStatus)) {
+            //     await callApi({
+            //         req,
+            //         path: `cursus_session/${session.uuid}/pending/validate`,
+            //         params: { 'ids[0]': currentInscription.uuid },
+            //         method: 'put',
+            //     })
+            // } else
+            if (statusesForAnnulation.includes(newStatus)) {
                 await callApi({
                     req,
                     path: `cursus_session/${session.uuid}/users/learner`,
