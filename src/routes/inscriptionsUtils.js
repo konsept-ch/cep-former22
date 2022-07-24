@@ -1,25 +1,31 @@
 import { prisma } from '..'
 
-export const FINAL_STATUSES = {
-    ANNULEE: 'Annulée',
-    ECARTEE: 'Écartée',
+export const STATUSES = {
+    A_TRAITER_PAR_RH: 'À traiter par RH',
+    VALIDE_PAR_RH: 'Validée par RH',
+    REFUSEE_PAR_RH: 'Réfusée par RH',
+    EN_ATTENTE: 'En attente',
+    ENTREE_WEB: 'Entrée Web',
+    ACCEPTEE_PAR_CEP: 'Acceptée par CEP',
+    REFUSEE_PAR_CEP: 'Refusée par CEP',
+    PROPOSEE: 'Proposée',
+    INVITEE: 'Invitée',
     PARTICIPATION: 'Participation',
     PARTICIPATION_PARTIELLE: 'Participation Partielle',
     NON_PARTICIPATION: 'Non-participation',
-    REFUSEE_PAR_RH: 'Réfusée par RH',
-    REFUSEE_PAR_CEP: 'Refusée par CEP',
-    EN_ATTENTE: 'En attente',
+    ANNULEE: 'Annulée',
+    ECARTEE: 'Écartée',
 }
 
-export const STATUSES = {
-    A_TRAITER_PAR_RH: 'À traiter par RH',
-    ENTREE_WEB: 'Entrée Web',
-    VALIDE_PAR_RH: 'Validée par RH',
-    ACCEPTEE_PAR_CEP: 'Acceptée par CEP',
-    INVITEE: 'Invitée',
-    PROPOSEE: 'Proposée',
-    ...FINAL_STATUSES,
-}
+export const FINAL_STATUSES = [
+    STATUSES.A_TRAITER_PAR_RH,
+    STATUSES.REFUSEE_PAR_RH,
+    STATUSES.EN_ATTENTE,
+    STATUSES.REFUSEE_PAR_CEP,
+    STATUSES.NON_PARTICIPATION,
+    STATUSES.ANNULEE,
+    STATUSES.ECARTEE,
+]
 
 export const REGISTRATION_TYPES = {
     CANCELLATION: 'cancellation',

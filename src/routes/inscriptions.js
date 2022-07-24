@@ -119,7 +119,7 @@ createService(
                 registrationType: currentInscription.registration_type,
             })
 
-        if (Object.values(FINAL_STATUSES).includes(currentInscriptionStatus)) {
+        if (FINAL_STATUSES.includes(currentInscriptionStatus)) {
             res.json('Ce statut ne peut pas être modifié')
 
             return {
