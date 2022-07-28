@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
 
 export const STATUSES = {
@@ -402,8 +401,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                         const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
 
                         return {
-                            id: uuidv4(),
-                            // id: inscription.uuid,
+                            id: inscription.uuid,
                             inscriptionDate: inscription.registration_date,
                             type: inscription.registration_type,
                             coordinator: coursesAdditionalData.find(
