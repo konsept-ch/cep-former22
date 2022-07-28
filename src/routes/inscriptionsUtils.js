@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
 
 export const STATUSES = {
@@ -117,6 +118,33 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
             course_name: true,
             quota_days: true,
             used_by_quotas: true,
+            claro_cursusbundle_course: {
+                include: {
+                    claro_cursusbundle_course_course_user: {
+                        include: {
+                            claro_cursusbundle_course: {
+                                include: {
+                                    claro_cursusbundle_course_session: true,
+                                },
+                            },
+                            claro_user: {
+                                include: {
+                                    user_organization: {
+                                        select: {
+                                            is_main: true,
+                                            claro__organization: {
+                                                include: {
+                                                    claro_cursusbundle_quota: true,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
             claro_cursusbundle_course_session_user: {
                 // eslint-disable-next-line no-undefined
                 where: shouldFetchTutors
@@ -261,6 +289,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         const inscriptionsToFetch = [...sessionsWithInscriptions, ...inscriptionCancellations].map(
             ({
                 claro_cursusbundle_course_session_user,
+                claro_cursusbundle_course,
                 course_name,
                 quota_days,
                 used_by_quotas,
@@ -339,12 +368,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                                   inscription.claro_user.user_organization
                                               )
                                             : null,
-                                        organization: inscription.claro_user.user_organization
-                                            ? userMainOrganization?.name
-                                            : null,
-                                        organizationId: inscription.claro_user.user_organization
-                                            ? userMainOrganization?.uuid
-                                            : null,
+                                        organization: userMainOrganization?.name,
+                                        organizationId: userMainOrganization?.uuid,
                                         organizationCode: inscription.claro_user.user_organization
                                             ? getOrganizationCode(inscription.claro_user.user_organization)
                                             : null,
@@ -359,9 +384,78 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             }
                         })()
                     )
-                    const fetchedLearnerStatuses = await Promise.allSettled(allLearnersToFetchStatus)
 
-                    return fetchedLearnerStatuses.flatMap(({ value }) => value)
+                    let fetchedPendingLearners = []
+
+                    if (claro_cursusbundle_course) {
+                        const pendingList = claro_cursusbundle_course.claro_cursusbundle_course_course_user.map(
+                            (inscription) =>
+                                (async () => {
+                                    const { shouldReceiveSms } =
+                                        (await prisma.former22_user.findUnique({
+                                            where: { userId: inscription.claro_user.uuid },
+                                        })) ?? {}
+
+                                    const userMainOrganization = getMainOrganization(
+                                        inscription.claro_user.user_organization
+                                    )
+
+                                    return {
+                                        id: uuidv4(),
+                                        // id: inscription.uuid,
+                                        inscriptionDate: inscription.registration_date,
+                                        type: inscription.registration_type,
+                                        coordinator: coursesAdditionalData.find(
+                                            ({ courseId }) => courseId === inscription.claro_cursusbundle_course.uuid
+                                        )?.coordinator,
+                                        status: FINAL_STATUSES.EN_ATTENTE,
+                                        isPending: true,
+                                        session: {
+                                            id: inscription.claro_cursusbundle_course.uuid,
+                                            name: `En attente - ${inscription.claro_cursusbundle_course.course_name}`,
+                                            startDate: 'En attente',
+                                            quotaDays: 0,
+                                            isUsedForQuota: false,
+                                            courseName: inscription.claro_cursusbundle_course.course_name,
+                                            startYear: new Date().getFullYear(),
+                                        },
+                                        user: {
+                                            firstName: inscription.claro_user.first_name,
+                                            lastName: inscription.claro_user.last_name,
+                                            email: inscription.claro_user.mail,
+                                            username: inscription.claro_user.username,
+                                            phone: inscription.claro_user.phone,
+                                            phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
+                                            userId: inscription.claro_user.uuid,
+                                            shouldReceiveSms,
+                                            hierarchy: inscription.claro_user.user_organization
+                                                ? await formatOrganizationsHierarchy(
+                                                      inscription.claro_user.user_organization
+                                                  )
+                                                : null,
+                                            organization: userMainOrganization?.name,
+                                            organizationId: userMainOrganization?.uuid,
+                                            organizationCode: inscription.claro_user.user_organization
+                                                ? getOrganizationCode(inscription.claro_user.user_organization)
+                                                : null,
+                                            profession: await getUserProfession({
+                                                userId: inscription.claro_user.id,
+                                                professionFacetsValues,
+                                            }),
+                                        },
+                                    }
+                                })()
+                        )
+
+                        const fetchedPendingLearnersSettled = await Promise.allSettled(pendingList)
+                        fetchedPendingLearners = fetchedPendingLearnersSettled.flatMap(({ value }) => value)
+                    }
+
+                    const fetchedLearnerStatusesSettled = await Promise.allSettled(allLearnersToFetchStatus)
+
+                    const fetchedLearnerStatuses = fetchedLearnerStatusesSettled.flatMap(({ value }) => value)
+
+                    return [...fetchedLearnerStatuses, ...fetchedPendingLearners]
                 })()
         )
 
