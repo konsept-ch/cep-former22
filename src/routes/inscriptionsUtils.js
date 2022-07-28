@@ -118,7 +118,6 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
             quota_days: true,
             used_by_quotas: true,
             claro_cursusbundle_course_session_user: {
-                // eslint-disable-next-line no-undefined
                 where: shouldFetchTutors
                     ? { registration_type: 'tutor' }
                     : {
@@ -339,12 +338,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                                   inscription.claro_user.user_organization
                                               )
                                             : null,
-                                        organization: inscription.claro_user.user_organization
-                                            ? userMainOrganization?.name
-                                            : null,
-                                        organizationId: inscription.claro_user.user_organization
-                                            ? userMainOrganization?.uuid
-                                            : null,
+                                        organization: userMainOrganization?.name,
+                                        organizationId: userMainOrganization?.uuid,
                                         organizationCode: inscription.claro_user.user_organization
                                             ? getOrganizationCode(inscription.claro_user.user_organization)
                                             : null,
@@ -359,6 +354,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             }
                         })()
                     )
+
                     const fetchedLearnerStatuses = await Promise.allSettled(allLearnersToFetchStatus)
 
                     return fetchedLearnerStatuses.flatMap(({ value }) => value)
@@ -367,43 +363,93 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
 
         const fetchedInscriptions = await Promise.allSettled(inscriptionsToFetch)
 
-        return fetchedInscriptions.flatMap(({ value }) => value)
+        let fetchedPendingLearners = []
+
+        if (!shouldFetchTutors) {
+            const allPendingInscriptionsOnCourseLevel = await prisma.claro_cursusbundle_course_course_user.findMany({
+                include: {
+                    claro_cursusbundle_course: {
+                        include: {
+                            claro_cursusbundle_course_session: true,
+                        },
+                    },
+                    claro_user: {
+                        include: {
+                            user_organization: {
+                                select: {
+                                    is_main: true,
+                                    claro__organization: {
+                                        include: {
+                                            claro_cursusbundle_quota: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+
+            if (allPendingInscriptionsOnCourseLevel) {
+                const pendingList = allPendingInscriptionsOnCourseLevel.map((inscription) =>
+                    (async () => {
+                        const { shouldReceiveSms } =
+                            (await prisma.former22_user.findUnique({
+                                where: { userId: inscription.claro_user.uuid },
+                            })) ?? {}
+
+                        const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
+
+                        return {
+                            id: inscription.uuid,
+                            inscriptionDate: inscription.registration_date,
+                            type: inscription.registration_type,
+                            coordinator: coursesAdditionalData.find(
+                                ({ courseId }) => courseId === inscription.claro_cursusbundle_course.uuid
+                            )?.coordinator,
+                            status: STATUSES.EN_ATTENTE,
+                            isPending: true,
+                            session: {
+                                id: inscription.claro_cursusbundle_course.uuid,
+                                name: `En attente - ${inscription.claro_cursusbundle_course.course_name}`,
+                                startDate: 'En attente',
+                                quotaDays: 0,
+                                isUsedForQuota: false,
+                                courseName: inscription.claro_cursusbundle_course.course_name,
+                                startYear: new Date().getFullYear(),
+                            },
+                            user: {
+                                firstName: inscription.claro_user.first_name,
+                                lastName: inscription.claro_user.last_name,
+                                email: inscription.claro_user.mail,
+                                username: inscription.claro_user.username,
+                                phone: inscription.claro_user.phone,
+                                phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
+                                userId: inscription.claro_user.uuid,
+                                shouldReceiveSms,
+                                hierarchy: inscription.claro_user.user_organization
+                                    ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)
+                                    : null,
+                                organization: userMainOrganization?.name,
+                                organizationId: userMainOrganization?.uuid,
+                                organizationCode: inscription.claro_user.user_organization
+                                    ? getOrganizationCode(inscription.claro_user.user_organization)
+                                    : null,
+                                profession: await getUserProfession({
+                                    userId: inscription.claro_user.id,
+                                    professionFacetsValues,
+                                }),
+                            },
+                        }
+                    })()
+                )
+
+                fetchedPendingLearners = await Promise.allSettled(pendingList)
+            }
+        }
+
+        return [...fetchedInscriptions, ...fetchedPendingLearners].flatMap(({ value }) => value)
     } else {
         return []
     }
 }
-
-const biologyGrades = [
-    { studentId: 54, grade: 4 },
-    { studentId: 32, grade: 4 },
-    { studentId: 1616, grade: 4 },
-    { studentId: 1616, grade: 2 },
-    { studentId: 54, grade: 6 },
-    { studentId: 54, grade: 5 },
-]
-
-Object.entries(
-    biologyGrades.reduce(
-        (gradesByStudentId, { studentId, grade }) => ({
-            ...gradesByStudentId,
-            [studentId]: [...(gradesByStudentId[studentId] ?? []), grade],
-        }),
-        {}
-    )
-)
-    .map(([studentId, grades]) => ({
-        studentId,
-        averageGrade: grades.reduce((a, b) => a + b, 0) / grades.length,
-    }))
-    .sort(({ averageGrade: a }, { averageGrade: b }) => a - b)
-
-Object.keys(
-    biologyGrades
-        .filter(
-            ({ studentId }) =>
-                !biologyGrades.some(
-                    ({ studentId: foundStudentId, grade }) => foundStudentId === studentId && grade === 2
-                )
-        )
-        .reduce((acc, { studentId }) => ({ ...acc, [studentId]: true }), {})
-).map((studentId) => Number(studentId))
