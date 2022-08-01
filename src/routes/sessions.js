@@ -10,7 +10,7 @@ export const sessionsRouter = Router()
 
 createService(
     'get',
-    '/sessions',
+    '/',
     async (req, res) => {
         const sessions = await prisma.claro_cursusbundle_course_session.findMany({
             select: {
@@ -56,7 +56,7 @@ createService(
 
 createService(
     'get',
-    '/sessions/seances',
+    '/seances',
     async (req, res) => {
         const seancesPrisma = await prisma.claro_cursusbundle_session_event.findMany({
             include: {
@@ -108,7 +108,7 @@ createService(
 
 createService(
     'put',
-    '/sessions/:sessionId',
+    '/:sessionId',
     async (req, res) => {
         const { sessionId } = req.params
 

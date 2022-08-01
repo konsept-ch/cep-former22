@@ -13,6 +13,7 @@ import { agendaRouter } from './routes/agenda'
 import { mailRouter } from './routes/mail'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
+import { organizationsRouter } from './routes/organizations'
 import { peoplesoftRouter } from './routes/peoplesoft'
 import { sessionsRouter } from './routes/sessions'
 import { templatesRouter } from './routes/templates'
@@ -64,6 +65,7 @@ app.use('/agenda', agendaRouter)
 app.use('/mail', mailRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
+app.use('/organizations', organizationsRouter)
 app.use('/peoplesoft', peoplesoftRouter)
 app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
