@@ -10,6 +10,7 @@ import { generateEndpoints } from './expressEndpoints' // deprecated, use routes
 
 import { authRouter } from './routes/auth'
 import { agendaRouter } from './routes/agenda'
+import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
@@ -62,6 +63,7 @@ app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi
 generateEndpoints()
 app.use('/auth', authRouter)
 app.use('/agenda', agendaRouter)
+app.use('/courses', coursesRouter)
 app.use('/mail', mailRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)

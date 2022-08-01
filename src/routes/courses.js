@@ -8,7 +8,7 @@ export const coursesRouter = Router()
 
 createService(
     'get',
-    '/courses',
+    '/',
     async (req, res) => {
         const courses = await prisma.claro_cursusbundle_course.findMany({
             select: {
@@ -53,7 +53,7 @@ createService(
 
 createService(
     'get',
-    '/courses/by-slug/:slug',
+    '/by-slug/:slug',
     async (req, res) => {
         const [courseDetails] = await prisma.claro_cursusbundle_course.findMany({
             where: { slug: req.params.slug },
@@ -67,7 +67,7 @@ createService(
 
 createService(
     'put',
-    '/courses/save-by-id/:id',
+    '/save-by-id/:id',
     async (req, res) => {
         const courseDetails = await prisma.claro_cursusbundle_course.update({
             where: { uuid: req.params.id },
@@ -88,7 +88,7 @@ createService(
 
 createService(
     'put',
-    '/courses/addOrganizations',
+    '/addOrganizations',
     async (req, res) => {
         const organizations = await callApi({ req, path: 'organization' })
         const courses = await callApi({ req, path: 'cursus_course' })
@@ -119,7 +119,7 @@ createService(
 
 createService(
     'put',
-    '/courses/removeOrganizations',
+    '/removeOrganizations',
     async (req, res) => {
         const organizations = await callApi({ req, path: 'organization' })
         const courses = await callApi({ req, path: 'cursus_course' })
@@ -157,7 +157,7 @@ createService(
 
 createService(
     'put',
-    '/courses/:courseId',
+    '/:courseId',
     async (req, res) => {
         const { courseId } = req.params
         const { newData } = req.body
