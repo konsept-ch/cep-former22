@@ -3,16 +3,9 @@
 import { v4 as uuidv4 } from 'uuid'
 import { callApi } from './callApi'
 import { sendEmail } from './sendEmail'
-import { sendSms } from './sendSms'
 import { createService, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
 import { prisma } from '.'
-import { getTemplatePreviews } from './routes/templatesUtils'
-import {
-    fetchInscriptionsWithStatuses,
-    getUserProfession,
-    getProfessionFacetsValues,
-    parsePhoneForSms,
-} from './routes/inscriptionsUtils'
+import { fetchInscriptionsWithStatuses } from './routes/inscriptionsUtils'
 
 export const generateEndpoints = () => {
     // organizations START
@@ -43,7 +36,7 @@ export const generateEndpoints = () => {
 
     createService(
         'put',
-        '/organization/:organizationId',
+        '/organizations/:organizationId',
         async (req, res) => {
             const { organizationName, newData } = req.body
             const { organizationId: organizationUuid } = req.params
@@ -65,162 +58,6 @@ export const generateEndpoints = () => {
         { entityType: LOG_TYPES.ORGANISATION }
     )
     // organizations END
-
-    // users START
-    createService('get', '/allUsers', async (req, res) => {
-        const users = await prisma.claro_user.findMany({
-            where: {
-                is_removed: false,
-            },
-            select: {
-                id: true,
-                uuid: true,
-                first_name: true,
-                last_name: true,
-                mail: true,
-                claro_user_role: {
-                    select: {
-                        claro_role: {
-                            select: {
-                                translation_key: true,
-                            },
-                        },
-                    },
-                },
-                user_organization: {
-                    where: {
-                        is_main: true,
-                    },
-                    select: {
-                        claro__organization: {
-                            select: {
-                                name: true,
-                            },
-                        },
-                    },
-                },
-                phone: true,
-            },
-        })
-
-        const usersSettings = await prisma.former22_user.findMany()
-        const professionFacetsValues = await getProfessionFacetsValues()
-
-        const enrichedUsersData = users.map((current) => {
-            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.uuid)
-            const currentUserProfession = getUserProfession({
-                userId: current.id,
-                professionFacetsValues,
-            })
-
-            let enrichedUser = {
-                id: current.uuid,
-                firstName: current.first_name,
-                lastName: current.last_name,
-                email: current.mail,
-                mainOrganizationName: current['user_organization'][0]?.['claro__organization'].name,
-                phone: current.phone,
-                phoneForSms: parsePhoneForSms({ phone: current.phone }),
-                roles: current.claro_user_role.map(({ claro_role: { translation_key } }) => translation_key),
-            }
-
-            if (currentUserSettings) {
-                // eslint-disable-next-line no-unused-vars
-                const { _userId, ...settings } = currentUserSettings
-
-                enrichedUser = { ...enrichedUser, ...settings }
-            }
-
-            if (currentUserProfession) {
-                enrichedUser = { ...enrichedUser, profession: currentUserProfession }
-            }
-
-            return enrichedUser
-        })
-
-        res.json(enrichedUsersData)
-    })
-
-    createService(
-        'put',
-        '/user/:userId',
-        async (req, res) => {
-            const { userId } = req.params
-            const { shouldReceiveSms, colorCode } = req.body
-
-            await prisma.former22_user.upsert({
-                where: { userId },
-                update: { shouldReceiveSms, colorCode },
-                create: { shouldReceiveSms, colorCode, userId },
-            })
-
-            res.json("L'utilisateur a été modifié")
-
-            const [{ first_name, last_name }] = await prisma.claro_user.findMany({
-                where: {
-                    uuid: req.params.userId,
-                },
-                select: {
-                    first_name: true,
-                    last_name: true,
-                },
-            })
-
-            const userFullName = `${first_name} ${last_name}`
-
-            return {
-                entityName: userFullName,
-                entityId: req.params.userId,
-                actionName: getLogDescriptions.user({
-                    shouldReceiveSms: req.body.shouldReceiveSms,
-                    fullName: userFullName,
-                }),
-            }
-        },
-        { entityType: LOG_TYPES.USER }
-    )
-
-    createService('get', '/admins', async (req, res) => {
-        const usersPrisma = await prisma.claro_user.findMany({
-            where: {
-                OR: [
-                    {
-                        is_removed: false,
-                        claro_user_role: {
-                            some: {
-                                claro_role: {
-                                    name: 'ROLE_ADMIN',
-                                },
-                            },
-                        },
-                    },
-                    {
-                        claro_user_group: {
-                            some: {
-                                claro_group: {
-                                    claro_group_role: {
-                                        some: {
-                                            claro_role: {
-                                                name: 'ROLE_ADMIN',
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                ],
-            },
-            select: {
-                id: true,
-                first_name: true,
-                last_name: true,
-            },
-        })
-
-        res.json(usersPrisma)
-    })
-    // users END
 
     // courses START
     createService('get', '/courses', async (req, res) => {
@@ -359,7 +196,7 @@ export const generateEndpoints = () => {
 
     createService(
         'put',
-        '/course/:courseId',
+        '/courses/:courseId',
         async (req, res) => {
             const { courseId } = req.params
             const { newData } = req.body
@@ -388,166 +225,6 @@ export const generateEndpoints = () => {
         { entityType: LOG_TYPES.FORMATION }
     )
     // courses END
-
-    // sessions START
-    createService('get', '/sessions', async (req, res) => {
-        const sessions = await prisma.claro_cursusbundle_course_session.findMany({
-            select: {
-                uuid: true,
-                course_name: true,
-                code: true,
-                hidden: true,
-                start_date: true,
-                price: true,
-                createdAt: true,
-                updatedAt: true,
-                quota_days: true,
-                used_by_quotas: true,
-            },
-        })
-        const sessionsAdditionalData = await prisma.former22_session.findMany()
-
-        const fullSessionsData = sessions.map((session) => {
-            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid)
-
-            return {
-                ...{
-                    id: session.uuid,
-                    name: session.course_name,
-                    code: session.code,
-                    hidden: session.hidden,
-                    startDate: session.start_date,
-                    price: session.price,
-                    created: session.createdAt,
-                    updated: session.updatedAt,
-                    quotaDays: session.quota_days,
-                    isUsedForQuota: session.used_by_quotas,
-                },
-                ...sessionAdditionalData,
-            }
-        })
-
-        res.json(fullSessionsData ?? 'Aucunes session trouvées')
-    })
-
-    createService('get', '/seances', async (req, res) => {
-        const seancesPrisma = await prisma.claro_cursusbundle_session_event.findMany({
-            include: {
-                claro_planned_object: true,
-                claro_cursusbundle_course_session: true,
-            },
-        })
-
-        const sessionsAdditionalData = await prisma.former22_session.findMany({
-            select: {
-                sessionId: true,
-                sessionFormat: true,
-                sessionLocation: true,
-            },
-        })
-
-        const seances = seancesPrisma?.reduce((acc, seance) => {
-            if (seance) {
-                const sessionData = sessionsAdditionalData.find(
-                    ({ sessionId }) => sessionId === seance.claro_cursusbundle_course_session.uuid
-                )
-
-                const formatedSeance = {
-                    id: seance.uuid,
-                    name: seance.claro_planned_object.entity_name,
-                    code: seance.code,
-                    duration: seance.claro_cursusbundle_course_session.quota_days,
-                    price: seance.claro_cursusbundle_course_session.price,
-                    quotaDays: seance.claro_cursusbundle_course_session.quota_days,
-                    isUsedForQuota: seance.claro_cursusbundle_course_session.used_by_quotas,
-                    creationDate: seance.claro_cursusbundle_course_session.createdAt,
-                    lastModifiedDate: seance.claro_cursusbundle_course_session.updatedAt,
-                    hidden: seance.claro_cursusbundle_course_session.hidden,
-                    sessionFormat: sessionData?.sessionFormat,
-                    sessionLocation: sessionData?.sessionLocation,
-                }
-
-                return [...acc, formatedSeance]
-            } else {
-                return [...acc]
-            }
-        }, [])
-
-        res.json(seances ?? 'Aucunes session trouvées')
-    })
-
-    createService(
-        'put',
-        '/sessions/:sessionId',
-        async (req, res) => {
-            const { sessionId } = req.params
-
-            await prisma.former22_session.upsert({
-                where: { sessionId },
-                update: { ...req.body },
-                create: { sessionId, ...req.body },
-            })
-
-            const { claro_cursusbundle_course_session_user: learners } =
-                await prisma.claro_cursusbundle_course_session.findUnique({
-                    where: {
-                        uuid: sessionId,
-                    },
-                    select: {
-                        claro_cursusbundle_course_session_user: {
-                            where: { registration_type: 'learner' },
-                            select: { uuid: true, claro_user: { select: { mail: true } } },
-                        },
-                    },
-                })
-
-            const templateForSessionInvites = await prisma.former22_template.findFirst({
-                where: { isUsedForSessionInvites: true },
-            })
-
-            if (templateForSessionInvites) {
-                const emailsToSend = learners.map(async (learner) => {
-                    const {
-                        uuid: learnerId,
-                        claro_user: { mail: learnerEmail },
-                    } = learner
-
-                    const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                        req,
-                        templateId: templateForSessionInvites.templateId,
-                        sessionId,
-                        inscriptionId: learnerId,
-                    })
-
-                    const { emailResponse } = await sendEmail({
-                        to: learnerEmail,
-                        subject: emailSubject,
-                        html_body: emailContent,
-                    })
-
-                    await sendSms({ to: '359877155302', content: smsContent })
-
-                    return { emailResponse }
-                })
-
-                const sentEmails = await Promise.allSettled(emailsToSend)
-
-                const data = sentEmails.map(({ value }) => value)
-
-                res.json(data ?? 'Aucun e-mail envoyé')
-            } else {
-                res.json("Aucun modèle pour sessions invitées n'a été trouvé")
-            }
-
-            return {
-                entityName: req.body.sessionName,
-                entityId: sessionId,
-                actionName: 'Session updated',
-            }
-        },
-        { entityType: LOG_TYPES.SESSION }
-    )
-    // sessions END
 
     // reportError START
     createService('post', '/reportError', async (req, res) => {

@@ -14,7 +14,9 @@ import { mailRouter } from './routes/mail'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
 import { peoplesoftRouter } from './routes/peoplesoft'
+import { sessionsRouter } from './routes/sessions'
 import { templatesRouter } from './routes/templates'
+import { usersRouter } from './routes/users'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -57,13 +59,15 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
 app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi.setup(null, swaggerUiOptions))
 
 generateEndpoints()
-app.use('/peoplesoft', peoplesoftRouter)
-app.use('/mail', mailRouter)
 app.use('/auth', authRouter)
-app.use('/templates', templatesRouter)
-app.use('/inscriptions', inscriptionsRouter)
 app.use('/agenda', agendaRouter)
+app.use('/mail', mailRouter)
+app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
+app.use('/peoplesoft', peoplesoftRouter)
+app.use('/sessions', sessionsRouter)
+app.use('/templates', templatesRouter)
+app.use('/users', usersRouter)
 
 app.get('/', (_req, res) => {
     const allRoutes = app._router.stack

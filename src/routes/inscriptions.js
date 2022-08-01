@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import fetch from 'node-fetch'
 import { v4 as uuidv4 } from 'uuid'
+
 import { prisma } from '..'
 import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
