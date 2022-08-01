@@ -12,6 +12,7 @@ import { mailRouter } from './routes/mail'
 import { templatesRouter } from './routes/templates'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { agendaRouter } from './routes/agenda'
+import { invoicesRouter } from './routes/invoices'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -59,6 +60,7 @@ app.use('/mail', mailRouter)
 app.use('/templates', templatesRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/agenda', agendaRouter)
+app.use('/invoices', invoicesRouter)
 
 app.get('/', (_req, res) => {
     const allRoutes = app._router.stack
