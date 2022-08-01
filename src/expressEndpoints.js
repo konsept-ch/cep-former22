@@ -1,9 +1,10 @@
+// deprecated, use routes instead
+
 import { v4 as uuidv4 } from 'uuid'
-import { customAlphabet } from 'nanoid'
-import { callApi, CLAROLINE_TOKEN } from './callApi'
+import { callApi } from './callApi'
 import { sendEmail } from './sendEmail'
 import { sendSms } from './sendSms'
-import { createService, delay, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
+import { createService, formatDate, getLogDescriptions, LOG_TYPES } from './utils'
 import { prisma } from '.'
 import { getTemplatePreviews } from './routes/templatesUtils'
 import {
@@ -13,60 +14,7 @@ import {
     parsePhoneForSms,
 } from './routes/inscriptionsUtils'
 
-const nanoid = customAlphabet('1234567890', 6)
-
 export const generateEndpoints = () => {
-    createService('post', '/auth/sendCode', async (req, res) => {
-        await delay(200)
-
-        const email = req.body.email?.trim()
-
-        const code = nanoid() //=> "123456"
-
-        const sendTimestamp = Date.now()
-
-        await prisma.former22_auth_codes.upsert({
-            where: { email },
-            update: { code, sendTimestamp },
-            create: { email, code, sendTimestamp },
-        })
-
-        await sendEmail({
-            to: email,
-            subject: 'Auth code',
-            html_body: `<h2>Auth code</h2><p>${code}</p>`,
-        })
-
-        res.json({ isCodeSendingSuccessful: true })
-    })
-
-    createService('post', '/auth/checkCodeAndToken', async (req, res) => {
-        await delay(200)
-
-        const email = req.body.email?.trim()
-        const token = req.body.token?.trim()
-        const code = req.body.code?.trim()
-
-        const authPair = await prisma.former22_auth_codes.findUnique({
-            where: { email },
-            select: { code: true },
-        })
-        const doesCodeMatch = authPair.code === code
-
-        if (doesCodeMatch) {
-            const apitokenResponse = await callApi({ req, path: 'apitoken', headers: { [CLAROLINE_TOKEN]: token } })
-
-            const doesTokenExist = apitokenResponse?.some?.(
-                ({ token: existingToken, user: { email: associatedEmail } }) =>
-                    existingToken === token && associatedEmail === email
-            )
-
-            res.json({ areCodeAndTokenCorrect: doesTokenExist })
-        } else {
-            res.json({ areCodeAndTokenCorrect: false })
-        }
-    })
-
     // organizations START
     createService('get', '/organizations', async (req, res) => {
         const organizations = await callApi({ req, path: 'organization/list/recursive' })

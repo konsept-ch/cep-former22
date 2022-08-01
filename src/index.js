@@ -6,13 +6,15 @@ import swaggerJsdoc from 'swagger-jsdoc'
 import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
 
-import { generateEndpoints } from './expressEndpoints'
-import { peoplesoftRouter } from './routes/peoplesoft'
-import { mailRouter } from './routes/mail'
-import { templatesRouter } from './routes/templates'
-import { inscriptionsRouter } from './routes/inscriptions'
+import { generateEndpoints } from './expressEndpoints' // deprecated, use routes instead
+
+import { authRouter } from './routes/auth'
 import { agendaRouter } from './routes/agenda'
+import { mailRouter } from './routes/mail'
+import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
+import { peoplesoftRouter } from './routes/peoplesoft'
+import { templatesRouter } from './routes/templates'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -57,6 +59,7 @@ app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi
 generateEndpoints()
 app.use('/peoplesoft', peoplesoftRouter)
 app.use('/mail', mailRouter)
+app.use('/auth', authRouter)
 app.use('/templates', templatesRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/agenda', agendaRouter)
