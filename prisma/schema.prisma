@@ -243,6 +243,7 @@ model claro__organization {
   claro_cursusbundle_cursus_organizations claro_cursusbundle_cursus_organizations[]
   claro_cursusbundle_quota                claro_cursusbundle_quota?
   claro_user_administrator                claro_user_administrator[]
+  former22_organization                   former22_organization?
   group_organization                      group_organization[]
   user_organization                       user_organization[]
   workspace_organization                  workspace_organization[]
@@ -5510,20 +5511,24 @@ model former22_user {
 }
 
 model former22_organization {
-  id                          Int     @id @default(autoincrement())
-  organizationUuid            String  @unique(map: "organizationUuid") @db.VarChar(36)
-  billingMode                 String? @db.Text
+  id                          Int                  @id @default(autoincrement())
+  organizationUuid            String               @unique(map: "organizationUuid") @db.VarChar(36)
+  billingMode                 String?              @db.Text
   dailyRate                   Float?
   flyersCount                 Int?
-  phone                       String? @db.Text
-  addressTitle                String? @db.Text
-  postalAddressCountry        String? @db.Text
-  postalAddressCountryCode    String? @db.Text
-  postalAddressCode           String? @db.Text
-  postalAddressStreet         String? @db.Text
-  postalAddressDepartment     String? @db.Text
-  postalAddressDepartmentCode String? @db.Text
-  postalAddressLocality       String? @db.Text
+  phone                       String?              @db.Text
+  addressTitle                String?              @db.Text
+  postalAddressCountry        String?              @db.Text
+  postalAddressCountryCode    String?              @db.Text
+  postalAddressCode           String?              @db.Text
+  postalAddressStreet         String?              @db.Text
+  postalAddressDepartment     String?              @db.Text
+  postalAddressDepartmentCode String?              @db.Text
+  postalAddressLocality       String?              @db.Text
+  organizationId              Int?                 @unique(map: "organizationId")
+  claro__organization         claro__organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
+
+  @@index([organizationId], map: "organization_index")
 }
 
 model former22_invoice {

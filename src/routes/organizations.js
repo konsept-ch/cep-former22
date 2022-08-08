@@ -8,7 +8,7 @@ export const organizationsRouter = Router()
 
 createService(
     'get',
-    '/',
+    '/hierarchy',
     async (req, res) => {
         const organizations = await callApi({ req, path: 'organization/list/recursive' })
         const allAdditionalData = await prisma.former22_organization.findMany()
@@ -38,16 +38,51 @@ createService(
 )
 
 createService(
+    'get',
+    '/flat-with-address',
+    async (req, res) => {
+        const organizations = await prisma.claro__organization.findMany({
+            select: {
+                uuid: true,
+                name: true,
+                code: true,
+                former22_organization: {
+                    select: {
+                        addressTitle: true,
+                        postalAddressCode: true,
+                        postalAddressCountry: true,
+                        postalAddressCountryCode: true,
+                        postalAddressDepartment: true,
+                        postalAddressDepartmentCode: true,
+                        postalAddressLocality: true,
+                        postalAddressStreet: true,
+                    },
+                },
+            },
+        })
+
+        res.json(organizations)
+    },
+    null,
+    organizationsRouter
+)
+
+createService(
     'put',
     '/:organizationId',
     async (req, res) => {
         const { organizationName, newData } = req.body
         const { organizationId: organizationUuid } = req.params
 
+        const { id } = await prisma.claro__organization.findUnique({
+            where: { uuid: organizationUuid },
+            select: { id: true },
+        })
+
         await prisma.former22_organization.upsert({
             where: { organizationUuid },
-            update: { ...newData },
-            create: { ...newData, organizationUuid },
+            update: { ...newData, organizationId: id },
+            create: { ...newData, organizationId: id, organizationUuid },
         })
 
         res.json("L'organisation a été modifié")

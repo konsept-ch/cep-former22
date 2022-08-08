@@ -142,6 +142,7 @@ createService(
     async (req, res) => {
         const manualInvoices = [
             {
+                id: '0-1-1', // primary key
                 // -----> client address
                 organizationId: 1, // is foreignkey
                 customClientAddress: 'This should be a multiline text area',
@@ -176,6 +177,7 @@ createService(
                 ],
             },
             {
+                id: '0-1-2',
                 organizationId: 2,
                 customClientAddress: 'This should be a multiline text area',
                 vatCode: 'EXONERE',
