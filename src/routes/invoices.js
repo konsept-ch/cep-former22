@@ -135,4 +135,80 @@ createService(
     { entityType: LOG_TYPES.INVOICE },
     invoicesRouter
 )
+
+createService(
+    'get',
+    '/manual',
+    async (req, res) => {
+        const manualInvoices = [
+            {
+                // -----> client address
+                organizationId: 1, // is foreignkey
+                customClientAddress: 'This should be a multiline text area',
+                // -----> vat code
+                vatCode: 'TVA 7.7%', // can be also 'EXONERE'
+                // -----> invoice date
+                invoiceDate: '2022-06-22T21:15:21.000Z', // date is required and with no default value. FE will provide
+                // -----> invoice number
+                courseYear: 2022, //Front end field is called 'Exercice'
+                creatorCode: 1,
+                invoiceNumberForCurrentYear: 1,
+                // -----> Concerne
+                invoiceReason: 'Explication de la raison du document', // field Concerne
+                items: [
+                    {
+                        designation: `Formation catalogue de M. Marc Pittet
+                        Méconnaissance de soit
+                        Dates: ...`, // multi-line
+                        unit: 'jours', // heures ou jours, drop-down
+                        amount: 2,
+                        price: 130,
+                    },
+                    {
+                        designation: `Formation sur mesure
+                        Méconnaissance de soit
+                        Dates: ...
+                        14 participant.e.s`,
+                        unit: 'heures',
+                        amount: 1,
+                        price: 60,
+                    },
+                ],
+            },
+            {
+                organizationId: 2,
+                customClientAddress: 'This should be a multiline text area',
+                vatCode: 'EXONERE',
+                invoiceDate: '2024-06-22T21:15:21.000Z',
+                courseYear: 2023,
+                creatorCode: 1,
+                invoiceNumberForCurrentYear: 1,
+                invoiceReason: 'Explication de la raison du document',
+                items: [
+                    {
+                        designation: `Formation catalogue de M. Marc Pittet
+                        Méconnaissance de soit
+                        Dates: ...`,
+                        unit: 'jours',
+                        amount: 2,
+                        price: 130,
+                    },
+                    {
+                        designation: `Formation sur mesure
+                        Méconnaissance de soit
+                        Dates: ...
+                        14 participant.e.s`,
+                        unit: 'heures',
+                        amount: 1,
+                        price: 60,
+                    },
+                ],
+            },
+        ]
+
+        res.json(manualInvoices)
+    },
+    null,
+    invoicesRouter
+)
 // invoices END
