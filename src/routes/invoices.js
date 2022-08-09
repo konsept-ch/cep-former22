@@ -145,7 +145,9 @@ createService(
                 id: '0-1-1', // primary key
                 // -----> client address
                 organizationId: 1, // is foreignkey
-                customClientAddress: 'This should be a multiline text area',
+                customClientEmail: 'test@example.com',
+                customClientAddress: `Adresse custom
+multi-ligne`,
                 // -----> vat code
                 vatCode: 'TVA 7.7%', // can be also 'EXONERE'
                 // -----> invoice date
@@ -180,6 +182,7 @@ createService(
                 id: '0-1-2',
                 organizationId: 2,
                 customClientAddress: 'This should be a multiline text area',
+                customClientEmail: 'test@example.com',
                 vatCode: 'EXONERE',
                 invoiceDate: '2024-06-22T21:15:21.000Z',
                 courseYear: 2023,
