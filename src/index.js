@@ -19,6 +19,7 @@ import { peoplesoftRouter } from './routes/peoplesoft'
 import { sessionsRouter } from './routes/sessions'
 import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
+import { receptionRouter } from './routes/reception'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -72,6 +73,7 @@ app.use('/peoplesoft', peoplesoftRouter)
 app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
+app.use('/reception', receptionRouter)
 
 app.get('/', (_req, res) => {
     const allRoutes = app._router.stack
