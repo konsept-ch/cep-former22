@@ -161,17 +161,17 @@ multi-ligne`,
                 items: [
                     {
                         designation: `Formation catalogue de M. Marc Pittet
-                        Méconnaissance de soit
-                        Dates: ...`, // multi-line
+Méconnaissance de soit
+Dates: ...`, // multi-line
                         unit: 'jours', // heures ou jours, drop-down
                         amount: 2,
                         price: 130,
                     },
                     {
                         designation: `Formation sur mesure
-                        Méconnaissance de soit
-                        Dates: ...
-                        14 participant.e.s`,
+Méconnaissance de soit
+Dates: ...
+14 participant.e.s`,
                         unit: 'heures',
                         amount: 1,
                         price: 60,
@@ -181,7 +181,7 @@ multi-ligne`,
             {
                 id: '0-1-2',
                 organizationId: 2,
-                customClientAddress: 'This should be a multiline text area',
+                customClientAddress: 'Adresse du client custom 2',
                 customClientEmail: 'test@example.com',
                 vatCode: 'EXONERE',
                 invoiceDate: '2024-06-22T21:15:21.000Z',
@@ -191,18 +191,13 @@ multi-ligne`,
                 invoiceReason: 'Explication de la raison du document',
                 items: [
                     {
-                        designation: `Formation catalogue de M. Marc Pittet
-                        Méconnaissance de soit
-                        Dates: ...`,
+                        designation: `Formation catalogue`,
                         unit: 'jours',
                         amount: 2,
                         price: 130,
                     },
                     {
-                        designation: `Formation sur mesure
-                        Méconnaissance de soit
-                        Dates: ...
-                        14 participant.e.s`,
+                        designation: `Formation sur mesure`,
                         unit: 'heures',
                         amount: 1,
                         price: 60,
