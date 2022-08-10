@@ -34,6 +34,13 @@ createService(
                     start_date: true,
                     end_date: true,
                     description: true,
+                    claro_user: {
+                        select: {
+                            first_name: true,
+                            last_name: true,
+                            mail: true,
+                        },
+                    },
                     claro_location_room: {
                         select: {
                             uuid: true,
@@ -76,6 +83,7 @@ createService(
                     description,
                     claro_location_room,
                     claro_cursusbundle_session_event,
+                    claro_user: { first_name: firstName, last_name: lastName, mail: email },
                     uuid,
                     ...rest
                 }) => {
@@ -112,6 +120,7 @@ createService(
                         studentsCount,
                         teachers,
                         seances,
+                        creator: { firstName, lastName, email },
                     }
                 }
             )
