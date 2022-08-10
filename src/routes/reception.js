@@ -9,7 +9,37 @@ createService(
     'get',
     '/',
     async (req, res) => {
+        // const getTomorrow = () => {
+        //     const tomorrow = new Date()
+
+        //     const tomorrowMs = tomorrow.setDate(tomorrow.getDate() + 1)
+
+        //     return new Date(tomorrowMs).toISOString()
+        // }
+
         const eventsPrisma = await prisma.claro_planned_object.findMany({
+            where: {
+                start_date: {
+                    // gte: new Date().toISOString(),
+                    // lte: getTomorrow(),
+                    gte: new Date('2022-08-23').toISOString(),
+                    lte: new Date('2022-08-24').toISOString(),
+                },
+            },
+            orderBy: [
+                {
+                    start_date: 'asc',
+                },
+                {
+                    claro_cursusbundle_session_event: {
+                        claro_cursusbundle_course_session: {
+                            claro_cursusbundle_course: {
+                                course_name: 'asc',
+                            },
+                        },
+                    },
+                },
+            ],
             select: {
                 uuid: true,
                 start_date: true,
