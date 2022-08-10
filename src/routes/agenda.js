@@ -8,7 +8,7 @@ export const agendaRouter = Router()
 createService(
     'get',
     '/',
-    async (req, res) => {
+    async (_req, res) => {
         const roomsPrisma = await prisma.claro_location_room.findMany({
             select: {
                 event_name: true,
@@ -63,6 +63,16 @@ createService(
                             },
                             claro_cursusbundle_course_session: {
                                 select: {
+                                    max_users: true,
+                                    claro_cursusbundle_course_session_user: {
+                                        where: {
+                                            validated: true,
+                                            registration_type: 'learner',
+                                        },
+                                        select: {
+                                            uuid: true,
+                                        },
+                                    },
                                     claro_cursusbundle_session_event: {
                                         include: {
                                             claro_planned_object: true,
@@ -114,6 +124,10 @@ createService(
                             description: claro_location_room?.description?.replace(/(<([^>]+)>)/gi, ''),
                             capacity: claro_location_room?.capacity,
                         },
+                        sessionInscriptionsCount:
+                            claro_cursusbundle_session_event?.claro_cursusbundle_course_session
+                                ?.claro_cursusbundle_course_session_user.length,
+                        sessionMaxUsers: claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.max_users,
                         start: start_date,
                         end: end_date,
                         description: description?.replace(/(<([^>]+)>)/gi, ''),
