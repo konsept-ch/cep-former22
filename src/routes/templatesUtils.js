@@ -1,6 +1,6 @@
 import { prisma } from '..'
 import { callApi } from '../callApi'
-import { fetchSessionsLessons, formatDate, getSessionAddress } from '../utils'
+import { fetchSessionsLessons, formatDate, formatDateWithTimezone, getSessionAddress } from '../utils'
 import { fetchInscriptionsWithStatuses } from './inscriptionsUtils'
 
 const formatSessionLessons = ({ sessionLessons }) => {
@@ -9,10 +9,7 @@ const formatSessionLessons = ({ sessionLessons }) => {
     const lessonsResume = sessionLessons.map(({ start, end }) =>
         [
             formatDate({ dateString: start, isDateVisible: true }),
-            [
-                formatDate({ dateString: start, isTimeVisible: true }),
-                formatDate({ dateString: end, isTimeVisible: true }),
-            ].join('-'),
+            [formatDateWithTimezone({ dateString: start }), formatDateWithTimezone({ dateString: end })].join('-'),
         ].join(', ')
     )
 

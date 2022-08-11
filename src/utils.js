@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from 'uuid'
-import { callApi } from './callApi'
+import { DateTime } from 'luxon'
+
 import { app, prisma } from './'
+import { callApi } from './callApi'
 import { winstonLogger } from './winston'
 
 // for testing/development purposes only
@@ -29,6 +31,12 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
 
     return [getDate(), getTime()].filter(Boolean).join(', ')
 }
+
+export const formatDateWithTimezone = ({ dateString }) =>
+    DateTime.fromISO(dateString, { zone: 'UTC' })
+        .setZone('Europe/Zurich')
+        .setLocale('fr')
+        .toLocaleString(DateTime.DATETIME_FULL)
 
 export const LOG_STATUSES = {
     PENDING: 'Pending',
