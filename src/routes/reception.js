@@ -22,8 +22,13 @@ createService(
                 start_date: {
                     // gte: new Date().toISOString(),
                     // lte: getTomorrow(),
-                    gte: new Date('2022-08-23').toISOString(),
-                    lte: new Date('2022-08-24').toISOString(),
+                    gte: new Date('2022-08-24').toISOString(),
+                    lte: new Date('2022-08-27').toISOString(),
+                },
+                claro__location: {
+                    name: {
+                        equals: 'CEP',
+                    },
                 },
             },
             orderBy: [
