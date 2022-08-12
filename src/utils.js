@@ -32,11 +32,11 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
     return [getDate(), getTime()].filter(Boolean).join(', ')
 }
 
-export const formatDateWithTimezone = ({ dateString }) =>
+export const formatTime = ({ dateString }) =>
     DateTime.fromISO(dateString, { zone: 'UTC' })
         .setZone('Europe/Zurich')
         .setLocale('fr')
-        .toLocaleString(DateTime.DATETIME_FULL)
+        .toLocaleString(DateTime.TIME_SIMPLE)
 
 export const LOG_STATUSES = {
     PENDING: 'Pending',
