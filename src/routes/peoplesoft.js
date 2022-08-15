@@ -119,10 +119,20 @@ createService(
                                     max_users: true,
                                     claro_cursusbundle_course_session_user: {
                                         where: {
+                                            // TODO: by organisation - child of Lausanne
                                             claro_user: {
-                                                OR: ['@lausanne.ch', '@tridel.ch', '@spsl-lausanne.ch'].map(
-                                                    (emailDomain) => ({ mail: { contains: emailDomain } })
-                                                ),
+                                                // OR: ['@lausanne.ch', '@tridel.ch', '@spsl-lausanne.ch'].map(
+                                                //     (emailDomain) => ({ mail: { contains: emailDomain } })
+                                                // ),
+                                                OR: {
+                                                    user_organization: {
+                                                        claro__organization: {
+                                                            name: {
+                                                                equals: 'Ville de Lausanne',
+                                                            },
+                                                        },
+                                                    },
+                                                },
                                             },
                                             registration_type: 'learner',
                                         },

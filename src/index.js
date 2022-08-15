@@ -30,9 +30,10 @@ app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 
 const port = process.env.PORT ?? 4000
+const apiPrefix = '/api/v1'
 const SWAGGER_UI_PATH = '/api-docs'
-const SWAGGER_SCHEMA_PATH = '/api-docs/swagger.json'
-const SWAGGER_SCHEMA_YAML_PATH = '/api-docs/swagger.yaml'
+const SWAGGER_SCHEMA_PATH = `${SWAGGER_UI_PATH}/swagger.json`
+const SWAGGER_SCHEMA_YAML_PATH = `${SWAGGER_UI_PATH}/swagger.yaml`
 const swaggerOptions = {
     definition: {
         openapi: '3.0.3',
@@ -62,42 +63,44 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
 app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi.setup(null, swaggerUiOptions))
 
 generateEndpoints()
-app.use('/auth', authRouter)
-app.use('/agenda', agendaRouter)
-app.use('/courses', coursesRouter)
-app.use('/mail', mailRouter)
-app.use('/inscriptions', inscriptionsRouter)
-app.use('/invoices', invoicesRouter)
-app.use('/organizations', organizationsRouter)
+
 app.use('/peoplesoft', peoplesoftRouter)
-app.use('/sessions', sessionsRouter)
-app.use('/templates', templatesRouter)
-app.use('/users', usersRouter)
-app.use('/reception', receptionRouter)
+
+app.use(`${apiPrefix}/auth`, authRouter)
+app.use(`${apiPrefix}/agenda`, agendaRouter)
+app.use(`${apiPrefix}/courses`, coursesRouter)
+app.use(`${apiPrefix}/mail`, mailRouter)
+app.use(`${apiPrefix}/inscriptions`, inscriptionsRouter)
+app.use(`${apiPrefix}/invoices`, invoicesRouter)
+app.use(`${apiPrefix}/organizations`, organizationsRouter)
+app.use(`${apiPrefix}/sessions`, sessionsRouter)
+app.use(`${apiPrefix}/templates`, templatesRouter)
+app.use(`${apiPrefix}/users`, usersRouter)
+app.use(`${apiPrefix}/reception`, receptionRouter)
 
 app.get('/', (_req, res) => {
-    const allRoutes = app._router.stack
-        .filter(({ name }) => name === 'bound dispatch')
-        .map(({ route: { path, stack } }) => ({ path, method: stack[0].method }))
-        .slice(0, -1)
+    // const allRoutes = app._router.stack
+    //     .filter(({ name }) => name === 'bound dispatch')
+    //     .map(({ route: { path, stack } }) => ({ path, method: stack[0].method }))
+    //     .slice(0, -1)
 
     const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
         path: `/peoplesoft${path}`,
         method: stack[0].method,
     }))
-    const mailRoutes = mailRouter.stack.map(({ route: { path, stack } }) => ({
-        path: `/mail${path}`,
-        method: stack[0].method,
-    }))
-    const templatesRoutes = templatesRouter.stack.map(({ route: { path, stack } }) => ({
-        path: `/templates${path}`,
-        method: stack[0].method,
-    }))
+    // const mailRoutes = mailRouter.stack.map(({ route: { path, stack } }) => ({
+    //     path: `/mail${path}`,
+    //     method: stack[0].method,
+    // }))
+    // const templatesRoutes = templatesRouter.stack.map(({ route: { path, stack } }) => ({
+    //     path: `/templates${path}`,
+    //     method: stack[0].method,
+    // }))
 
     const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
 
     res.send(
-        `<ul><li>${SWAGGER_LINK}</li>${[...allRoutes, ...peoplesoftRoutes, ...mailRoutes, ...templatesRoutes]
+        `<ul><li>${SWAGGER_LINK}</li>${peoplesoftRoutes
             .map(({ path, method }) => `<li><a href="${path}">${path} (${method})</a></li>`)
             .join('')}</ul>`
     )
