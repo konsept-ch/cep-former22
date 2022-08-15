@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { prisma } from '..'
-import { createService } from '../utils'
+import { createService, addHours } from '../utils'
 
 export const receptionRouter = Router()
 
@@ -9,27 +9,28 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        // const getTomorrow = () => {
-        //     const tomorrow = new Date()
-
-        //     const tomorrowMs = tomorrow.setDate(tomorrow.getDate() + 1)
-
-        //     return new Date(tomorrowMs).toISOString()
-        // }
+        const currentDateTime = new Date() // pass '2022-09-29T11:00:00' to show events, if none are displayed
 
         const eventsPrisma = await prisma.claro_planned_object.findMany({
             where: {
                 start_date: {
-                    // gte: new Date().toISOString(),
-                    // lte: getTomorrow(),
-                    gte: new Date('2022-08-24').toISOString(),
-                    lte: new Date('2022-08-27').toISOString(),
+                    lte: addHours({
+                        numOfHours: 1.5,
+                        oldDate: currentDateTime,
+                    }).toISOString(),
+                },
+                end_date: {
+                    gte: currentDateTime.toISOString(),
                 },
                 claro__location: {
                     name: {
                         equals: 'CEP',
                     },
                 },
+                // TODO: ask CEP
+                // NOT: {
+                //     claro_location_room: null,
+                // },
             },
             orderBy: [
                 {

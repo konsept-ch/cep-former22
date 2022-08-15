@@ -179,3 +179,5 @@ export const getSessionAddress = ({ sessions, wantedSessionId }) => {
 
     return location
 }
+
+export const addHours = ({ numOfHours, oldDate }) => new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
