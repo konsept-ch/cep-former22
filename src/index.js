@@ -66,17 +66,17 @@ generateEndpoints()
 
 app.use('/peoplesoft', peoplesoftRouter)
 
-app.use(`${apiPrefix}/auth`, authRouter)
-app.use(`${apiPrefix}/agenda`, agendaRouter)
-app.use(`${apiPrefix}/courses`, coursesRouter)
-app.use(`${apiPrefix}/mail`, mailRouter)
-app.use(`${apiPrefix}/inscriptions`, inscriptionsRouter)
-app.use(`${apiPrefix}/invoices`, invoicesRouter)
-app.use(`${apiPrefix}/organizations`, organizationsRouter)
-app.use(`${apiPrefix}/sessions`, sessionsRouter)
-app.use(`${apiPrefix}/templates`, templatesRouter)
-app.use(`${apiPrefix}/users`, usersRouter)
-app.use(`${apiPrefix}/reception`, receptionRouter)
+app.use('/auth', authRouter)
+app.use('/agenda', agendaRouter)
+app.use('/courses', coursesRouter)
+app.use('/mail', mailRouter)
+app.use('/inscriptions', inscriptionsRouter)
+app.use('/invoices', invoicesRouter)
+app.use('/organizations', organizationsRouter)
+app.use('/sessions', sessionsRouter)
+app.use('/templates', templatesRouter)
+app.use('/users', usersRouter)
+app.use('/reception', receptionRouter)
 
 app.get('/', (_req, res) => {
     // const allRoutes = app._router.stack
