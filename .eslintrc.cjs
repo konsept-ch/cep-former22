@@ -25,7 +25,6 @@ module.exports = {
         'no-shadow': 'error',
         'no-undef': 'error',
         'no-undef-init': 'error',
-        'no-undefined': 'error',
         'no-use-before-define': 'error',
         'no-void': 'error',
         yoda: ['error', 'never', { exceptRange: true }],

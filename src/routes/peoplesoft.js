@@ -99,10 +99,67 @@ createService(
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
+                    const generateParentOrgFilter = ({ orgName, levels = 5 }) => ({
+                        claro__organization:
+                            levels > 0
+                                ? {
+                                      OR: [
+                                          {
+                                              name: {
+                                                  equals: orgName,
+                                              },
+                                          },
+                                          generateParentOrgFilter({ orgName, levels: levels - 1 }),
+                                      ],
+                                  }
+                                : {
+                                      name: {
+                                          equals: orgName,
+                                      },
+                                  },
+                    })
+
+                    const registrationConditions = {
+                        // reused in order to send only courses that have sessions that have inscriptions of Lausanne
+                        claro_user: {
+                            user_organization: {
+                                some: {
+                                    claro__organization: generateParentOrgFilter({
+                                        orgName: 'Ville de Lausanne (administration communale)',
+                                        levels: 5,
+                                    }),
+                                    // OR: [
+                                    //     {
+                                    //         name: {
+                                    //             equals: 'Ville de Lausanne (administration communale)',
+                                    //         },
+                                    //     },
+                                    //     {
+                                    //         claro__organization: {
+                                    //             name: {
+                                    //                 equals: 'Ville de Lausanne (administration communale)',
+                                    //             },
+                                    //         },
+                                    //     },
+                                    // ],
+                                },
+                            },
+                        },
+                        registration_type: 'learner',
+                    }
+
                     const courses = await prisma.claro_cursusbundle_course.findMany({
-                        where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
+                        where: {
+                            hidden: false,
+                            claro_cursusbundle_course_session: {
+                                some: {
+                                    claro_cursusbundle_course_session_user: {
+                                        some: registrationConditions,
+                                    },
+                                },
+                            },
+                        },
                         select: {
-                            // TODO: ask CEP if we should send the poster and thumbnail URLs
                             uuid: true,
                             code: true,
                             course_name: true,
@@ -111,31 +168,19 @@ createService(
                             session_hours: true,
                             plainDescription: true,
                             claro_cursusbundle_course_session: {
-                                where: { hidden: false }, // TODO: ask CEP about other filters except hidden: false
+                                where: {
+                                    hidden: false,
+                                    claro_cursusbundle_course_session_user: {
+                                        some: registrationConditions,
+                                    },
+                                },
                                 select: {
                                     uuid: true,
                                     code: true,
                                     createdAt: true,
                                     max_users: true,
                                     claro_cursusbundle_course_session_user: {
-                                        where: {
-                                            // TODO: by organisation - child of Lausanne
-                                            claro_user: {
-                                                // OR: ['@lausanne.ch', '@tridel.ch', '@spsl-lausanne.ch'].map(
-                                                //     (emailDomain) => ({ mail: { contains: emailDomain } })
-                                                // ),
-                                                OR: {
-                                                    user_organization: {
-                                                        claro__organization: {
-                                                            name: {
-                                                                equals: 'Ville de Lausanne',
-                                                            },
-                                                        },
-                                                    },
-                                                },
-                                            },
-                                            registration_type: 'learner',
-                                        },
+                                        where: registrationConditions,
                                         select: {
                                             uuid: true,
                                             registration_date: true,
@@ -207,7 +252,6 @@ createService(
                                     ...inscriptionsAdditionalData.find(
                                         ({ inscriptionId }) => inscriptionId === inscription.uuid
                                     ),
-                                    // eslint-disable-next-line no-undefined -- unset inscriptionId
                                     inscriptionId: undefined,
                                 }))
                                 .filter(
@@ -216,18 +260,13 @@ createService(
                                         updatedAt == null ||
                                         new Date(updatedAt).getTime() >= new Date(statusUpdatedSince).getTime()
                                 ),
-                            // eslint-disable-next-line no-undefined -- unset sessionId
                             sessionId: undefined,
-                            // eslint-disable-next-line no-undefined -- renamed to inscriptions
                             claro_cursusbundle_course_session_user: undefined,
                         })),
-                        // eslint-disable-next-line no-undefined -- unset courseId
                         courseId: undefined,
-                        // eslint-disable-next-line no-undefined -- renamed to sessions
                         claro_cursusbundle_course_session: undefined,
                     }))
 
-                    // TODO: ask CEP about other filters based on business logic
                     // const filteredCoursesData = fullCoursesData.filter(({ restrictions: { hidden } }) => !hidden)
                     const filteredCoursesData = fullCoursesData
 
@@ -326,7 +365,10 @@ createService(
                         })
                     )
 
-                    respondToPeopleSoft(res, renamedFieldsCoursesData ?? 'Aucun cours trouvé')
+                    respondToPeopleSoft(
+                        res,
+                        renamedFieldsCoursesData ?? 'Aucun cours avec sessions avec inscription de la ville trouvé'
+                    )
                 }
             }
         }
