@@ -4,7 +4,7 @@ import convert from 'xml-js'
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
 import { createService } from '../utils'
 import { prisma } from '..'
-import { deriveInscriptionStatus, getMainOrganization, transformFlagsToStatus } from './inscriptionsUtils'
+import { deriveInscriptionStatus, getMainOrganization, STATUSES, transformFlagsToStatus } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
@@ -128,20 +128,6 @@ createService(
                                         orgName: 'Ville de Lausanne (administration communale)',
                                         levels: 5,
                                     }),
-                                    // OR: [
-                                    //     {
-                                    //         name: {
-                                    //             equals: 'Ville de Lausanne (administration communale)',
-                                    //         },
-                                    //     },
-                                    //     {
-                                    //         claro__organization: {
-                                    //             name: {
-                                    //                 equals: 'Ville de Lausanne (administration communale)',
-                                    //             },
-                                    //         },
-                                    //     },
-                                    // ],
                                 },
                             },
                         },
@@ -153,6 +139,7 @@ createService(
                             hidden: false,
                             claro_cursusbundle_course_session: {
                                 some: {
+                                    hidden: false,
                                     claro_cursusbundle_course_session_user: {
                                         some: registrationConditions,
                                     },
@@ -274,96 +261,111 @@ createService(
                     // maybe better to return everything, in order to avoid timezone confusion?
 
                     // note: we rename some fields here for clarity and consistency
-                    const renamedFieldsCoursesData = filteredCoursesData.map(
-                        ({
-                            uuid: id,
-                            code,
-                            course_name: name,
-                            createdAt: creationDate,
-                            typeStage = null,
-                            teachingMethod = null,
-                            codeCategory = null,
-                            isRecurrent = false,
-                            session_days,
-                            session_hours,
-                            plainDescription: summary,
-                            sessions,
-                            ...restCourseData
-                        }) => ({
-                            ...restCourseData,
-                            id,
-                            code,
-                            name,
-                            isActive: true, // TODO: discuss: statut stage actif/inactif
-                            creationDate,
-                            typeStage,
-                            teachingMethod,
-                            codeCategory,
-                            isCertifying: typeStage === 'Certificat', // TODO constant
-                            isRecurrent,
-                            durationHours: session_days * 8 + session_hours,
-                            summary,
-                            sessions: sessions.map(
-                                ({
-                                    uuid: sessionId,
-                                    code: sessionCode,
-                                    course_name: sessionName,
-                                    createdAt: sessionCreationDate,
-                                    claro_cursusbundle_session_event,
-                                    max_users: maxParticipants,
-                                    sessionFormat = null,
-                                    sessionLocation = null,
-                                    inscriptions,
-                                    ...restSessionData
-                                }) => ({
-                                    ...restSessionData,
-                                    id: sessionId,
-                                    code: sessionCode,
-                                    name: sessionName,
-                                    creationDate: sessionCreationDate,
-                                    eventDates: claro_cursusbundle_session_event
-                                        .map(({ claro_planned_object: { start_date } }) => start_date?.toISOString())
-                                        .sort(),
-                                    maxParticipants,
-                                    sessionFormat,
-                                    sessionLocation,
-                                    inscriptions: inscriptions.map(
+                    const renamedFieldsCoursesData = filteredCoursesData
+                        .map(
+                            ({
+                                uuid: id,
+                                code,
+                                course_name: name,
+                                createdAt: creationDate,
+                                typeStage = null,
+                                teachingMethod = null,
+                                codeCategory = null,
+                                isRecurrent = false,
+                                session_days,
+                                session_hours,
+                                plainDescription: summary,
+                                sessions,
+                                ...restCourseData
+                            }) => ({
+                                ...restCourseData,
+                                id,
+                                code,
+                                name,
+                                isActive: true, // TODO: discuss: statut stage actif/inactif
+                                creationDate,
+                                typeStage,
+                                teachingMethod,
+                                codeCategory,
+                                isCertifying: typeStage === 'Certificat', // TODO constant
+                                isRecurrent,
+                                durationHours: session_days * 8 + session_hours,
+                                summary,
+                                sessions: sessions
+                                    .map(
                                         ({
-                                            uuid: inscriptionId,
-                                            registration_date,
-                                            validated,
-                                            status,
-                                            registration_type,
-                                            updatedAt = registration_date,
-                                            claro_user: { mail, uuid: userId, user_organization },
-                                            inscriptionStatus,
-                                            ...restInscriptionData
+                                            uuid: sessionId,
+                                            code: sessionCode,
+                                            course_name: sessionName,
+                                            createdAt: sessionCreationDate,
+                                            claro_cursusbundle_session_event,
+                                            max_users: maxParticipants,
+                                            sessionFormat = null,
+                                            sessionLocation = null,
+                                            inscriptions,
+                                            ...restSessionData
                                         }) => ({
-                                            ...restInscriptionData,
-                                            id: inscriptionId,
-                                            status: deriveInscriptionStatus({
-                                                savedStatus: inscriptionStatus,
-                                                transformedStatus: transformFlagsToStatus({
-                                                    validated,
-                                                    registrationType: registration_type,
-                                                    hrValidationStatus: status,
-                                                    isHrValidationEnabled:
-                                                        getMainOrganization(user_organization)
-                                                            ?.claro_cursusbundle_quota != null,
-                                                }),
-                                            }).replace('Réfusée par RH', 'Refusée par RH'), // patch typo until fixed in db
-                                            statusUpdatedAt: updatedAt,
-                                            inscriptionDate: registration_date,
-                                            user: {
-                                                id: userId,
-                                                email: mail,
-                                            },
+                                            ...restSessionData,
+                                            id: sessionId,
+                                            code: sessionCode,
+                                            name: sessionName,
+                                            creationDate: sessionCreationDate,
+                                            eventDates: claro_cursusbundle_session_event
+                                                .map(({ claro_planned_object: { start_date } }) =>
+                                                    start_date?.toISOString()
+                                                )
+                                                .sort(),
+                                            maxParticipants,
+                                            sessionFormat,
+                                            sessionLocation,
+                                            inscriptions: inscriptions
+                                                .map(
+                                                    ({
+                                                        uuid: inscriptionId,
+                                                        registration_date,
+                                                        validated,
+                                                        status,
+                                                        registration_type,
+                                                        updatedAt = registration_date,
+                                                        claro_user: { mail, uuid: userId, user_organization },
+                                                        inscriptionStatus,
+                                                        ...restInscriptionData
+                                                    }) => ({
+                                                        ...restInscriptionData,
+                                                        id: inscriptionId,
+                                                        status: deriveInscriptionStatus({
+                                                            savedStatus: inscriptionStatus,
+                                                            transformedStatus: transformFlagsToStatus({
+                                                                validated,
+                                                                registrationType: registration_type,
+                                                                hrValidationStatus: status,
+                                                                isHrValidationEnabled:
+                                                                    getMainOrganization(user_organization)
+                                                                        ?.claro_cursusbundle_quota != null,
+                                                            }),
+                                                        }).replace('Réfusée par RH', 'Refusée par RH'), // patch typo until fixed in db
+                                                        statusUpdatedAt: updatedAt,
+                                                        inscriptionDate: registration_date,
+                                                        user: {
+                                                            id: userId,
+                                                            email: mail,
+                                                        },
+                                                    })
+                                                )
+                                                .filter(
+                                                    ({ status }) =>
+                                                        ![
+                                                            STATUSES.ENTREE_WEB,
+                                                            STATUSES.EN_ATTENTE,
+                                                            STATUSES.INVITEE,
+                                                        ].includes(status)
+                                                ),
                                         })
-                                    ),
-                                })
-                            ),
-                        })
-                    )
+                                    )
+                                    .filter(({ inscriptions }) => inscriptions.length > 0),
+                            })
+                        )
+                        .filter(({ sessions }) => sessions.length > 0)
 
                     respondToPeopleSoft(
                         res,
