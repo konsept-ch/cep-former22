@@ -15,7 +15,7 @@ createService(
             where: {
                 start_date: {
                     lte: addHours({
-                        numOfHours: 1.5,
+                        numOfHours: 1.5, // start showing events an hour and a half before they start
                         oldDate: currentDateTime,
                     }).toISOString(),
                 },
@@ -27,10 +27,9 @@ createService(
                         equals: 'CEP',
                     },
                 },
-                // TODO: ask CEP
-                // NOT: {
-                //     claro_location_room: null,
-                // },
+                NOT: {
+                    claro_location_room: null,
+                },
             },
             orderBy: [
                 {
@@ -82,34 +81,22 @@ createService(
                 },
             },
         })
+
         if (typeof eventsPrisma !== 'undefined') {
             const events = eventsPrisma.map(
-                ({ uuid, start_date, end_date, claro_location_room, claro_cursusbundle_session_event, ...rest }) => {
-                    let teachers
-
-                    if (claro_cursusbundle_session_event?.claro_cursusbundle_session_event_user) {
-                        const { claro_cursusbundle_session_event_user: users } = claro_cursusbundle_session_event
-
-                        teachers = users.map(
-                            ({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`
-                        )
-                    }
-
-                    const courseName =
-                        claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_course
-                            ?.course_name
-
-                    return {
-                        ...rest,
-                        id: uuid,
-                        start: start_date,
-                        end: end_date,
-                        roomName: claro_location_room?.event_name,
-                        roomFloor: claro_location_room?.description?.replace(/(<([^>]+)>)/gi, ''),
-                        teachers,
-                        name: courseName,
-                    }
-                }
+                ({ uuid, start_date, end_date, claro_location_room, claro_cursusbundle_session_event, ...rest }) => ({
+                    ...rest,
+                    id: uuid,
+                    start: start_date,
+                    end: end_date,
+                    roomName: claro_location_room?.event_name,
+                    roomFloor: claro_location_room?.description?.replace(/(<([^>]+)>)/gi, ''),
+                    tutors: claro_cursusbundle_session_event?.claro_cursusbundle_session_event_user?.map(
+                        ({ claro_user: { first_name, last_name } }) => ({ firstName: first_name, lastName: last_name })
+                    ),
+                    name: claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_course
+                        ?.course_name,
+                })
             )
 
             res.json(events)
