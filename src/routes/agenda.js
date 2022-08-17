@@ -80,7 +80,17 @@ createService(
                                     },
                                     claro_cursusbundle_session_event: {
                                         include: {
-                                            claro_planned_object: true,
+                                            claro_planned_object: {
+                                                select: {
+                                                    entity_name: true,
+                                                    start_date: true,
+                                                    claro__location: {
+                                                        select: {
+                                                            name: true,
+                                                        },
+                                                    },
+                                                },
+                                            },
                                         },
                                     },
                                 },
@@ -100,6 +110,8 @@ createService(
                     claro_cursusbundle_session_event,
                     claro_user: { first_name: firstName, last_name: lastName, mail: email },
                     uuid,
+                    // eslint-disable-next-line no-unused-vars
+                    // claro__location: _claro__location,
                     ...rest
                 }) => {
                     let studentsCount
@@ -139,6 +151,18 @@ createService(
                         studentsCount,
                         teachers,
                         seances,
+                        isFirstPhysical:
+                            // TODO: can we optimize calculating isFirstPhysical?
+                            claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_session_event
+                                .sort(
+                                    (
+                                        { claro_planned_object: { start_date: a } },
+                                        { claro_planned_object: { start_date: b } }
+                                    ) => a - b
+                                )
+                                .find(
+                                    ({ claro_planned_object: { claro__location } }) => claro__location?.name === 'CEP'
+                                )?.claro_planned_object?.entity_name === entity_name,
                         creator: { firstName, lastName, email },
                     }
                 }
