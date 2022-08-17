@@ -66,7 +66,11 @@ createService(
                 uuid: sessionId,
             },
             select: {
-                course_name: true,
+                claro_cursusbundle_course: {
+                    select: {
+                        course_name: true,
+                    },
+                },
                 code: true,
                 claro_cursusbundle_session_event: {
                     where: {
@@ -106,7 +110,7 @@ createService(
         res.json(
             sessionPresenceList
                 ? {
-                      courseName: sessionPresenceList.course_name,
+                      courseName: sessionPresenceList.claro_cursusbundle_course.course_name,
                       sessionCode: sessionPresenceList.code,
                       eventDates: sessionPresenceList.claro_cursusbundle_session_event.map(
                           ({ claro_planned_object: { start_date } }) => start_date
