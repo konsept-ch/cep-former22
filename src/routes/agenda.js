@@ -34,6 +34,11 @@ createService(
                     start_date: true,
                     end_date: true,
                     description: true,
+                    claro__location: {
+                        select: {
+                            name: true,
+                        },
+                    },
                     claro_user: {
                         select: {
                             first_name: true,
