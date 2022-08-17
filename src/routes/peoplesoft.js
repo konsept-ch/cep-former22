@@ -211,6 +211,7 @@ createService(
                             teachingMethod: true,
                             codeCategory: true,
                             isRecurrent: true,
+                            theme: true,
                             // note: we don't send coordinator and responsible to peoplesoft
                             coordinator: false,
                             responsible: false,
@@ -270,6 +271,7 @@ createService(
                                 createdAt: creationDate,
                                 typeStage = null,
                                 teachingMethod = null,
+                                theme = null,
                                 codeCategory = null,
                                 isRecurrent = false,
                                 session_days,
@@ -286,6 +288,7 @@ createService(
                                 creationDate,
                                 typeStage,
                                 teachingMethod,
+                                theme,
                                 codeCategory,
                                 isCertifying: typeStage === 'Certificat', // TODO constant
                                 isRecurrent,
