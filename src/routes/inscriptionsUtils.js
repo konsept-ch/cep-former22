@@ -453,3 +453,11 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         return []
     }
 }
+
+export const getNamesByType = ({ inscriptions, registrationType }) =>
+    inscriptions
+        .filter(({ registration_type }) => registration_type === registrationType)
+        .map(({ claro_user: { first_name, last_name } }) => ({
+            firstName: first_name,
+            lastName: last_name,
+        }))

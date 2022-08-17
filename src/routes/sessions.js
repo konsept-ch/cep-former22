@@ -4,6 +4,7 @@ import { prisma } from '..'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, LOG_TYPES } from '../utils'
+import { getNamesByType } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
 export const sessionsRouter = Router()
@@ -49,6 +50,78 @@ createService(
         })
 
         res.json(fullSessionsData ?? 'Aucunes session trouvées')
+    },
+    null,
+    sessionsRouter
+)
+
+createService(
+    'get',
+    '/presence-list/:sessionId',
+    async (req, res) => {
+        const { sessionId } = req.params
+
+        const sessionPresenceList = await prisma.claro_cursusbundle_course_session.findUnique({
+            where: {
+                uuid: sessionId,
+            },
+            select: {
+                course_name: true,
+                code: true,
+                claro_cursusbundle_session_event: {
+                    where: {
+                        claro_planned_object: {
+                            claro__location: {
+                                name: {
+                                    equals: 'CEP',
+                                },
+                            },
+                        },
+                    },
+                    select: {
+                        claro_planned_object: {
+                            select: {
+                                start_date: true,
+                            },
+                        },
+                    },
+                },
+                claro_cursusbundle_course_session_user: {
+                    where: {
+                        OR: [{ registration_type: 'learner' }, { registration_type: 'tutor' }],
+                    },
+                    select: {
+                        registration_type: true,
+                        claro_user: {
+                            select: {
+                                first_name: true,
+                                last_name: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        res.json(
+            sessionPresenceList
+                ? {
+                      courseName: sessionPresenceList.course_name,
+                      sessionCode: sessionPresenceList.code,
+                      eventDates: sessionPresenceList.claro_cursusbundle_session_event.map(
+                          ({ claro_planned_object: { start_date } }) => start_date
+                      ),
+                      learners: getNamesByType({
+                          inscriptions: sessionPresenceList.claro_cursusbundle_course_session_user,
+                          registrationType: 'learner',
+                      }),
+                      tutors: getNamesByType({
+                          inscriptions: sessionPresenceList.claro_cursusbundle_course_session_user,
+                          registrationType: 'tutor',
+                      }),
+                  }
+                : "La session n'est pas trouvée"
+        )
     },
     null,
     sessionsRouter
