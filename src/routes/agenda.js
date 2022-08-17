@@ -69,6 +69,11 @@ createService(
                             claro_cursusbundle_course_session: {
                                 select: {
                                     max_users: true,
+                                    claro_cursusbundle_course: {
+                                        select: {
+                                            uuid: true,
+                                        },
+                                    },
                                     claro_cursusbundle_course_session_user: {
                                         where: {
                                             validated: true,
@@ -97,6 +102,30 @@ createService(
                             },
                         },
                     },
+                },
+            })
+
+            // TODO: use foreign key for courses instead of additional request
+            const coursesFormer22Data = await prisma.former22_course.findMany({
+                select: {
+                    courseId: true,
+                    coordinator: true, // TODO: use user uuid to save coordinator, perhaps foreign key
+                },
+            })
+
+            const usersFormer22Data = await prisma.former22_user.findMany({
+                select: {
+                    userId: true,
+                    colorCode: true,
+                },
+            })
+
+            // TODO: foreign keys
+            const allUsers = await prisma.claro_user.findMany({
+                select: {
+                    uuid: true,
+                    first_name: true,
+                    last_name: true,
                 },
             })
 
@@ -131,6 +160,17 @@ createService(
                             ?.filter(({ claro_planned_object }) => claro_planned_object.entity_name !== entity_name)
                             ?.map(({ claro_planned_object }) => claro_planned_object.entity_name)
 
+                    const coordinator = coursesFormer22Data.find(
+                        ({ courseId }) =>
+                            courseId ===
+                            claro_cursusbundle_session_event?.claro_cursusbundle_course_session
+                                ?.claro_cursusbundle_course?.uuid
+                    )?.coordinator
+
+                    const coordinatorUuid = allUsers.find(
+                        ({ first_name, last_name }) => `${first_name} ${last_name}` === coordinator
+                    )?.uuid
+
                     return {
                         ...rest,
                         id: uuid,
@@ -164,6 +204,9 @@ createService(
                                     ({ claro_planned_object: { claro__location } }) => claro__location?.name === 'CEP'
                                 )?.claro_planned_object?.entity_name === entity_name,
                         creator: { firstName, lastName, email },
+                        coordinator,
+                        coordinatorColorCode: usersFormer22Data.find(({ userId }) => userId === coordinatorUuid)
+                            ?.colorCode,
                     }
                 }
             )
