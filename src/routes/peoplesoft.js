@@ -177,6 +177,8 @@ createService(
                                                 select: {
                                                     mail: true,
                                                     uuid: true,
+                                                    first_name: true,
+                                                    last_name: true,
                                                     user_organization: {
                                                         include: {
                                                             claro__organization: {
@@ -330,7 +332,13 @@ createService(
                                                         status,
                                                         registration_type,
                                                         updatedAt = registration_date,
-                                                        claro_user: { mail, uuid: userId, user_organization },
+                                                        claro_user: {
+                                                            mail,
+                                                            uuid: userId,
+                                                            first_name,
+                                                            last_name,
+                                                            user_organization,
+                                                        },
                                                         inscriptionStatus,
                                                         ...restInscriptionData
                                                     }) => ({
@@ -352,6 +360,8 @@ createService(
                                                         user: {
                                                             id: userId,
                                                             email: mail,
+                                                            firstName: first_name,
+                                                            lastName: last_name,
                                                         },
                                                     })
                                                 )
