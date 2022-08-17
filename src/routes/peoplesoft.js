@@ -362,6 +362,7 @@ createService(
                                                             email: mail,
                                                             firstName: first_name,
                                                             lastName: last_name,
+                                                            organization: user_organization,
                                                         },
                                                     })
                                                 )
