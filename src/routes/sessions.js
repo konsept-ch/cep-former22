@@ -94,6 +94,18 @@ createService(
                     where: {
                         OR: [{ registration_type: 'learner' }, { registration_type: 'tutor' }],
                     },
+                    orderBy: [
+                        {
+                            claro_user: {
+                                last_name: 'asc',
+                            },
+                        },
+                        {
+                            claro_user: {
+                                first_name: 'asc',
+                            },
+                        },
+                    ],
                     select: {
                         registration_type: true,
                         claro_user: {
