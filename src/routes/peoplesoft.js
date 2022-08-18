@@ -362,9 +362,9 @@ createService(
                                                             email: mail,
                                                             firstName: first_name,
                                                             lastName: last_name,
-                                                            // organizations: user_organization.map(
-                                                            //     ({ claro__organization: { name: orgName } }) => orgName
-                                                            // ),
+                                                            organizations: user_organization.map(
+                                                                ({ claro__organization: { name: orgName } }) => orgName
+                                                            ),
                                                         },
                                                     })
                                                 )
