@@ -126,6 +126,15 @@ createService(
                     uuid: true,
                     first_name: true,
                     last_name: true,
+                    claro_user_role: {
+                        select: {
+                            claro_role: {
+                                select: {
+                                    translation_key: true,
+                                },
+                            },
+                        },
+                    },
                 },
             })
 
@@ -168,7 +177,9 @@ createService(
                     )?.coordinator
 
                     const coordinatorUuid = allUsers.find(
-                        ({ first_name, last_name }) => `${first_name} ${last_name}` === coordinator
+                        ({ first_name, last_name, claro_user_role }) =>
+                            `${first_name} ${last_name}` === coordinator &&
+                            claro_user_role.some(({ claro_role: { translation_key } }) => translation_key === 'admin')
                     )?.uuid
 
                     return {
