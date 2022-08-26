@@ -135,12 +135,7 @@ createService(
 
         // const statusesForRefusalRh = [STATUSES.REFUSEE_PAR_RH]
         // const statusesForValidation = [STATUSES.A_TRAITER_PAR_RH, STATUSES.ENTREE_WEB, STATUSES.ACCEPTEE_PAR_CEP]
-        const statusesForAnnulation = [
-            STATUSES.NON_PARTICIPATION,
-            STATUSES.ANNULEE,
-            STATUSES.REFUSEE_PAR_CEP,
-            STATUSES.ECARTEE,
-        ]
+        const statusesForAnnulation = [STATUSES.ANNULEE, STATUSES.REFUSEE_PAR_CEP, STATUSES.ECARTEE]
 
         if (typeof currentInscription !== 'undefined') {
             if (emailTemplateId) {
