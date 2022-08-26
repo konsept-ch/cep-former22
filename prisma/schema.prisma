@@ -58,8 +58,8 @@ model claro__location {
 model claro__location_organization {
   organization_id     Int
   location_id         Int
-  claro__location     claro__location     @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C4EBDE064D218E")
   claro__organization claro__organization @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C4EBDE032C8A3DE")
+  claro__location     claro__location     @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C4EBDE064D218E")
 
   @@id([organization_id, location_id])
   @@index([organization_id], map: "IDX_C4EBDE032C8A3DE")
@@ -77,9 +77,9 @@ model claro__open_badge_assertion {
   revoked                               Boolean
   revocationReason                      String?                                @db.LongText
   uuid                                  String                                 @unique(map: "UNIQ_B6E0ABADD17F50A6") @db.VarChar(36)
-  claro__open_badge_badge_class         claro__open_badge_badge_class?         @relation(fields: [badge_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B6E0ABADF7A2C2FC")
-  claro_user                            claro_user?                            @relation(fields: [recipient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B6E0ABADE92F8F78")
   claro__open_badge_verification_object claro__open_badge_verification_object? @relation(fields: [verification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_B6E0ABAD1623CB0A")
+  claro_user                            claro_user?                            @relation(fields: [recipient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B6E0ABADE92F8F78")
+  claro__open_badge_badge_class         claro__open_badge_badge_class?         @relation(fields: [badge_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B6E0ABADF7A2C2FC")
   claro__open_badge_evidence            claro__open_badge_evidence[]
   revocationlist_assertion              revocationlist_assertion[]
 
@@ -106,9 +106,9 @@ model claro__open_badge_badge_class {
   issuingPeer                 Boolean
   template_id                 Int?
   notifyGrant                 Boolean
-  claro__organization         claro__organization?          @relation(fields: [issuer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_7A1CAEBEBB9D6FEE")
   claro_template              claro_template?               @relation(fields: [template_id], references: [id], onUpdate: NoAction, map: "FK_7A1CAEBE5DA0FB8")
   claro_workspace             claro_workspace?              @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_7A1CAEBE82D40A1F")
+  claro__organization         claro__organization?          @relation(fields: [issuer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_7A1CAEBEBB9D6FEE")
   badgeclass_group            badgeclass_group[]
   badgeclass_user             badgeclass_user[]
   claro__open_badge_assertion claro__open_badge_assertion[]
@@ -127,8 +127,8 @@ model claro__open_badge_endorsement {
   issuedOn                              DateTime                               @db.DateTime(0)
   comment                               String                                 @db.LongText
   uuid                                  String                                 @unique(map: "UNIQ_F2235FAED17F50A6") @db.VarChar(36)
-  claro_user                            claro_user?                            @relation(fields: [issuer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_F2235FAEBB9D6FEE")
   claro__open_badge_verification_object claro__open_badge_verification_object? @relation(fields: [verification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_F2235FAE1623CB0A")
+  claro_user                            claro_user?                            @relation(fields: [issuer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_F2235FAEBB9D6FEE")
 
   @@index([verification_id], map: "IDX_F2235FAE1623CB0A")
   @@index([issuer_id], map: "IDX_F2235FAEBB9D6FEE")
@@ -186,11 +186,11 @@ model claro__open_badge_rule {
   action                        String                         @db.VarChar(255)
   data                          String                         @db.LongText
   uuid                          String                         @unique(map: "UNIQ_DE554AC7D17F50A6") @db.VarChar(36)
+  claro_resource_node           claro_resource_node?           @relation(fields: [node_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC7460D9FD7")
+  claro_workspace               claro_workspace?               @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC782D40A1F")
+  claro_role                    claro_role?                    @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC7D60322AC")
   claro__open_badge_badge_class claro__open_badge_badge_class? @relation(fields: [badge_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DE554AC7F7A2C2FC")
   claro_group                   claro_group?                   @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC7FE54D947")
-  claro_resource_node           claro_resource_node?           @relation(fields: [node_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC7460D9FD7")
-  claro_role                    claro_role?                    @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC7D60322AC")
-  claro_workspace               claro_workspace?               @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE554AC782D40A1F")
   claro__open_badge_evidence    claro__open_badge_evidence[]
 
   @@index([node_id], map: "IDX_DE554AC7460D9FD7")
@@ -258,8 +258,8 @@ model claro_activity {
   description                                                                       String                     @db.LongText
   primaryResource_id                                                                Int?
   resourceNode_id                                                                   Int?                       @unique(map: "UNIQ_E4A67CACB87FAB32")
-  claro_activity_parameters_claro_activity_parameters_idToclaro_activity_parameters claro_activity_parameters? @relation("claro_activity_parameters_idToclaro_activity_parameters", fields: [parameters_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E4A67CAC88BD9C1F")
   claro_resource_node_claro_activity_primaryResource_idToclaro_resource_node        claro_resource_node?       @relation("claro_activity_primaryResource_idToclaro_resource_node", fields: [primaryResource_id], references: [id], onUpdate: NoAction, map: "FK_E4A67CAC52410EEC")
+  claro_activity_parameters_claro_activity_parameters_idToclaro_activity_parameters claro_activity_parameters? @relation("claro_activity_parameters_idToclaro_activity_parameters", fields: [parameters_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E4A67CAC88BD9C1F")
   claro_resource_node_claro_activity_resourceNode_idToclaro_resource_node           claro_resource_node?       @relation("claro_activity_resourceNode_idToclaro_resource_node", fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E4A67CACB87FAB32")
   claro_activity_parameters_claro_activityToclaro_activity_parameters_activity_id   claro_activity_parameters? @relation("claro_activityToclaro_activity_parameters_activity_id")
 
@@ -284,8 +284,8 @@ model claro_activity_evaluation {
   evaluation_comment        String?                   @db.VarChar(255)
   details                   String?                   @db.LongText
   claro_activity_parameters claro_activity_parameters @relation(fields: [activity_parameters_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F75EC869896F55DB")
-  claro_log                 claro_log?                @relation(fields: [log_id], references: [id], onUpdate: NoAction, map: "FK_F75EC869EA675D86")
   claro_user                claro_user                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F75EC869A76ED395")
+  claro_log                 claro_log?                @relation(fields: [log_id], references: [id], onUpdate: NoAction, map: "FK_F75EC869EA675D86")
 
   @@unique([user_id, activity_parameters_id], map: "user_activity_unique_evaluation")
   @@index([activity_parameters_id], map: "IDX_F75EC869896F55DB")
@@ -325,8 +325,8 @@ model claro_activity_past_evaluation {
   evaluation_comment        String?                    @db.VarChar(255)
   details                   String?                    @db.LongText
   claro_activity_parameters claro_activity_parameters? @relation(fields: [activity_parameters_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182896F55DB")
-  claro_log                 claro_log?                 @relation(fields: [log_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182EA675D86")
   claro_user                claro_user?                @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182A76ED395")
+  claro_log                 claro_log?                 @relation(fields: [log_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182EA675D86")
 
   @@index([activity_parameters_id], map: "IDX_F1A76182896F55DB")
   @@index([user_id], map: "IDX_F1A76182A76ED395")
@@ -336,8 +336,8 @@ model claro_activity_past_evaluation {
 model claro_activity_secondary_resources {
   activityparameters_id     Int
   resourcenode_id           Int
-  claro_activity_parameters claro_activity_parameters @relation(fields: [activityparameters_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_713242A7DB5E3CF7")
   claro_resource_node       claro_resource_node       @relation(fields: [resourcenode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_713242A777C292AE")
+  claro_activity_parameters claro_activity_parameters @relation(fields: [activityparameters_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_713242A7DB5E3CF7")
 
   @@id([activityparameters_id, resourcenode_id])
   @@index([resourcenode_id], map: "IDX_713242A777C292AE")
@@ -384,9 +384,9 @@ model claro_announcement {
   visible_until                DateTime?                    @db.DateTime(0)
   uuid                         String                       @unique(map: "UNIQ_778754E3D17F50A6") @db.VarChar(36)
   poster                       String?                      @db.VarChar(255)
-  claro_announcement_aggregate claro_announcement_aggregate @relation(fields: [aggregate_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_778754E3D0BBCCBE")
   claro_user                   claro_user?                  @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_778754E361220EA6")
   claro_scheduled_task         claro_scheduled_task?        @relation(fields: [task_id], references: [id], onUpdate: NoAction, map: "FK_778754E38DB60186")
+  claro_announcement_aggregate claro_announcement_aggregate @relation(fields: [aggregate_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_778754E3D0BBCCBE")
   claro_announcement_roles     claro_announcement_roles[]
   claro_announcements_send     claro_announcements_send[]
 
@@ -493,8 +493,8 @@ model claro_audio_resource_section_comment {
   creation_date                DateTime                      @db.DateTime(0)
   edition_date                 DateTime?                     @db.DateTime(0)
   uuid                         String                        @unique(map: "UNIQ_16790DB2D17F50A6") @db.VarChar(36)
-  claro_audio_resource_section claro_audio_resource_section? @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_16790DB2D823E37A")
   claro_user                   claro_user?                   @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_16790DB2A76ED395")
+  claro_audio_resource_section claro_audio_resource_section? @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_16790DB2D823E37A")
 
   @@index([user_id], map: "IDX_16790DB2A76ED395")
   @@index([section_id], map: "IDX_16790DB2D823E37A")
@@ -657,8 +657,8 @@ model claro_clacoformbundle_comment {
   edition_date                DateTime?                    @db.DateTime(0)
   comment_status              Int
   uuid                        String                       @unique(map: "UNIQ_23B30E0D17F50A6") @db.VarChar(36)
-  claro_clacoformbundle_entry claro_clacoformbundle_entry? @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_23B30E0BA364942")
   claro_user                  claro_user?                  @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_23B30E0A76ED395")
+  claro_clacoformbundle_entry claro_clacoformbundle_entry? @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_23B30E0BA364942")
 
   @@index([user_id], map: "IDX_23B30E0A76ED395")
   @@index([entry_id], map: "IDX_23B30E0BA364942")
@@ -675,8 +675,8 @@ model claro_clacoformbundle_entry {
   edition_date                         DateTime?                              @db.DateTime(0)
   publication_date                     DateTime?                              @db.DateTime(0)
   uuid                                 String                                 @unique(map: "UNIQ_889DAEDFD17F50A6") @db.VarChar(36)
-  claro_clacoformbundle_claco_form     claro_clacoformbundle_claco_form       @relation(fields: [claco_form_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_889DAEDFF7D9CC0C")
   claro_user                           claro_user?                            @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_889DAEDFA76ED395")
+  claro_clacoformbundle_claco_form     claro_clacoformbundle_claco_form       @relation(fields: [claco_form_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_889DAEDFF7D9CC0C")
   claro_clacoformbundle_comment        claro_clacoformbundle_comment[]
   claro_clacoformbundle_entry_category claro_clacoformbundle_entry_category[]
   claro_clacoformbundle_entry_keyword  claro_clacoformbundle_entry_keyword[]
@@ -701,8 +701,8 @@ model claro_clacoformbundle_entry_category {
 model claro_clacoformbundle_entry_keyword {
   entry_id                      Int
   keyword_id                    Int
-  claro_clacoformbundle_entry   claro_clacoformbundle_entry   @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C61CA20BBA364942")
   claro_clacoformbundle_keyword claro_clacoformbundle_keyword @relation(fields: [keyword_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C61CA20B115D4552")
+  claro_clacoformbundle_entry   claro_clacoformbundle_entry   @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C61CA20BBA364942")
 
   @@id([entry_id, keyword_id])
   @@index([keyword_id], map: "IDX_C61CA20B115D4552")
@@ -718,8 +718,8 @@ model claro_clacoformbundle_entry_user {
   notify_comment              Boolean
   notify_vote                 Boolean
   uuid                        String                       @unique(map: "UNIQ_7036190CD17F50A6") @db.VarChar(36)
-  claro_clacoformbundle_entry claro_clacoformbundle_entry? @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7036190CBA364942")
   claro_user                  claro_user?                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7036190CA76ED395")
+  claro_clacoformbundle_entry claro_clacoformbundle_entry? @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7036190CBA364942")
 
   @@unique([entry_id, user_id], map: "clacoform_unique_entry_user")
   @@index([user_id], map: "IDX_7036190CA76ED395")
@@ -730,8 +730,8 @@ model claro_clacoformbundle_field {
   id                                          Int                                           @id @default(autoincrement())
   claco_form_id                               Int
   field_facet_id                              Int?                                          @unique(map: "UNIQ_F84976F72AB018E9")
-  claro_clacoformbundle_claco_form            claro_clacoformbundle_claco_form              @relation(fields: [claco_form_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F84976F7F7D9CC0C")
   claro_field_facet                           claro_field_facet?                            @relation(fields: [field_facet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F84976F72AB018E9")
+  claro_clacoformbundle_claco_form            claro_clacoformbundle_claco_form              @relation(fields: [claco_form_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F84976F7F7D9CC0C")
   claro_clacoformbundle_field_choice_category claro_clacoformbundle_field_choice_category[]
   claro_clacoformbundle_field_value           claro_clacoformbundle_field_value[]
 
@@ -747,8 +747,8 @@ model claro_clacoformbundle_field_choice_category {
   uuid                           String                         @unique(map: "UNIQ_1F7C5EF7D17F50A6") @db.VarChar(36)
   field_value                    String?                        @db.LongText
   claro_clacoformbundle_category claro_clacoformbundle_category @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F7C5EF712469DE2")
-  claro_field_facet_choice       claro_field_facet_choice?      @relation(fields: [field_facet_choice_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F7C5EF7E07710C3")
   claro_clacoformbundle_field    claro_clacoformbundle_field    @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F7C5EF7443707B0")
+  claro_field_facet_choice       claro_field_facet_choice?      @relation(fields: [field_facet_choice_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F7C5EF7E07710C3")
 
   @@index([category_id], map: "IDX_1F7C5EF712469DE2")
   @@index([field_id], map: "IDX_1F7C5EF7443707B0")
@@ -761,9 +761,9 @@ model claro_clacoformbundle_field_value {
   field_id                    Int?
   field_facet_value_id        Int?                         @unique(map: "UNIQ_B481BDB9D4EE0DAB")
   uuid                        String                       @unique(map: "UNIQ_B481BDB9D17F50A6") @db.VarChar(36)
+  claro_clacoformbundle_field claro_clacoformbundle_field? @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B481BDB9443707B0")
   claro_clacoformbundle_entry claro_clacoformbundle_entry? @relation(fields: [entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B481BDB9BA364942")
   claro_field_facet_value     claro_field_facet_value?     @relation(fields: [field_facet_value_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B481BDB9D4EE0DAB")
-  claro_clacoformbundle_field claro_clacoformbundle_field? @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B481BDB9443707B0")
 
   @@unique([entry_id, field_id], map: "field_unique_name")
   @@index([field_id], map: "IDX_B481BDB9443707B0")
@@ -799,8 +799,8 @@ model claro_connection_message {
 model claro_connection_message_role {
   connectionmessage_id     Int
   role_id                  Int
-  claro_connection_message claro_connection_message @relation(fields: [connectionmessage_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B1EB3A86E926F912")
   claro_role               claro_role               @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B1EB3A86D60322AC")
+  claro_connection_message claro_connection_message @relation(fields: [connectionmessage_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B1EB3A86E926F912")
 
   @@id([connectionmessage_id, role_id])
   @@index([role_id], map: "IDX_B1EB3A86D60322AC")
@@ -824,8 +824,8 @@ model claro_connection_message_slide {
 model claro_connection_message_user {
   connectionmessage_id     Int
   user_id                  Int
-  claro_connection_message claro_connection_message @relation(fields: [connectionmessage_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6B1166A5E926F912")
   claro_user               claro_user               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6B1166A5A76ED395")
+  claro_connection_message claro_connection_message @relation(fields: [connectionmessage_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6B1166A5E926F912")
 
   @@id([connectionmessage_id, user_id])
   @@index([user_id], map: "IDX_6B1166A5A76ED395")
@@ -836,8 +836,8 @@ model claro_contact {
   id                                              Int                        @id @default(autoincrement())
   user_id                                         Int?
   contact_id                                      Int?
-  claro_user_claro_contact_contact_idToclaro_user claro_user?                @relation("claro_contact_contact_idToclaro_user", fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2C215B9FE7A1254A")
   claro_user_claro_contact_user_idToclaro_user    claro_user?                @relation("claro_contact_user_idToclaro_user", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2C215B9FA76ED395")
+  claro_user_claro_contact_contact_idToclaro_user claro_user?                @relation("claro_contact_contact_idToclaro_user", fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2C215B9FE7A1254A")
   claro_contact_categories                        claro_contact_categories[]
 
   @@unique([user_id, contact_id], map: "contact_unique_user_contact")
@@ -913,8 +913,8 @@ model claro_cryptographic_key {
 model claro_cursus_sessions {
   coursesession_id                  Int
   cursus_id                         Int
-  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [coursesession_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5256A813AE020D6E")
   claro_cursusbundle_cursus         claro_cursusbundle_cursus         @relation(fields: [cursus_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5256A81340AEF4B9")
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [coursesession_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5256A813AE020D6E")
 
   @@id([coursesession_id, cursus_id])
   @@index([cursus_id], map: "IDX_5256A81340AEF4B9")
@@ -959,8 +959,8 @@ model claro_cursusbundle_course {
   session_hours                                                                 Float                                          @default(0)
   claro_user                                                                    claro_user?                                    @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_3359D34961220EA6")
   claro_cursusbundle_course                                                     claro_cursusbundle_course?                     @relation("claro_cursusbundle_courseToclaro_cursusbundle_course_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3359D349727ACA70")
-  claro_resource_node                                                           claro_resource_node?                           @relation(fields: [resource_id], references: [id], onUpdate: NoAction, map: "FK_3359D34989329D25")
   claro_workspace_claro_cursusbundle_course_workspace_idToclaro_workspace       claro_workspace?                               @relation("claro_cursusbundle_course_workspace_idToclaro_workspace", fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_3359D34982D40A1F")
+  claro_resource_node                                                           claro_resource_node?                           @relation(fields: [resource_id], references: [id], onUpdate: NoAction, map: "FK_3359D34989329D25")
   claro_workspace_claro_cursusbundle_course_workspace_model_idToclaro_workspace claro_workspace?                               @relation("claro_cursusbundle_course_workspace_model_idToclaro_workspace", fields: [workspace_model_id], references: [id], onUpdate: NoAction, map: "FK_3359D349EE7F5384")
   other_claro_cursusbundle_course                                               claro_cursusbundle_course[]                    @relation("claro_cursusbundle_courseToclaro_cursusbundle_course_parent_id")
   claro_cursusbundle_course_course_user                                         claro_cursusbundle_course_course_user[]
@@ -997,8 +997,8 @@ model claro_cursusbundle_course_course_user {
 model claro_cursusbundle_course_organizations {
   course_id                 Int
   organization_id           Int
-  claro_cursusbundle_course claro_cursusbundle_course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6B367C8591CC992")
   claro__organization       claro__organization       @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6B367C832C8A3DE")
+  claro_cursusbundle_course claro_cursusbundle_course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6B367C8591CC992")
 
   @@id([course_id, organization_id])
   @@index([organization_id], map: "IDX_6B367C832C8A3DE")
@@ -1067,10 +1067,10 @@ model claro_cursusbundle_course_session {
   quota_days                                                               Float?                                           @default(0)
   claro_cursusbundle_course                                                claro_cursusbundle_course                        @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C5F56FDE591CC992")
   claro_user                                                               claro_user?                                      @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDE61220EA6")
-  claro_role_claro_cursusbundle_course_session_learner_role_idToclaro_role claro_role?                                      @relation("claro_cursusbundle_course_session_learner_role_idToclaro_role", fields: [learner_role_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDEEF2297F5")
   claro__location                                                          claro__location?                                 @relation(fields: [location_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDE64D218E")
-  claro_role_claro_cursusbundle_course_session_tutor_role_idToclaro_role   claro_role?                                      @relation("claro_cursusbundle_course_session_tutor_role_idToclaro_role", fields: [tutor_role_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDEBEFB2F13")
   claro_workspace                                                          claro_workspace?                                 @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDE82D40A1F")
+  claro_role_claro_cursusbundle_course_session_tutor_role_idToclaro_role   claro_role?                                      @relation("claro_cursusbundle_course_session_tutor_role_idToclaro_role", fields: [tutor_role_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDEBEFB2F13")
+  claro_role_claro_cursusbundle_course_session_learner_role_idToclaro_role claro_role?                                      @relation("claro_cursusbundle_course_session_learner_role_idToclaro_role", fields: [learner_role_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDEEF2297F5")
   claro_cursus_sessions                                                    claro_cursus_sessions[]
   claro_cursusbundle_course_session_cancellation                           claro_cursusbundle_course_session_cancellation[]
   claro_cursusbundle_course_session_group                                  claro_cursusbundle_course_session_group[]
@@ -1109,8 +1109,8 @@ model claro_cursusbundle_course_session_group {
   registration_date                 DateTime                          @db.DateTime(0)
   uuid                              String                            @unique(map: "UNIQ_F27287A4D17F50A6") @db.VarChar(36)
   registration_type                 String                            @db.VarChar(255)
-  claro_group                       claro_group                       @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F27287A4FE54D947")
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F27287A4613FECDF")
+  claro_group                       claro_group                       @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F27287A4FE54D947")
 
   @@unique([session_id, group_id], map: "training_session_unique_group")
   @@index([session_id], map: "IDX_F27287A4613FECDF")
@@ -1120,8 +1120,8 @@ model claro_cursusbundle_course_session_group {
 model claro_cursusbundle_course_session_resources {
   resource_id                       Int
   session_id                        Int                               @unique(map: "UNIQ_4956113E613FECDF")
-  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4956113E89329D25")
   claro_resource_node               claro_resource_node               @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4956113E613FECDF")
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4956113E89329D25")
 
   @@id([resource_id, session_id])
   @@index([resource_id], map: "IDX_4956113E89329D25")
@@ -1150,8 +1150,8 @@ model claro_cursusbundle_course_session_user {
 model claro_cursusbundle_course_session_validators {
   coursesession_id                  Int
   user_id                           Int
-  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [coursesession_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7EE284A7AE020D6E")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7EE284A7A76ED395")
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [coursesession_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7EE284A7AE020D6E")
 
   @@id([coursesession_id, user_id])
   @@index([user_id], map: "IDX_7EE284A7A76ED395")
@@ -1237,8 +1237,8 @@ model claro_cursusbundle_cursus_group {
 model claro_cursusbundle_cursus_organizations {
   cursus_id                 Int
   organization_id           Int
-  claro_cursusbundle_cursus claro_cursusbundle_cursus @relation(fields: [cursus_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3B65A4C840AEF4B9")
   claro__organization       claro__organization       @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3B65A4C832C8A3DE")
+  claro_cursusbundle_cursus claro_cursusbundle_cursus @relation(fields: [cursus_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3B65A4C840AEF4B9")
 
   @@id([cursus_id, organization_id])
   @@index([organization_id], map: "IDX_3B65A4C832C8A3DE")
@@ -1300,9 +1300,9 @@ model claro_cursusbundle_session_event {
   planned_object_id                        Int                                        @unique(map: "UNIQ_257C3061A669922F")
   presence_template_id                     Int?
   registration_mail                        Boolean
+  claro_cursusbundle_course_session        claro_cursusbundle_course_session          @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_257C3061613FECDF")
   claro_planned_object                     claro_planned_object                       @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_257C3061A669922F")
   claro_template                           claro_template?                            @relation(fields: [presence_template_id], references: [id], onUpdate: NoAction, map: "FK_257C3061D7F5EEA3")
-  claro_cursusbundle_course_session        claro_cursusbundle_course_session          @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_257C3061613FECDF")
   claro_cursusbundle_presence_status       claro_cursusbundle_presence_status[]
   claro_cursusbundle_session_event_comment claro_cursusbundle_session_event_comment[]
   claro_cursusbundle_session_event_group   claro_cursusbundle_session_event_group[]
@@ -1321,8 +1321,8 @@ model claro_cursusbundle_session_event_comment {
   creation_date                    DateTime                         @db.DateTime(0)
   edition_date                     DateTime?                        @db.DateTime(0)
   uuid                             String                           @unique(map: "UNIQ_21DFDBA8D17F50A6") @db.VarChar(36)
-  claro_cursusbundle_session_event claro_cursusbundle_session_event @relation(fields: [session_event_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_21DFDBA8FA5B88E3")
   claro_user                       claro_user                       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_21DFDBA8A76ED395")
+  claro_cursusbundle_session_event claro_cursusbundle_session_event @relation(fields: [session_event_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_21DFDBA8FA5B88E3")
 
   @@index([user_id], map: "IDX_21DFDBA8A76ED395")
   @@index([session_event_id], map: "IDX_21DFDBA8FA5B88E3")
@@ -1485,9 +1485,9 @@ model claro_dropzonebundle_document {
   drop_date                          DateTime                             @db.DateTime(0)
   is_manager                         Boolean
   uuid                               String                               @unique(map: "UNIQ_E846CAA8D17F50A6") @db.VarChar(36)
+  claro_dropzonebundle_revision      claro_dropzonebundle_revision?       @relation(fields: [revision_id], references: [id], onUpdate: NoAction, map: "FK_E846CAA81DFA7C8F")
   claro_dropzonebundle_drop          claro_dropzonebundle_drop            @relation(fields: [drop_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E846CAA84D224760")
   claro_resource_node                claro_resource_node?                 @relation(fields: [resource_id], references: [id], onUpdate: NoAction, map: "FK_E846CAA889329D25")
-  claro_dropzonebundle_revision      claro_dropzonebundle_revision?       @relation(fields: [revision_id], references: [id], onUpdate: NoAction, map: "FK_E846CAA81DFA7C8F")
   claro_user                         claro_user?                          @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_E846CAA8A76ED395")
   claro_dropzonebundle_tool_document claro_dropzonebundle_tool_document[]
 
@@ -1614,8 +1614,8 @@ model claro_dropzonebundle_revision {
   creator_id                            Int?
   creation_date                         DateTime                                @db.DateTime(0)
   uuid                                  String                                  @unique(map: "UNIQ_5D4C5512D17F50A6") @db.VarChar(36)
-  claro_user                            claro_user?                             @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_5D4C551261220EA6")
   claro_dropzonebundle_drop             claro_dropzonebundle_drop               @relation(fields: [drop_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5D4C55124D224760")
+  claro_user                            claro_user?                             @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_5D4C551261220EA6")
   claro_dropzonebundle_document         claro_dropzonebundle_document[]
   claro_dropzonebundle_revision_comment claro_dropzonebundle_revision_comment[]
 
@@ -1653,8 +1653,8 @@ model claro_dropzonebundle_tool_document {
   tool_id                       Int
   tool_data                     String?                       @db.LongText
   uuid                          String                        @unique(map: "UNIQ_762E507AD17F50A6") @db.VarChar(36)
-  claro_dropzonebundle_document claro_dropzonebundle_document @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_762E507AC33F7837")
   claro_dropzonebundle_tool     claro_dropzonebundle_tool     @relation(fields: [tool_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_762E507A8F7B22CC")
+  claro_dropzonebundle_document claro_dropzonebundle_document @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_762E507AC33F7837")
 
   @@index([tool_id], map: "IDX_762E507A8F7B22CC")
   @@index([document_id], map: "IDX_762E507AC33F7837")
@@ -1666,9 +1666,9 @@ model claro_event {
   uuid                   String                   @unique(map: "UNIQ_B1ADDDB5D17F50A6") @db.VarChar(36)
   planned_object_id      Int                      @unique(map: "UNIQ_B1ADDDB5A669922F")
   invitation_template_id Int?
-  claro_template         claro_template?          @relation(fields: [invitation_template_id], references: [id], onUpdate: NoAction, map: "FK_B1ADDDB5D2D03B8")
-  claro_planned_object   claro_planned_object     @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B1ADDDB5A669922F")
   claro_workspace        claro_workspace?         @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B1ADDDB582D40A1F")
+  claro_planned_object   claro_planned_object     @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_B1ADDDB5A669922F")
+  claro_template         claro_template?          @relation(fields: [invitation_template_id], references: [id], onUpdate: NoAction, map: "FK_B1ADDDB5D2D03B8")
   claro_event_invitation claro_event_invitation[]
 
   @@index([workspace_id], map: "IDX_B1ADDDB582D40A1F")
@@ -1701,8 +1701,8 @@ model claro_facet {
 model claro_facet_role {
   facet_id    Int
   role_id     Int
-  claro_facet claro_facet @relation(fields: [facet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CDD5845DFC889F24")
   claro_role  claro_role  @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CDD5845DD60322AC")
+  claro_facet claro_facet @relation(fields: [facet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CDD5845DFC889F24")
 
   @@id([facet_id, role_id])
   @@index([role_id], map: "IDX_CDD5845DD60322AC")
@@ -1741,8 +1741,8 @@ model claro_field_facet_choice {
   position                                    Int
   uuid                                        String                                        @unique(map: "UNIQ_E2001DD17F50A6") @db.VarChar(36)
   fieldFacet_id                               Int
-  claro_field_facet                           claro_field_facet                             @relation(fields: [fieldFacet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E2001D9F9239AF")
   claro_field_facet_choice                    claro_field_facet_choice?                     @relation("claro_field_facet_choiceToclaro_field_facet_choice_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E2001D727ACA70")
+  claro_field_facet                           claro_field_facet                             @relation(fields: [fieldFacet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E2001D9F9239AF")
   claro_clacoformbundle_field_choice_category claro_clacoformbundle_field_choice_category[]
   other_claro_field_facet_choice              claro_field_facet_choice[]                    @relation("claro_field_facet_choiceToclaro_field_facet_choice_parent_id")
 
@@ -1772,8 +1772,8 @@ model claro_file {
   opening                                                      String               @db.VarChar(255)
   uuid                                                         String               @unique(map: "UNIQ_EA81C80BD17F50A6") @db.VarChar(36)
   claro_resource_node                                          claro_resource_node? @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EA81C80BB87FAB32")
-  claro_video_track_claro_fileToclaro_video_track_trackFile_id claro_video_track[]  @relation("claro_fileToclaro_video_track_trackFile_id")
   claro_video_track_claro_fileToclaro_video_track_video_id     claro_video_track[]  @relation("claro_fileToclaro_video_track_video_id")
+  claro_video_track_claro_fileToclaro_video_track_trackFile_id claro_video_track[]  @relation("claro_fileToclaro_video_track_trackFile_id")
 }
 
 model claro_forum {
@@ -1807,8 +1807,8 @@ model claro_forum_message {
   created                   DateTime              @db.DateTime(0)
   updated                   DateTime              @db.DateTime(0)
   author                    String?               @db.VarChar(255)
-  claro_forum_message       claro_forum_message?  @relation("claro_forum_messageToclaro_forum_message_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6A49AC0E727ACA70")
   claro_forum_subject       claro_forum_subject?  @relation(fields: [subject_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6A49AC0E23EDC87")
+  claro_forum_message       claro_forum_message?  @relation("claro_forum_messageToclaro_forum_message_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6A49AC0E727ACA70")
   claro_user                claro_user?           @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_6A49AC0EA76ED395")
   other_claro_forum_message claro_forum_message[] @relation("claro_forum_messageToclaro_forum_message_parent_id")
 
@@ -1892,8 +1892,8 @@ model claro_group {
 model claro_group_role {
   group_id    Int
   role_id     Int
-  claro_group claro_group @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1CBA5A40FE54D947")
   claro_role  claro_role  @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1CBA5A40D60322AC")
+  claro_group claro_group @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1CBA5A40FE54D947")
 
   @@id([group_id, role_id])
   @@index([role_id], map: "IDX_1CBA5A40D60322AC")
@@ -1922,8 +1922,8 @@ model claro_home_tab {
   accessible_until                DateTime?                        @db.DateTime(0)
   access_code                     String?                          @db.VarChar(255)
   claro_home_tab                  claro_home_tab?                  @relation("claro_home_tabToclaro_home_tab_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A9744CCE727ACA70")
-  claro_user                      claro_user?                      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A9744CCEA76ED395")
   claro_workspace                 claro_workspace?                 @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A9744CCE82D40A1F")
+  claro_user                      claro_user?                      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A9744CCEA76ED395")
   other_claro_home_tab            claro_home_tab[]                 @relation("claro_home_tabToclaro_home_tab_parent_id")
   claro_home_tab_config           claro_home_tab_config[]
   claro_home_tab_roles            claro_home_tab_roles[]
@@ -1989,8 +1989,8 @@ model claro_home_tab_widgets {
 model claro_home_tab_widgets_containers {
   tab_id                 Int
   container_id           Int                    @unique(map: "UNIQ_15155527BC21F742")
-  claro_widget_container claro_widget_container @relation(fields: [container_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_15155527BC21F742")
   claro_home_tab_widgets claro_home_tab_widgets @relation(fields: [tab_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_151555278D0C9323")
+  claro_widget_container claro_widget_container @relation(fields: [container_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_15155527BC21F742")
 
   @@id([tab_id, container_id])
   @@index([tab_id], map: "IDX_151555278D0C9323")
@@ -2081,12 +2081,12 @@ model claro_log {
   other_element_id                             Int?
   resourceNode_id                              Int?
   claro_user_claro_log_doer_idToclaro_user     claro_user?                      @relation("claro_log_doer_idToclaro_user", fields: [doer_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F12D3860F")
+  claro_workspace                              claro_workspace?                 @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F82D40A1F")
+  claro_resource_type                          claro_resource_type?             @relation(fields: [resource_type_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F98EC6B7B")
+  claro_resource_node                          claro_resource_node?             @relation(fields: [resourceNode_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FB87FAB32")
   claro_group                                  claro_group?                     @relation(fields: [receiver_group_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FC6F122B2")
   claro_user_claro_log_receiver_idToclaro_user claro_user?                      @relation("claro_log_receiver_idToclaro_user", fields: [receiver_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FCD53EDB6")
-  claro_resource_node                          claro_resource_node?             @relation(fields: [resourceNode_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FB87FAB32")
-  claro_resource_type                          claro_resource_type?             @relation(fields: [resource_type_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F98EC6B7B")
   claro_role                                   claro_role?                      @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FD60322AC")
-  claro_workspace                              claro_workspace?                 @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F82D40A1F")
   claro_activity_evaluation                    claro_activity_evaluation[]
   claro_activity_past_evaluation               claro_activity_past_evaluation[]
 
@@ -2156,9 +2156,9 @@ model claro_log_connect_tool {
   connection_date    DateTime            @db.DateTime(0)
   total_duration     Int?
   uuid               String              @unique(map: "UNIQ_DDD8A470D17F50A6") @db.VarChar(36)
+  claro_workspace    claro_workspace?    @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_DDD8A47082D40A1F")
   claro_ordered_tool claro_ordered_tool? @relation(fields: [tool_id], references: [id], onUpdate: NoAction, map: "FK_DDD8A4708F7B22CC")
   claro_user         claro_user?         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DDD8A470A76ED395")
-  claro_workspace    claro_workspace?    @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_DDD8A47082D40A1F")
 
   @@index([workspace_id], map: "IDX_DDD8A47082D40A1F")
   @@index([tool_id], map: "IDX_DDD8A4708F7B22CC")
@@ -2173,8 +2173,8 @@ model claro_log_connect_workspace {
   connection_date DateTime         @db.DateTime(0)
   total_duration  Int?
   uuid            String           @unique(map: "UNIQ_8724810ED17F50A6") @db.VarChar(36)
-  claro_user      claro_user?      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_8724810EA76ED395")
   claro_workspace claro_workspace? @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_8724810E82D40A1F")
+  claro_user      claro_user?      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_8724810EA76ED395")
 
   @@index([workspace_id], map: "IDX_8724810E82D40A1F")
   @@index([user_id], map: "IDX_8724810EA76ED395")
@@ -2188,9 +2188,9 @@ model claro_log_functionnal {
   date                DateTime             @db.DateTime(0)
   details             String               @db.LongText
   event               String               @db.VarChar(255)
+  claro_workspace     claro_workspace?     @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_29C2B64E82D40A1F")
   claro_resource_node claro_resource_node? @relation(fields: [resource_id], references: [id], onUpdate: NoAction, map: "FK_29C2B64E89329D25")
   claro_user          claro_user?          @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_29C2B64EA76ED395")
-  claro_workspace     claro_workspace?     @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_29C2B64E82D40A1F")
 
   @@index([workspace_id], map: "IDX_29C2B64E82D40A1F")
   @@index([resource_id], map: "IDX_29C2B64E89329D25")
@@ -2238,8 +2238,8 @@ model claro_menu_action {
   scope               String               @db.LongText
   api                 String               @db.LongText
   is_default          Boolean
-  claro_plugin        claro_plugin?        @relation(fields: [plugin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F57E52BEC942BCF")
   claro_resource_type claro_resource_type? @relation(fields: [resource_type_id], references: [id], onUpdate: NoAction, map: "FK_1F57E52B98EC6B7B")
+  claro_plugin        claro_plugin?        @relation(fields: [plugin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F57E52BEC942BCF")
 
   @@index([resource_type_id], map: "IDX_1F57E52B98EC6B7B")
   @@index([plugin_id], map: "IDX_1F57E52BEC942BCF")
@@ -2306,9 +2306,9 @@ model claro_ordered_tool {
   poster                 String?                  @db.VarChar(255)
   fullscreen             Boolean
   hidden                 Boolean                  @default(false)
+  claro_workspace        claro_workspace?         @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6CF1320E82D40A1F")
   claro_tools            claro_tools              @relation(fields: [tool_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6CF1320E8F7B22CC")
   claro_user             claro_user?              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6CF1320EA76ED395")
-  claro_workspace        claro_workspace?         @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6CF1320E82D40A1F")
   claro_log_connect_tool claro_log_connect_tool[]
   claro_tool_rights      claro_tool_rights[]
 
@@ -2341,8 +2341,8 @@ model claro_panel_facet_role {
   canEdit           Boolean
   uuid              String            @unique(map: "UNIQ_A66BF654D17F50A6") @db.VarChar(36)
   panelFacet_id     Int
-  claro_panel_facet claro_panel_facet @relation(fields: [panelFacet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A66BF654E99038C0")
   claro_role        claro_role        @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A66BF654D60322AC")
+  claro_panel_facet claro_panel_facet @relation(fields: [panelFacet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A66BF654E99038C0")
 
   @@index([role_id], map: "IDX_A66BF654D60322AC")
   @@index([panelFacet_id], map: "IDX_A66BF654E99038C0")
@@ -2366,9 +2366,9 @@ model claro_planned_object {
   room_id                          Int?
   locationUrl                      String?                           @db.VarChar(255)
   event_class                      String                            @db.VarChar(255)
+  claro_location_room              claro_location_room?              @relation(fields: [room_id], references: [id], onUpdate: NoAction, map: "FK_5F6CC1D754177093")
   claro_user                       claro_user?                       @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_5F6CC1D761220EA6")
   claro__location                  claro__location?                  @relation(fields: [location_id], references: [id], onUpdate: NoAction, map: "FK_5F6CC1D764D218E")
-  claro_location_room              claro_location_room?              @relation(fields: [room_id], references: [id], onUpdate: NoAction, map: "FK_5F6CC1D754177093")
   claro_cursusbundle_session_event claro_cursusbundle_session_event?
   claro_event                      claro_event?
   claro_planning_planned_object    claro_planning_planned_object[]
@@ -2411,8 +2411,8 @@ model claro_plannednotificationbundle_planned_notification {
 model claro_plannednotificationbundle_planned_notification_role {
   plannednotification_id                               Int
   role_id                                              Int
-  claro_plannednotificationbundle_planned_notification claro_plannednotificationbundle_planned_notification @relation(fields: [plannednotification_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2A4A3832EAB5688")
   claro_role                                           claro_role                                           @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2A4A3832D60322AC")
+  claro_plannednotificationbundle_planned_notification claro_plannednotificationbundle_planned_notification @relation(fields: [plannednotification_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2A4A3832EAB5688")
 
   @@id([plannednotification_id, role_id])
   @@index([role_id], map: "IDX_2A4A3832D60322AC")
@@ -2430,8 +2430,8 @@ model claro_planning {
 model claro_planning_planned_object {
   planning_id          Int
   planned_object_id    Int
-  claro_planned_object claro_planned_object @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A0548794A669922F")
   claro_planning       claro_planning       @relation(fields: [planning_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A05487943D865311")
+  claro_planned_object claro_planned_object @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A0548794A669922F")
 
   @@id([planning_id, planned_object_id])
   @@index([planning_id], map: "IDX_A05487943D865311")
@@ -2578,8 +2578,8 @@ model claro_resource_node {
   estimatedDuration                                                                    Int?
   claro_user                                                                           claro_user?                                  @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_A76799FF61220EA6")
   claro_resource_node                                                                  claro_resource_node?                         @relation("claro_resource_nodeToclaro_resource_node_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A76799FF727ACA70")
-  claro_resource_type                                                                  claro_resource_type                          @relation(fields: [resource_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A76799FF98EC6B7B")
   claro_workspace                                                                      claro_workspace?                             @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A76799FF82D40A1F")
+  claro_resource_type                                                                  claro_resource_type                          @relation(fields: [resource_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A76799FF98EC6B7B")
   claro__open_badge_rule                                                               claro__open_badge_rule[]
   claro_activity_claro_activity_primaryResource_idToclaro_resource_node                claro_activity[]                             @relation("claro_activity_primaryResource_idToclaro_resource_node")
   claro_activity_claro_activity_resourceNode_idToclaro_resource_node                   claro_activity?                              @relation("claro_activity_resourceNode_idToclaro_resource_node")
@@ -2604,8 +2604,8 @@ model claro_resource_node {
   other_claro_resource_node                                                            claro_resource_node[]                        @relation("claro_resource_nodeToclaro_resource_node_parent_id")
   claro_resource_recent                                                                claro_resource_recent[]
   claro_resource_rights                                                                claro_resource_rights[]
-  claro_resource_shortcut_claro_resource_nodeToclaro_resource_shortcut_resourceNode_id claro_resource_shortcut?                     @relation("claro_resource_nodeToclaro_resource_shortcut_resourceNode_id")
   claro_resource_shortcut_claro_resource_nodeToclaro_resource_shortcut_target_id       claro_resource_shortcut[]                    @relation("claro_resource_nodeToclaro_resource_shortcut_target_id")
+  claro_resource_shortcut_claro_resource_nodeToclaro_resource_shortcut_resourceNode_id claro_resource_shortcut?                     @relation("claro_resource_nodeToclaro_resource_shortcut_resourceNode_id")
   claro_resource_user_evaluation                                                       claro_resource_user_evaluation[]
   claro_rss_feed                                                                       claro_rss_feed?
   claro_scorm                                                                          claro_scorm?
@@ -2679,8 +2679,8 @@ model claro_resource_shortcut {
   target_id                                                                        Int
   resourceNode_id                                                                  Int?                 @unique(map: "UNIQ_5E7F4AB8B87FAB32")
   uuid                                                                             String               @unique(map: "UNIQ_5E7F4AB8D17F50A6") @db.VarChar(36)
-  claro_resource_node_claro_resource_nodeToclaro_resource_shortcut_resourceNode_id claro_resource_node? @relation("claro_resource_nodeToclaro_resource_shortcut_resourceNode_id", fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5E7F4AB8B87FAB32")
   claro_resource_node_claro_resource_nodeToclaro_resource_shortcut_target_id       claro_resource_node  @relation("claro_resource_nodeToclaro_resource_shortcut_target_id", fields: [target_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5E7F4AB8158E0B66")
+  claro_resource_node_claro_resource_nodeToclaro_resource_shortcut_resourceNode_id claro_resource_node? @relation("claro_resource_nodeToclaro_resource_shortcut_resourceNode_id", fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5E7F4AB8B87FAB32")
 
   @@index([target_id], map: "IDX_5E7F4AB8158E0B66")
 }
@@ -2743,8 +2743,8 @@ model claro_role {
   claro_admin_tool_role                                                                           claro_admin_tool_role[]
   claro_announcement_roles                                                                        claro_announcement_roles[]
   claro_connection_message_role                                                                   claro_connection_message_role[]
-  claro_cursusbundle_course_session_claro_cursusbundle_course_session_learner_role_idToclaro_role claro_cursusbundle_course_session[]                         @relation("claro_cursusbundle_course_session_learner_role_idToclaro_role")
   claro_cursusbundle_course_session_claro_cursusbundle_course_session_tutor_role_idToclaro_role   claro_cursusbundle_course_session[]                         @relation("claro_cursusbundle_course_session_tutor_role_idToclaro_role")
+  claro_cursusbundle_course_session_claro_cursusbundle_course_session_learner_role_idToclaro_role claro_cursusbundle_course_session[]                         @relation("claro_cursusbundle_course_session_learner_role_idToclaro_role")
   claro_facet_role                                                                                claro_facet_role[]
   claro_general_facet_preference                                                                  claro_general_facet_preference[]
   claro_group_role                                                                                claro_group_role[]
@@ -2754,8 +2754,8 @@ model claro_role {
   claro_plannednotificationbundle_planned_notification_role                                       claro_plannednotificationbundle_planned_notification_role[]
   claro_resource_rights                                                                           claro_resource_rights[]
   claro_role_options                                                                              claro_role_options?
-  claro_team_claro_roleToclaro_team_role_id                                                       claro_team?                                                 @relation("claro_roleToclaro_team_role_id")
   claro_team_claro_roleToclaro_team_team_manager_role                                             claro_team?                                                 @relation("claro_roleToclaro_team_team_manager_role")
+  claro_team_claro_roleToclaro_team_role_id                                                       claro_team?                                                 @relation("claro_roleToclaro_team_role_id")
   claro_tool_rights                                                                               claro_tool_rights[]
   claro_user_role                                                                                 claro_user_role[]
   claro_workspace_claro_roleToclaro_workspace_default_role_id                                     claro_workspace[]                                           @relation("claro_roleToclaro_workspace_default_role_id")
@@ -2809,8 +2809,8 @@ model claro_scheduled_task {
   execution_type             String                       @db.VarChar(255)
   execution_interval         Int?
   end_date                   DateTime?                    @db.DateTime(0)
-  claro_group                claro_group?                 @relation(fields: [group_id], references: [id], onUpdate: NoAction, map: "FK_9D92A4DDFE54D947")
   claro_workspace            claro_workspace?             @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_9D92A4DD82D40A1F")
+  claro_group                claro_group?                 @relation(fields: [group_id], references: [id], onUpdate: NoAction, map: "FK_9D92A4DDFE54D947")
   claro_announcement         claro_announcement[]
   claro_scheduled_task_users claro_scheduled_task_users[]
 
@@ -2821,8 +2821,8 @@ model claro_scheduled_task {
 model claro_scheduled_task_users {
   user_id              Int
   scheduled_task_id    Int
-  claro_scheduled_task claro_scheduled_task @relation(fields: [scheduled_task_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_573E7D5EE97157C2")
   claro_user           claro_user           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_573E7D5EA76ED395")
+  claro_scheduled_task claro_scheduled_task @relation(fields: [scheduled_task_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_573E7D5EE97157C2")
 
   @@id([scheduled_task_id, user_id])
   @@index([user_id], map: "IDX_573E7D5EA76ED395")
@@ -2865,8 +2865,8 @@ model claro_scorm_12_sco {
   launch_data                 String?                       @db.VarChar(4096)
   mastery_score               Int?
   is_block                    Boolean
-  claro_scorm_12_sco          claro_scorm_12_sco?           @relation("claro_scorm_12_scoToclaro_scorm_12_sco_sco_parent_id", fields: [sco_parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F900C28948C689D5")
   claro_scorm_12_resource     claro_scorm_12_resource       @relation(fields: [scorm_resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F900C289167AFF3D")
+  claro_scorm_12_sco          claro_scorm_12_sco?           @relation("claro_scorm_12_scoToclaro_scorm_12_sco_sco_parent_id", fields: [sco_parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F900C28948C689D5")
   other_claro_scorm_12_sco    claro_scorm_12_sco[]          @relation("claro_scorm_12_scoToclaro_scorm_12_sco_sco_parent_id")
   claro_scorm_12_sco_tracking claro_scorm_12_sco_tracking[]
 
@@ -2925,8 +2925,8 @@ model claro_scorm_2004_sco {
   max_time_allowed              String?                         @db.VarChar(255)
   completion_threshold          Decimal?                        @db.Decimal(10, 7)
   scaled_passing_score          Decimal?                        @db.Decimal(10, 7)
-  claro_scorm_2004_sco          claro_scorm_2004_sco?           @relation("claro_scorm_2004_scoToclaro_scorm_2004_sco_sco_parent_id", fields: [sco_parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E88F1DDD48C689D5")
   claro_scorm_2004_resource     claro_scorm_2004_resource       @relation(fields: [scorm_resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E88F1DDD167AFF3D")
+  claro_scorm_2004_sco          claro_scorm_2004_sco?           @relation("claro_scorm_2004_scoToclaro_scorm_2004_sco_sco_parent_id", fields: [sco_parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E88F1DDD48C689D5")
   other_claro_scorm_2004_sco    claro_scorm_2004_sco[]          @relation("claro_scorm_2004_scoToclaro_scorm_2004_sco_sco_parent_id")
   claro_scorm_2004_sco_tracking claro_scorm_2004_sco_tracking[]
 
@@ -3078,8 +3078,8 @@ model claro_task {
   uuid                 String               @unique(map: "UNIQ_3460253ED17F50A6") @db.VarChar(36)
   planned_object_id    Int                  @unique(map: "UNIQ_3460253EA669922F")
   workspace_id         Int?
-  claro_planned_object claro_planned_object @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3460253EA669922F")
   claro_workspace      claro_workspace?     @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3460253E82D40A1F")
+  claro_planned_object claro_planned_object @relation(fields: [planned_object_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3460253EA669922F")
 
   @@index([workspace_id], map: "IDX_3460253E82D40A1F")
 }
@@ -3100,10 +3100,10 @@ model claro_team {
   dir_deletable                                       Boolean              @default(false)
   uuid                                                String               @unique(map: "UNIQ_A2FE5804D17F50A6") @db.VarChar(36)
   claro_resource_node                                 claro_resource_node? @relation(fields: [directory_id], references: [id], onUpdate: NoAction, map: "FK_A2FE58042C94069F")
-  claro_role_claro_roleToclaro_team_role_id           claro_role?          @relation("claro_roleToclaro_team_role_id", fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_A2FE5804D60322AC")
   claro_user                                          claro_user?          @relation(fields: [team_manager], references: [id], onUpdate: NoAction, map: "FK_A2FE580455D548E")
   claro_role_claro_roleToclaro_team_team_manager_role claro_role?          @relation("claro_roleToclaro_team_team_manager_role", fields: [team_manager_role], references: [id], onUpdate: NoAction, map: "FK_A2FE580459E625D1")
   claro_workspace                                     claro_workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A2FE580482D40A1F")
+  claro_role_claro_roleToclaro_team_role_id           claro_role?          @relation("claro_roleToclaro_team_role_id", fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_A2FE5804D60322AC")
   claro_team_users                                    claro_team_users[]
 
   @@index([team_manager], map: "IDX_A2FE580455D548E")
@@ -3207,8 +3207,8 @@ model claro_theme {
   is_default        Boolean
   extending_default Boolean
   uuid              String        @unique(map: "UNIQ_1D76301AD17F50A6") @db.VarChar(36)
-  claro_plugin      claro_plugin? @relation(fields: [plugin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1D76301AEC942BCF")
   claro_user        claro_user?   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1D76301AA76ED395")
+  claro_plugin      claro_plugin? @relation(fields: [plugin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1D76301AEC942BCF")
 
   @@index([user_id], map: "IDX_1D76301AA76ED395")
   @@index([plugin_id], map: "IDX_1D76301AEC942BCF")
@@ -3327,8 +3327,8 @@ model claro_user {
   claro_clacoformbundle_entry                                                                                                 claro_clacoformbundle_entry[]
   claro_clacoformbundle_entry_user                                                                                            claro_clacoformbundle_entry_user[]
   claro_connection_message_user                                                                                               claro_connection_message_user[]
-  claro_contact_claro_contact_contact_idToclaro_user                                                                          claro_contact[]                                  @relation("claro_contact_contact_idToclaro_user")
   claro_contact_claro_contact_user_idToclaro_user                                                                             claro_contact[]                                  @relation("claro_contact_user_idToclaro_user")
+  claro_contact_claro_contact_contact_idToclaro_user                                                                          claro_contact[]                                  @relation("claro_contact_contact_idToclaro_user")
   claro_contact_category                                                                                                      claro_contact_category[]
   claro_contact_options                                                                                                       claro_contact_options?
   claro_cryptographic_key                                                                                                     claro_cryptographic_key[]
@@ -3454,8 +3454,8 @@ model claro_user_administrator {
 model claro_user_group {
   user_id     Int
   group_id    Int
-  claro_group claro_group @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ED8B34C7FE54D947")
   claro_user  claro_user  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ED8B34C7A76ED395")
+  claro_group claro_group @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ED8B34C7FE54D947")
 
   @@id([user_id, group_id])
   @@index([user_id], map: "IDX_ED8B34C7A76ED395")
@@ -3490,8 +3490,8 @@ model claro_user_options {
 model claro_user_role {
   user_id    Int
   role_id    Int
-  claro_role claro_role @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_797E43FFD60322AC")
   claro_user claro_user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_797E43FFA76ED395")
+  claro_role claro_role @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_797E43FFD60322AC")
 
   @@id([user_id, role_id])
   @@index([user_id], map: "IDX_797E43FFA76ED395")
@@ -3517,8 +3517,8 @@ model claro_video_track {
   is_default                                            Boolean
   uuid                                                  String      @unique(map: "UNIQ_D25DC065D17F50A6") @db.VarChar(36)
   trackFile_id                                          Int?
-  claro_file_claro_fileToclaro_video_track_trackFile_id claro_file? @relation("claro_fileToclaro_video_track_trackFile_id", fields: [trackFile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_D25DC065ED87669A")
   claro_file_claro_fileToclaro_video_track_video_id     claro_file? @relation("claro_fileToclaro_video_track_video_id", fields: [video_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_D25DC06529C1004E")
+  claro_file_claro_fileToclaro_video_track_trackFile_id claro_file? @relation("claro_fileToclaro_video_track_trackFile_id", fields: [trackFile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_D25DC065ED87669A")
 
   @@index([video_id], map: "IDX_D25DC06529C1004E")
   @@index([trackFile_id], map: "IDX_D25DC065ED87669A")
@@ -3597,9 +3597,9 @@ model claro_widget_instance_config {
   type                  String                 @db.VarChar(255)
   is_visible            Boolean
   is_locked             Boolean
-  claro_user            claro_user?            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4787A3FDA76ED395")
   claro_widget_instance claro_widget_instance? @relation(fields: [widget_instance_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4787A3FD44BF891")
   claro_workspace       claro_workspace?       @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4787A3FD82D40A1F")
+  claro_user            claro_user?            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4787A3FDA76ED395")
 
   @@index([widget_instance_id], map: "IDX_4787A3FD44BF891")
   @@index([workspace_id], map: "IDX_4787A3FD82D40A1F")
@@ -3695,9 +3695,9 @@ model claro_workspace {
   createdAt                                                                               DateTime?                                              @db.DateTime(0)
   updatedAt                                                                               DateTime?                                              @db.DateTime(0)
   hidden                                                                                  Boolean                                                @default(false)
-  claro_user_claro_userToclaro_workspace_creator_id                                       claro_user?                                            @relation("claro_userToclaro_workspace_creator_id", fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_D902854561220EA6")
   claro_role_claro_roleToclaro_workspace_default_role_id                                  claro_role?                                            @relation("claro_roleToclaro_workspace_default_role_id", fields: [default_role_id], references: [id], onUpdate: NoAction, map: "FK_D9028545248673E9")
   claro_workspace_options_claro_workspace_options_idToclaro_workspace_options             claro_workspace_options?                               @relation("claro_workspace_options_idToclaro_workspace_options", fields: [options_id], references: [id], onUpdate: NoAction, map: "FK_D90285453ADB05F1")
+  claro_user_claro_userToclaro_workspace_creator_id                                       claro_user?                                            @relation("claro_userToclaro_workspace_creator_id", fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_D902854561220EA6")
   claro__open_badge_badge_class                                                           claro__open_badge_badge_class[]
   claro__open_badge_rule                                                                  claro__open_badge_rule[]
   claro_cursusbundle_course_claro_cursusbundle_course_workspace_idToclaro_workspace       claro_cursusbundle_course[]                            @relation("claro_cursusbundle_course_workspace_idToclaro_workspace")
@@ -3753,8 +3753,8 @@ model claro_workspace_evaluation {
   progression                Int?
   progression_max            Int?
   uuid                       String                       @unique(map: "UNIQ_E0FF6754D17F50A6") @db.VarChar(36)
-  claro_user                 claro_user?                  @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_E0FF6754A76ED395")
   claro_workspace            claro_workspace?             @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_E0FF675482D40A1F")
+  claro_user                 claro_user?                  @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_E0FF6754A76ED395")
   claro__open_badge_evidence claro__open_badge_evidence[]
 
   @@unique([workspace_id, user_id], map: "workspace_user_evaluation")
@@ -3766,8 +3766,8 @@ model claro_workspace_favourite {
   id              Int             @id @default(autoincrement())
   user_id         Int?
   workspace_id    Int
-  claro_user      claro_user?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_711A30BA76ED395")
   claro_workspace claro_workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_711A30B82D40A1F")
+  claro_user      claro_user?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_711A30BA76ED395")
 
   @@unique([workspace_id, user_id], map: "UNIQ_711A30B82D40A1FA76ED395")
   @@index([workspace_id], map: "IDX_711A30B82D40A1F")
@@ -3788,8 +3788,8 @@ model claro_workspace_recent {
   user_id         Int
   workspace_id    Int
   createdAt       DateTime?       @db.DateTime(0)
-  claro_user      claro_user      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ED82CA3BA76ED395")
   claro_workspace claro_workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ED82CA3B82D40A1F")
+  claro_user      claro_user      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ED82CA3BA76ED395")
 
   @@index([workspace_id], map: "IDX_ED82CA3B82D40A1F")
   @@index([user_id], map: "user_idx")
@@ -3800,9 +3800,9 @@ model claro_workspace_registration_queue {
   role_id         Int
   user_id         Int
   workspace_id    Int
-  claro_role      claro_role      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F461C538D60322AC")
-  claro_user      claro_user      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F461C538A76ED395")
   claro_workspace claro_workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F461C53882D40A1F")
+  claro_user      claro_user      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F461C538A76ED395")
+  claro_role      claro_role      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F461C538D60322AC")
 
   @@unique([role_id, user_id], map: "user_role_unique")
   @@index([workspace_id], map: "IDX_F461C53882D40A1F")
@@ -3827,9 +3827,9 @@ model claro_workspace_requirements {
   user_id                            Int?
   role_id                            Int?
   uuid                               String                               @unique(map: "UNIQ_894BE409D17F50A6") @db.VarChar(36)
-  claro_role                         claro_role?                          @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_894BE409D60322AC")
-  claro_user                         claro_user?                          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_894BE409A76ED395")
   claro_workspace                    claro_workspace                      @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_894BE40982D40A1F")
+  claro_user                         claro_user?                          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_894BE409A76ED395")
+  claro_role                         claro_role?                          @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_894BE409D60322AC")
   claro_workspace_required_resources claro_workspace_required_resources[]
 
   @@unique([workspace_id, role_id], map: "workspace_role_requirements")
@@ -3845,8 +3845,8 @@ model claro_workspace_shortcuts {
   role_id         Int?
   shortcuts_data  String?          @db.LongText
   uuid            String           @unique(map: "UNIQ_872A8149D17F50A6") @db.VarChar(36)
-  claro_role      claro_role?      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_872A8149D60322AC")
   claro_workspace claro_workspace? @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_872A814982D40A1F")
+  claro_role      claro_role?      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_872A8149D60322AC")
 
   @@index([workspace_id], map: "IDX_872A814982D40A1F")
   @@index([role_id], map: "IDX_872A8149D60322AC")
@@ -4035,8 +4035,8 @@ model doctrine_ujmltibundle_versions {
 model group_location {
   group_id        Int
   location_id     Int
-  claro_group     claro_group     @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_57AEC5B4FE54D947")
   claro__location claro__location @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_57AEC5B464D218E")
+  claro_group     claro_group     @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_57AEC5B4FE54D947")
 
   @@id([group_id, location_id])
   @@index([location_id], map: "IDX_57AEC5B464D218E")
@@ -4046,8 +4046,8 @@ model group_location {
 model group_organization {
   group_id            Int
   organization_id     Int
-  claro_group         claro_group         @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2DA82945FE54D947")
   claro__organization claro__organization @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2DA8294532C8A3DE")
+  claro_group         claro_group         @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2DA82945FE54D947")
 
   @@id([group_id, organization_id])
   @@index([organization_id], map: "IDX_2DA8294532C8A3DE")
@@ -4087,8 +4087,8 @@ model hevinci_ability_progress {
 model hevinci_ability_resource {
   ability_id          Int
   resourcenode_id     Int
-  hevinci_ability     hevinci_ability     @relation(fields: [ability_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_563CD07E8016D8B2")
   claro_resource_node claro_resource_node @relation(fields: [resourcenode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_563CD07E77C292AE")
+  hevinci_ability     hevinci_ability     @relation(fields: [ability_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_563CD07E8016D8B2")
 
   @@id([ability_id, resourcenode_id])
   @@index([resourcenode_id], map: "IDX_563CD07E77C292AE")
@@ -4114,8 +4114,8 @@ model hevinci_competency {
   hevinci_competency_progress                                                                 hevinci_competency_progress[]
   hevinci_competency_progress_log                                                             hevinci_competency_progress_log[]
   hevinci_competency_resource                                                                 hevinci_competency_resource[]
-  hevinci_objective_competency_hevinci_competencyTohevinci_objective_competency_competency_id hevinci_objective_competency[]    @relation("hevinci_competencyTohevinci_objective_competency_competency_id")
   hevinci_objective_competency_hevinci_competencyTohevinci_objective_competency_framework_id  hevinci_objective_competency[]    @relation("hevinci_competencyTohevinci_objective_competency_framework_id")
+  hevinci_objective_competency_hevinci_competencyTohevinci_objective_competency_competency_id hevinci_objective_competency[]    @relation("hevinci_competencyTohevinci_objective_competency_competency_id")
 
   @@index([parent_id], map: "IDX_61ECD5E6727ACA70")
   @@index([scale_id], map: "IDX_61ECD5E6F73142C2")
@@ -4127,9 +4127,9 @@ model hevinci_competency_ability {
   ability_id         Int
   level_id           Int
   uuid               String             @unique(map: "UNIQ_38178A41D17F50A6") @db.VarChar(36)
+  hevinci_level      hevinci_level      @relation(fields: [level_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_38178A415FB14BA7")
   hevinci_ability    hevinci_ability    @relation(fields: [ability_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_38178A418016D8B2")
   hevinci_competency hevinci_competency @relation(fields: [competency_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_38178A41FB9F58C")
-  hevinci_level      hevinci_level      @relation(fields: [level_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_38178A415FB14BA7")
 
   @@index([level_id], map: "IDX_38178A415FB14BA7")
   @@index([ability_id], map: "IDX_38178A418016D8B2")
@@ -4148,9 +4148,9 @@ model hevinci_competency_progress {
   user_name          String              @db.VarChar(255)
   level_name         String?             @db.VarChar(255)
   uuid               String              @unique(map: "UNIQ_CB827A3D17F50A6") @db.VarChar(36)
-  hevinci_competency hevinci_competency? @relation(fields: [competency_id], references: [id], onUpdate: NoAction, map: "FK_CB827A3FB9F58C")
   hevinci_level      hevinci_level?      @relation(fields: [level_id], references: [id], onUpdate: NoAction, map: "FK_CB827A35FB14BA7")
   claro_user         claro_user?         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_CB827A3A76ED395")
+  hevinci_competency hevinci_competency? @relation(fields: [competency_id], references: [id], onUpdate: NoAction, map: "FK_CB827A3FB9F58C")
 
   @@index([level_id], map: "IDX_CB827A35FB14BA7")
   @@index([user_id], map: "IDX_CB827A3A76ED395")
@@ -4168,9 +4168,9 @@ model hevinci_competency_progress_log {
   user_name          String              @db.VarChar(255)
   level_name         String?             @db.VarChar(255)
   uuid               String              @unique(map: "UNIQ_8522FF2AD17F50A6") @db.VarChar(36)
-  hevinci_competency hevinci_competency? @relation(fields: [competency_id], references: [id], onUpdate: NoAction, map: "FK_8522FF2AFB9F58C")
   hevinci_level      hevinci_level?      @relation(fields: [level_id], references: [id], onUpdate: NoAction, map: "FK_8522FF2A5FB14BA7")
   claro_user         claro_user?         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_8522FF2AA76ED395")
+  hevinci_competency hevinci_competency? @relation(fields: [competency_id], references: [id], onUpdate: NoAction, map: "FK_8522FF2AFB9F58C")
 
   @@index([level_id], map: "IDX_8522FF2A5FB14BA7")
   @@index([user_id], map: "IDX_8522FF2AA76ED395")
@@ -4180,8 +4180,8 @@ model hevinci_competency_progress_log {
 model hevinci_competency_resource {
   competency_id       Int
   resourcenode_id     Int
-  hevinci_competency  hevinci_competency  @relation(fields: [competency_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_922821F3FB9F58C")
   claro_resource_node claro_resource_node @relation(fields: [resourcenode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_922821F377C292AE")
+  hevinci_competency  hevinci_competency  @relation(fields: [competency_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_922821F3FB9F58C")
 
   @@id([competency_id, resourcenode_id])
   @@index([resourcenode_id], map: "IDX_922821F377C292AE")
@@ -4221,10 +4221,10 @@ model hevinci_objective_competency {
   level_id                                                                          Int
   framework_id                                                                      Int
   uuid                                                                              String                     @unique(map: "UNIQ_EDBF8544D17F50A6") @db.VarChar(36)
-  hevinci_competency_hevinci_competencyTohevinci_objective_competency_competency_id hevinci_competency         @relation("hevinci_competencyTohevinci_objective_competency_competency_id", fields: [competency_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EDBF8544FB9F58C")
   hevinci_competency_hevinci_competencyTohevinci_objective_competency_framework_id  hevinci_competency         @relation("hevinci_competencyTohevinci_objective_competency_framework_id", fields: [framework_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EDBF854437AECF72")
   hevinci_level                                                                     hevinci_level              @relation(fields: [level_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EDBF85445FB14BA7")
   hevinci_learning_objective                                                        hevinci_learning_objective @relation(fields: [objective_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EDBF854473484933")
+  hevinci_competency_hevinci_competencyTohevinci_objective_competency_competency_id hevinci_competency         @relation("hevinci_competencyTohevinci_objective_competency_competency_id", fields: [competency_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EDBF8544FB9F58C")
 
   @@index([framework_id], map: "IDX_EDBF854437AECF72")
   @@index([level_id], map: "IDX_EDBF85445FB14BA7")
@@ -4235,8 +4235,8 @@ model hevinci_objective_competency {
 model hevinci_objective_group {
   objective_id               Int
   group_id                   Int
-  claro_group                claro_group                @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_FFDC9E0FE54D947")
   hevinci_learning_objective hevinci_learning_objective @relation(fields: [objective_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_FFDC9E073484933")
+  claro_group                claro_group                @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_FFDC9E0FE54D947")
 
   @@id([objective_id, group_id])
   @@index([objective_id], map: "IDX_FFDC9E073484933")
@@ -4386,8 +4386,8 @@ model icap__blog_member {
   blog_id    Int?
   trusted    Boolean
   banned     Boolean
-  icap__blog icap__blog? @relation(fields: [blog_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_34A6FF39DAE07E97")
   claro_user claro_user? @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_34A6FF39A76ED395")
+  icap__blog icap__blog? @relation(fields: [blog_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_34A6FF39DAE07E97")
 
   @@index([user_id], map: "IDX_34A6FF39A76ED395")
   @@index([blog_id], map: "IDX_34A6FF39DAE07E97")
@@ -4434,8 +4434,8 @@ model icap__blog_post {
   poster              String?               @db.VarChar(255)
   thumbnail           String?               @db.VarChar(255)
   author              String?               @db.VarChar(255)
-  icap__blog          icap__blog?           @relation(fields: [blog_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_1B067922DAE07E97")
   claro_user          claro_user?           @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_1B06792261220EA6")
+  icap__blog          icap__blog?           @relation(fields: [blog_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_1B067922DAE07E97")
   icap__blog_comment  icap__blog_comment[]
   icap__blog_post_tag icap__blog_post_tag[]
 
@@ -4468,8 +4468,8 @@ model icap__lesson {
   resourceNode_id                                                   Int?                   @unique(map: "UNIQ_D9B36130B87FAB32")
   description                                                       String?                @db.LongText
   show_overview                                                     Boolean                @default(false)
-  claro_resource_node                                               claro_resource_node?   @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_D9B36130B87FAB32")
   icap__lesson_chapter_icap__lesson_root_idToicap__lesson_chapter   icap__lesson_chapter?  @relation("icap__lesson_root_idToicap__lesson_chapter", fields: [root_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_D9B3613079066886")
+  claro_resource_node                                               claro_resource_node?   @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_D9B36130B87FAB32")
   icap__lesson_chapter_icap__lessonToicap__lesson_chapter_lesson_id icap__lesson_chapter[] @relation("icap__lessonToicap__lesson_chapter_lesson_id")
 }
 
@@ -4487,8 +4487,8 @@ model icap__lesson_chapter {
   uuid                                                      String                 @unique(map: "UNIQ_3D7E3C8CD17F50A6") @db.VarChar(36)
   internalNote                                              String?                @db.LongText
   poster                                                    String?                @db.VarChar(255)
-  icap__lesson_icap__lessonToicap__lesson_chapter_lesson_id icap__lesson?          @relation("icap__lessonToicap__lesson_chapter_lesson_id", fields: [lesson_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3D7E3C8CCDF80196")
   icap__lesson_chapter                                      icap__lesson_chapter?  @relation("icap__lesson_chapterToicap__lesson_chapter_parent_id", fields: [parent_id], references: [id], onUpdate: NoAction, map: "FK_3D7E3C8C727ACA70")
+  icap__lesson_icap__lessonToicap__lesson_chapter_lesson_id icap__lesson?          @relation("icap__lessonToicap__lesson_chapter_lesson_id", fields: [lesson_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3D7E3C8CCDF80196")
   icap__lesson_icap__lesson_root_idToicap__lesson_chapter   icap__lesson?          @relation("icap__lesson_root_idToicap__lesson_chapter")
   other_icap__lesson_chapter                                icap__lesson_chapter[] @relation("icap__lesson_chapterToicap__lesson_chapter_parent_id")
 
@@ -4569,8 +4569,8 @@ model icap__wiki {
   display_contents                                          Boolean              @default(true)
   uuid                                                      String               @unique(map: "UNIQ_1FAD6B81D17F50A6") @db.VarChar(36)
   resourceNode_id                                           Int?                 @unique(map: "UNIQ_1FAD6B81B87FAB32")
-  claro_resource_node                                       claro_resource_node? @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1FAD6B81B87FAB32")
   icap__wiki_section_icap__wiki_root_idToicap__wiki_section icap__wiki_section?  @relation("icap__wiki_root_idToicap__wiki_section", fields: [root_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1FAD6B8179066886")
+  claro_resource_node                                       claro_resource_node? @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1FAD6B81B87FAB32")
   icap__wiki_section_icap__wikiToicap__wiki_section_wiki_id icap__wiki_section[] @relation("icap__wikiToicap__wiki_section_wiki_id")
 }
 
@@ -4582,8 +4582,8 @@ model icap__wiki_contribution {
   text                                                                                  String?             @db.LongText
   creation_date                                                                         DateTime            @db.DateTime(0)
   uuid                                                                                  String              @unique(map: "UNIQ_781E6502D17F50A6") @db.VarChar(36)
-  icap__wiki_section_icap__wiki_contribution_section_idToicap__wiki_section             icap__wiki_section? @relation("icap__wiki_contribution_section_idToicap__wiki_section", fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_781E6502D823E37A")
   claro_user                                                                            claro_user?         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_781E6502A76ED395")
+  icap__wiki_section_icap__wiki_contribution_section_idToicap__wiki_section             icap__wiki_section? @relation("icap__wiki_contribution_section_idToicap__wiki_section", fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_781E6502D823E37A")
   icap__wiki_section_icap__wiki_contributionToicap__wiki_section_active_contribution_id icap__wiki_section? @relation("icap__wiki_contributionToicap__wiki_section_active_contribution_id")
 
   @@index([user_id], map: "IDX_781E6502A76ED395")
@@ -4605,10 +4605,10 @@ model icap__wiki_section {
   rgt                                                                                        Int
   root                                                                                       Int?
   uuid                                                                                       String                    @unique(map: "UNIQ_82904AAD17F50A6") @db.VarChar(36)
-  icap__wiki_contribution_icap__wiki_contributionToicap__wiki_section_active_contribution_id icap__wiki_contribution?  @relation("icap__wiki_contributionToicap__wiki_section_active_contribution_id", fields: [active_contribution_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82904AAFE665925")
   icap__wiki_section                                                                         icap__wiki_section?       @relation("icap__wiki_sectionToicap__wiki_section_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82904AA727ACA70")
   claro_user                                                                                 claro_user?               @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_82904AAA76ED395")
   icap__wiki_icap__wikiToicap__wiki_section_wiki_id                                          icap__wiki?               @relation("icap__wikiToicap__wiki_section_wiki_id", fields: [wiki_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82904AAAA948DBE")
+  icap__wiki_contribution_icap__wiki_contributionToicap__wiki_section_active_contribution_id icap__wiki_contribution?  @relation("icap__wiki_contributionToicap__wiki_section_active_contribution_id", fields: [active_contribution_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82904AAFE665925")
   icap__wiki_icap__wiki_root_idToicap__wiki_section                                          icap__wiki?               @relation("icap__wiki_root_idToicap__wiki_section")
   icap__wiki_contribution_icap__wiki_contribution_section_idToicap__wiki_section             icap__wiki_contribution[] @relation("icap__wiki_contribution_section_idToicap__wiki_section")
   other_icap__wiki_section                                                                   icap__wiki_section[]      @relation("icap__wiki_sectionToicap__wiki_section_parent_id")
@@ -4664,8 +4664,8 @@ model innova_step {
   uuid                           String                           @unique(map: "UNIQ_86F48567D17F50A6") @db.VarChar(36)
   poster                         String?                          @db.VarChar(255)
   innova_step                    innova_step?                     @relation("innova_stepToinnova_step_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_86F48567727ACA70")
-  innova_path                    innova_path?                     @relation(fields: [path_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_86F48567D96C566B")
   claro_resource_node            claro_resource_node?             @relation(fields: [resource_id], references: [id], onUpdate: NoAction, map: "FK_86F4856789329D25")
+  innova_path                    innova_path?                     @relation(fields: [path_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_86F48567D96C566B")
   innova_path_progression        innova_path_progression[]
   other_innova_step              innova_step[]                    @relation("innova_stepToinnova_step_parent_id")
   innova_step_secondary_resource innova_step_secondary_resource[]
@@ -4680,8 +4680,8 @@ model innova_step_secondary_resource {
   step_id             Int
   resource_id         Int
   resource_order      Int
-  claro_resource_node claro_resource_node @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4E895FCB89329D25")
   innova_step         innova_step         @relation(fields: [step_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4E895FCB73B21E9C")
+  claro_resource_node claro_resource_node @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4E895FCB89329D25")
 
   @@index([step_id], map: "IDX_4E895FCB73B21E9C")
   @@index([resource_id], map: "IDX_4E895FCB89329D25")
@@ -4705,8 +4705,8 @@ model ujm_association {
   proposal_id              Int?
   score                    Float?
   feedback                 String?                   @db.LongText
-  ujm_label                ujm_label?                @relation(fields: [label_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2DD0DD0F33B92F39")
   ujm_interaction_matching ujm_interaction_matching? @relation(fields: [match_question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2DD0DD0F2CBE8797")
+  ujm_label                ujm_label?                @relation(fields: [label_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2DD0DD0F33B92F39")
   ujm_proposal             ujm_proposal?             @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2DD0DD0FF4792058")
 
   @@index([match_question_id], map: "IDX_2DD0DD0F2CBE8797")
@@ -4958,8 +4958,8 @@ model ujm_interaction_graphic {
   id           Int           @id @default(autoincrement())
   image_id     Int?
   question_id  Int?          @unique(map: "UNIQ_9EBD442F1E27F6BF")
-  ujm_picture  ujm_picture?  @relation(fields: [image_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_9EBD442F3DA5256D")
   ujm_question ujm_question? @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_9EBD442F1E27F6BF")
+  ujm_picture  ujm_picture?  @relation(fields: [image_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_9EBD442F3DA5256D")
   ujm_coords   ujm_coords[]
 
   @@index([image_id], map: "IDX_9EBD442F3DA5256D")
@@ -5030,8 +5030,8 @@ model ujm_label {
   entity_order             Int
   data                     String?                   @db.LongText
   resourceNode_id          Int?
-  ujm_interaction_matching ujm_interaction_matching? @relation(fields: [interaction_matching_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_C22A1EB5FAB79C10")
   claro_resource_node      claro_resource_node?      @relation(fields: [resourceNode_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_C22A1EB5B87FAB32")
+  ujm_interaction_matching ujm_interaction_matching? @relation(fields: [interaction_matching_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_C22A1EB5FAB79C10")
   ujm_association          ujm_association[]
 
   @@index([resourceNode_id], map: "IDX_C22A1EB5B87FAB32")
@@ -5066,8 +5066,8 @@ model ujm_lti_resource {
 model ujm_ltiapp_workspace {
   ltiapp_id       Int
   workspace_id    Int
-  ujm_lti_app     ujm_lti_app     @relation(fields: [ltiapp_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7FB6D142A22F70CC")
   claro_workspace claro_workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7FB6D14282D40A1F")
+  ujm_lti_app     ujm_lti_app     @relation(fields: [ltiapp_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7FB6D142A22F70CC")
 
   @@id([ltiapp_id, workspace_id])
   @@index([workspace_id], map: "IDX_7FB6D14282D40A1F")
@@ -5095,8 +5095,8 @@ model ujm_ordering_item {
   score                    Float?
   feedback                 String?                @db.LongText
   resourceNode_id          Int?
-  claro_resource_node      claro_resource_node?   @relation(fields: [resourceNode_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_360C6C62B87FAB32")
   ujm_question_ordering    ujm_question_ordering? @relation(fields: [ujm_question_ordering_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_360C6C62273546DE")
+  claro_resource_node      claro_resource_node?   @relation(fields: [resourceNode_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_360C6C62B87FAB32")
 
   @@index([ujm_question_ordering_id], map: "IDX_360C6C62273546DE")
   @@index([resourceNode_id], map: "IDX_360C6C62B87FAB32")
@@ -5116,8 +5116,8 @@ model ujm_paper {
   anonymous      Boolean?
   invalidated    Boolean
   uuid           String         @unique(map: "UNIQ_82972E4BD17F50A6") @db.VarChar(36)
-  ujm_exercise   ujm_exercise?  @relation(fields: [exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82972E4BE934951A")
   claro_user     claro_user?    @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_82972E4BA76ED395")
+  ujm_exercise   ujm_exercise?  @relation(fields: [exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82972E4BE934951A")
   ujm_response   ujm_response[]
 
   @@index([user_id], map: "IDX_82972E4BA76ED395")
@@ -5142,8 +5142,8 @@ model ujm_proposal {
   entity_order             Int
   data                     String?                   @db.LongText
   resourceNode_id          Int?
-  ujm_interaction_matching ujm_interaction_matching? @relation(fields: [interaction_matching_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2672B44BFAB79C10")
   claro_resource_node      claro_resource_node?      @relation(fields: [resourceNode_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2672B44BB87FAB32")
+  ujm_interaction_matching ujm_interaction_matching? @relation(fields: [interaction_matching_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_2672B44BFAB79C10")
   ujm_association          ujm_association[]
 
   @@index([resourceNode_id], map: "IDX_2672B44BB87FAB32")
@@ -5350,8 +5350,8 @@ model user_organization {
   user_id             Int
   oganization_id      Int
   is_main             Boolean
-  claro__organization claro__organization @relation(fields: [oganization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_41221F7EF35E13B7")
   claro_user          claro_user          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_41221F7EA76ED395")
+  claro__organization claro__organization @relation(fields: [oganization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_41221F7EF35E13B7")
 
   @@index([user_id], map: "IDX_41221F7EA76ED395")
   @@index([oganization_id], map: "IDX_41221F7EF35E13B7")
@@ -5427,10 +5427,10 @@ model icap__socialmedia_wall_item {
   user_id                   Int?
   creation_date             DateTime                   @db.DateTime(0)
   visible                   Boolean
-  icap__socialmedia_comment icap__socialmedia_comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420F8697D13")
-  icap__socialmedia_like    icap__socialmedia_like?    @relation(fields: [like_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420859BFA32")
   icap__socialmedia_share   icap__socialmedia_share?   @relation(fields: [share_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC4202AE63FDB")
+  icap__socialmedia_like    icap__socialmedia_like?    @relation(fields: [like_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420859BFA32")
   claro_user                claro_user?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420A76ED395")
+  icap__socialmedia_comment icap__socialmedia_comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420F8697D13")
 
   @@index([share_id], map: "IDX_436BC4202AE63FDB")
   @@index([like_id], map: "IDX_436BC420859BFA32")
@@ -5589,8 +5589,8 @@ model claro_transfer_import {
   extra             String?            @db.LongText
   name              String?            @db.VarChar(255)
   claro_user        claro_user?        @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_EA6FE9F161220EA6")
-  claro_public_file claro_public_file? @relation(fields: [file_id], references: [id], onUpdate: NoAction, map: "FK_EA6FE9F193CB796C")
   claro_workspace   claro_workspace?   @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_EA6FE9F182D40A1F")
+  claro_public_file claro_public_file? @relation(fields: [file_id], references: [id], onUpdate: NoAction, map: "FK_EA6FE9F193CB796C")
 
   @@index([creator_id], map: "IDX_EA6FE9F161220EA6")
   @@index([workspace_id], map: "IDX_EA6FE9F182D40A1F")
@@ -5617,4 +5617,12 @@ model messenger_messages {
   delivered_at DateTime? @db.DateTime(0)
 
   @@index([delivered_at], map: "IDX_75EA56E016BA31DB")
+}
+
+model former22_attestations {
+  idModel         String  @id @db.VarChar(255)
+  title           String? @db.VarChar(255)
+  descriptionText String? @db.Text
+  path            String? @db.VarChar(255)
+  filename        String? @db.Text
 }

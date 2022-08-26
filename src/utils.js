@@ -52,6 +52,7 @@ export const LOG_TYPES = {
     ORGANISATION: 'Organisation',
     USER: 'Utilisateur',
     INVOICE: 'Facture',
+    ATTESTATION: 'Attestation',
 }
 
 // TODO: named params
