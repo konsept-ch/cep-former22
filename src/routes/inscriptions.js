@@ -20,7 +20,6 @@ import { getTemplatePreviews } from './templatesUtils'
 
 export const inscriptionsRouter = Router()
 
-// inscriptions START
 createService(
     'get',
     '/',
@@ -267,4 +266,3 @@ createService(
     null,
     inscriptionsRouter
 )
-// inscriptions END

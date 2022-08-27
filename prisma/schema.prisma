@@ -5191,8 +5191,8 @@ model ujm_question_grid {
   id           Int           @id @default(autoincrement())
   question_id  Int?          @unique(map: "UNIQ_2412DE371E27F6BF")
   sumMode      String        @db.VarChar(255)
-  grid_rows    Int
-  grid_columns Int
+  rows         Int
+  columns      Int
   borderWidth  Int
   borderColor  String        @db.VarChar(255)
   penalty      Float
@@ -5620,9 +5620,10 @@ model messenger_messages {
 }
 
 model former22_attestations {
-  idModel         String  @id @db.VarChar(255)
-  title           String? @db.VarChar(255)
-  descriptionText String? @db.Text
-  path            String? @db.VarChar(255)
-  filename        String? @db.Text
+  id          Int     @id @default(autoincrement())
+  uuid        String? @unique(map: "uuid") @db.VarChar(36)
+  title       String? @default("Nouveau modèle d'attestation") @db.VarChar(255)
+  description String? @db.MediumText
+  filePath    String? @db.VarChar(255)
+  fileName    String? @db.Text
 }

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import fetch from 'node-fetch'
+import fetch /* , { FormData, File, fileFrom } */ from 'node-fetch'
 import { v4 as uuidv4 } from 'uuid'
 
 import { clarolineApiUrl } from '../credentialsConfig'
@@ -8,12 +8,20 @@ import { createService, LOG_TYPES } from '../utils'
 
 export const attestationsRouter = Router()
 
-// attestations START
 createService(
     'get',
     '/',
     async (_req, res) => {
-        const attestations = await prisma.former22_attestations.findMany()
+        const attestations = await prisma.former22_attestations.findMany({
+            select: {
+                id: false,
+                uuid: true,
+                title: true,
+                description: true,
+                fileName: true,
+                filePath: true,
+            },
+        })
 
         res.json(attestations ?? "Les attestations n'ont pas été trouvés")
     },
@@ -25,6 +33,90 @@ createService(
     'post',
     '/',
     async (req, res) => {
+        try {
+            const { uuid, title } = await prisma.former22_attestations.create({
+                data: {
+                    uuid: uuidv4(), // can the DB generate this? Should it?
+                },
+            })
+
+            res.json("L'attestation a été créé")
+
+            return {
+                entityName: title, // uses the default value, which is set in the DB structure
+                entityId: uuid,
+                actionName: 'Added an attestation',
+            }
+        } catch (error) {
+            console.error(error)
+
+            res.json('Erreur')
+        }
+    },
+    { entityType: LOG_TYPES.ATTESTATION },
+    attestationsRouter
+)
+
+createService(
+    'put',
+    '/:uuid',
+    async (req, res) => {
+        const { uuid } = req.params
+        const { title, description } = req.body
+
+        await prisma.former22_attestations.update({
+            where: {
+                uuid,
+            },
+            data: {
+                title,
+                description,
+            },
+        })
+
+        res.json("L'attestation a été mise à jour")
+
+        return {
+            entityName: title,
+            entityId: uuid,
+            actionName: 'Updated an attestation',
+        }
+    },
+    { entityType: LOG_TYPES.ATTESTATION },
+    attestationsRouter
+)
+
+createService(
+    'delete',
+    '/:uuid',
+    async (req, res) => {
+        const { uuid } = req.params
+
+        const { title } = await prisma.former22_attestations.delete({
+            where: {
+                uuid,
+            },
+        })
+
+        res.json("L'attestation a été supprimé")
+
+        return {
+            entityName: title,
+            entityId: uuid,
+            actionName: 'Deleted an attestation',
+        }
+    },
+    { entityType: LOG_TYPES.ATTESTATION },
+    attestationsRouter
+)
+
+createService(
+    'patch',
+    '/upload/:uuid',
+    async (req, res) => {
+        const { uuid } = req.params
+        const { title, description } = req.body
+
         const response = await fetch(`${clarolineApiUrl}public_file/upload`, {
             method: 'post',
             headers: req.headers,
@@ -44,10 +136,10 @@ createService(
         await prisma.former22_attestations.create({
             data: {
                 path: pathMock,
-                title: req.body.title,
-                descriptionText: req.body.descriptionText,
-                filename: req.body.filename,
-                idModel: req.body.idModel,
+                title,
+                description,
+                // fileName,
+                uuid,
             },
         })
 
@@ -62,4 +154,3 @@ createService(
     { entityType: LOG_TYPES.ATTESTATION },
     attestationsRouter
 )
-// attestations END

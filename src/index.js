@@ -31,7 +31,7 @@ app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 
 const port = process.env.PORT ?? 4000
-const apiPrefix = '/api/v1'
+// const apiPrefix = '/api/v1'
 const SWAGGER_UI_PATH = '/api-docs'
 const SWAGGER_SCHEMA_PATH = `${SWAGGER_UI_PATH}/swagger.json`
 const SWAGGER_SCHEMA_YAML_PATH = `${SWAGGER_UI_PATH}/swagger.yaml`
