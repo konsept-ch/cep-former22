@@ -5620,10 +5620,10 @@ model messenger_messages {
 }
 
 model former22_attestations {
-  id          Int     @id @default(autoincrement())
-  uuid        String? @unique(map: "uuid") @db.VarChar(36)
-  title       String? @default("Nouveau modèle d'attestation") @db.VarChar(255)
-  description String? @db.MediumText
-  filePath    String? @db.VarChar(255)
-  fileName    String? @db.Text
+  id               Int     @id @default(autoincrement())
+  uuid             String? @unique(map: "uuid") @db.VarChar(36)
+  title            String? @default("Nouveau modèle d'attestation") @db.VarChar(255)
+  description      String? @db.MediumText
+  fileStoredName   String? @db.VarChar(255)
+  fileOriginalName String? @db.MediumText
 }

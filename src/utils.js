@@ -56,8 +56,17 @@ export const LOG_TYPES = {
 }
 
 // TODO: named params
-export const createService = (method, url, handlerFunction, logHelper, router = app) => {
-    router[method](url, async (req, res) => {
+export const createService = (
+    method,
+    url,
+    handlerFunction,
+    logHelper,
+    router = app,
+    middlewareFunction = (req, res, next) => {
+        next()
+    }
+) => {
+    router[method](url, middlewareFunction, async (req, res) => {
         let logId
         try {
             if (logHelper) {
