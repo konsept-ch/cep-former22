@@ -67,9 +67,7 @@ createService(
         const { uuid } = req.params
         const { title, description } = req.body
 
-        const {
-            file: { originalname, filename },
-        } = req
+        const { file: { originalname, filename } = {} } = req
 
         try {
             await prisma.former22_attestations.update({
