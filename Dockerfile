@@ -3,7 +3,7 @@
 FROM node:16.17-alpine
 
 # add docx read support with antiword for textract
-RUN apk add antiword
+RUN apk add libreoffice
 
 ENV NODE_ENV=production
 

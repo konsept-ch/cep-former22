@@ -5,6 +5,8 @@ import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import fs from 'fs'
 import path from 'path'
+import libre from 'libreoffice-convert'
+import util from 'util'
 
 import { prisma } from '..'
 import { callApi } from '../callApi'
@@ -21,6 +23,8 @@ import {
     transformFlagsToStatus,
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
+
+libre.convertAsync = util.promisify(libre.convert)
 
 export const inscriptionsRouter = Router()
 
@@ -184,8 +188,6 @@ createService(
                     },
                 })
 
-                const filePath = path.resolve(uploadedFilesDest, attestation.fileStoredName)
-
                 const content = fs.readFileSync(path.resolve(uploadedFilesDest, attestation.fileStoredName), 'binary')
 
                 const zip = new PizZip(content)
@@ -208,6 +210,21 @@ createService(
                 })
 
                 fs.writeFileSync(path.resolve(uploadedFilesDest, `${attestation.fileStoredName}.docx`), buf)
+
+                // TODO: convert to PDF
+                const ext = '.pdf'
+                // const inputPath = path.join(__dirname, '/resources/example.docx');
+                const outputPath = path.join(uploadedFilesDest, `${attestation.fileStoredName}${ext}`)
+
+                // // Read file
+                // const docxBuf = await fs.readFile(inputPath);
+                const docxBuf = buf
+
+                // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
+                const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
+
+                // Here in done you have pdf file which you can save or transfer in another stream
+                fs.writeFileSync(outputPath, pdfBuf)
 
                 // TODO: upload to personal workspace
             }
