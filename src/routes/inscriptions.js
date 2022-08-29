@@ -1,13 +1,17 @@
 import { Router } from 'express'
 import fetch from 'node-fetch'
 import { v4 as uuidv4 } from 'uuid'
+import PizZip from 'pizzip'
+import Docxtemplater from 'docxtemplater'
+import fs from 'fs'
+import path from 'path'
 
 import { prisma } from '..'
 import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
+import { createService, getLogDescriptions, LOG_TYPES, uploadedFilesDest } from '../utils'
 import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,
@@ -180,7 +184,30 @@ createService(
                     },
                 })
 
-                // TODO: replace placeholders
+                const filePath = path.resolve(uploadedFilesDest, attestation.fileStoredName)
+
+                const content = fs.readFileSync(path.resolve(uploadedFilesDest, attestation.fileStoredName), 'binary')
+
+                const zip = new PizZip(content)
+
+                const doc = new Docxtemplater(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                })
+
+                doc.render({
+                    SESSION_NOM: currentInscription.claro_cursusbundle_course_session.course_name,
+                })
+
+                const buf = doc.getZip().generate({
+                    type: 'nodebuffer',
+                    // compression: DEFLATE adds a compression step.
+                    // For a 50MB output document, expect 500ms additional CPU time
+                    compression: 'DEFLATE',
+                })
+
+                fs.writeFileSync(path.resolve(uploadedFilesDest, `${attestation.fileStoredName}.docx`), buf)
+
                 // TODO: upload to personal workspace
             }
 

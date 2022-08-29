@@ -3,9 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import multer from 'multer'
 
 import { prisma } from '..'
-import { createService, LOG_TYPES } from '../utils'
-
-export const uploadedFilesDest = '/data/uploads/attestation-templates'
+import { createService, LOG_TYPES, uploadedFilesDest } from '../utils'
 
 const upload = multer({ dest: uploadedFilesDest })
 
