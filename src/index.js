@@ -12,6 +12,7 @@ import { authRouter } from './routes/auth'
 import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
+import { attestationsRouter } from './routes/attestations'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
 import { organizationsRouter } from './routes/organizations'
@@ -30,7 +31,7 @@ app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 
 const port = process.env.PORT ?? 4000
-const apiPrefix = '/api/v1'
+// const apiPrefix = '/api/v1'
 const SWAGGER_UI_PATH = '/api-docs'
 const SWAGGER_SCHEMA_PATH = `${SWAGGER_UI_PATH}/swagger.json`
 const SWAGGER_SCHEMA_YAML_PATH = `${SWAGGER_UI_PATH}/swagger.yaml`
@@ -70,6 +71,7 @@ app.use('/auth', authRouter)
 app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
 app.use('/mail', mailRouter)
+app.use('/attestations', attestationsRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
 app.use('/organizations', organizationsRouter)

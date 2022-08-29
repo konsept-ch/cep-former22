@@ -5,7 +5,6 @@ import { createService, formatDate, LOG_TYPES } from '../utils'
 
 export const invoicesRouter = Router()
 
-// invoices START
 createService(
     'get',
     '/',
@@ -211,4 +210,3 @@ Dates: ...
     null,
     invoicesRouter
 )
-// invoices END

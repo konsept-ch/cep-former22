@@ -5,6 +5,8 @@ import { app, prisma } from './'
 import { callApi } from './callApi'
 import { winstonLogger } from './winston'
 
+export const uploadedFilesDest = '/data/uploads/attestation-templates'
+
 // for testing/development purposes only
 export const delay = (ms) => new Promise((res) => setTimeout(res, ms))
 
@@ -52,11 +54,21 @@ export const LOG_TYPES = {
     ORGANISATION: 'Organisation',
     USER: 'Utilisateur',
     INVOICE: 'Facture',
+    ATTESTATION: 'Attestation',
 }
 
 // TODO: named params
-export const createService = (method, url, handlerFunction, logHelper, router = app) => {
-    router[method](url, async (req, res) => {
+export const createService = (
+    method,
+    url,
+    handlerFunction,
+    logHelper,
+    router = app,
+    middlewareFunction = (req, res, next) => {
+        next()
+    }
+) => {
+    router[method](url, middlewareFunction, async (req, res) => {
         let logId
         try {
             if (logHelper) {
