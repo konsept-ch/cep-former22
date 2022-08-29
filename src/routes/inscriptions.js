@@ -191,6 +191,7 @@ createService(
                 const zip = new PizZip(content)
 
                 const doc = new Docxtemplater(zip, {
+                    delimiters: { start: '[', end: ']' },
                     paragraphLoop: true,
                     linebreaks: true,
                 })
