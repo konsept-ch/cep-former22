@@ -13,7 +13,13 @@ import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, getLogDescriptions, LOG_TYPES, uploadedFilesDest } from '../utils'
+import {
+    createService,
+    getLogDescriptions,
+    LOG_TYPES,
+    attestationTemplateFilesDest,
+    attestationFilesDest,
+} from '../utils'
 import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,
@@ -188,7 +194,10 @@ createService(
                     },
                 })
 
-                const content = fs.readFileSync(path.resolve(uploadedFilesDest, attestation.fileStoredName), 'binary')
+                const content = fs.readFileSync(
+                    path.resolve(attestationTemplateFilesDest, attestation.fileStoredName),
+                    'binary'
+                )
 
                 const zip = new PizZip(content)
 
@@ -209,12 +218,11 @@ createService(
                     compression: 'DEFLATE',
                 })
 
-                fs.writeFileSync(path.resolve(uploadedFilesDest, `${attestation.fileStoredName}.docx`), buf)
+                // fs.writeFileSync(path.resolve(attestationTemplateFilesDest, `${attestation.fileStoredName}.docx`), buf)
 
-                // TODO: convert to PDF
                 const ext = '.pdf'
                 // const inputPath = path.join(__dirname, '/resources/example.docx');
-                const outputPath = path.join(uploadedFilesDest, `${attestation.fileStoredName}${ext}`)
+                // const outputPath = path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`)
 
                 // // Read file
                 // const docxBuf = await fs.readFile(inputPath);
@@ -224,7 +232,7 @@ createService(
                 const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
 
                 // Here in done you have pdf file which you can save or transfer in another stream
-                fs.writeFileSync(outputPath, pdfBuf)
+                fs.writeFileSync(path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`), pdfBuf)
 
                 // TODO: upload to personal workspace
             }

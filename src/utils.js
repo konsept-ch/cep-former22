@@ -5,7 +5,8 @@ import { app, prisma } from './'
 import { callApi } from './callApi'
 import { winstonLogger } from './winston'
 
-export const uploadedFilesDest = '/data/uploads/attestation-templates'
+export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
+export const attestationFilesDest = '/data/uploads/attestations'
 
 // for testing/development purposes only
 export const delay = (ms) => new Promise((res) => setTimeout(res, ms))
