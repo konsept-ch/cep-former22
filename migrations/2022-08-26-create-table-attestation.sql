@@ -4,8 +4,8 @@ CREATE TABLE
         uuid VARCHAR(36) UNIQUE COMMENT 'The ID of the attestation',
         title VARCHAR(255) DEFAULT "Nouveau modèle d'attestation" COMMENT 'The title of the attestation template',
         description TEXT COMMENT 'The description of the attestation template',
-        filePath VARCHAR(255) COMMENT 'The path of the docx file',
-        fileName TEXT COMMENT 'The original name of the docx file'
+        fileStoredName VARCHAR(255) COMMENT 'The generated name for storing the docx file',
+        fileOriginalName TEXT COMMENT 'The original name of the uploaded docx file by the user'
     ) DEFAULT CHARSET UTF8 COMMENT '';
 
 ALTER TABLE
