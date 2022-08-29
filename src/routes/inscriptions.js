@@ -69,7 +69,7 @@ createService(
     'post',
     '/:inscriptionId',
     async (req, res) => {
-        const { emailTemplateId, shouldSendSms, status: newStatus } = req.body
+        const { emailTemplateId, selectedAttestationTemplateUuid, shouldSendSms, status: newStatus } = req.body
 
         const currentInscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
             where: { uuid: req.params.inscriptionId },
@@ -157,6 +157,31 @@ createService(
                         content: smsContent.replace(/<br\s*\/?>/gi, '\n'),
                     })
                 }
+            }
+
+            if (selectedAttestationTemplateUuid) {
+                const attestation = await prisma.former22_attestations.findUnique({
+                    where: {
+                        uuid: selectedAttestationTemplateUuid,
+                    },
+                    select: {
+                        id: true,
+                        fileOriginalName: true,
+                        fileStoredName: true,
+                    },
+                })
+
+                await prisma.former22_inscription.update({
+                    where: {
+                        inscriptionId: req.params.inscriptionId,
+                    },
+                    data: {
+                        attestationId: attestation.id,
+                    },
+                })
+
+                // TODO: replace placeholders
+                // TODO: upload to personal workspace
             }
 
             // if (statusesForRefusalRh.includes(newStatus)) {

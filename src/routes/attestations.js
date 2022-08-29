@@ -5,7 +5,7 @@ import multer from 'multer'
 import { prisma } from '..'
 import { createService, LOG_TYPES } from '../utils'
 
-const uploadedFilesDest = '/data/uploads/attestation-templates'
+export const uploadedFilesDest = '/data/uploads/attestation-templates'
 
 const upload = multer({ dest: uploadedFilesDest })
 
