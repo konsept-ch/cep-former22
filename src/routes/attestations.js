@@ -15,7 +15,7 @@ createService(
     'get',
     '/',
     async (_req, res) => {
-        const attestations = await prisma.former22_attestations.findMany({
+        const attestations = await prisma.former22_attestation.findMany({
             select: {
                 id: false,
                 uuid: true,
@@ -37,7 +37,7 @@ createService(
     '/',
     async (req, res) => {
         try {
-            const { uuid, title } = await prisma.former22_attestations.create({
+            const { uuid, title } = await prisma.former22_attestation.create({
                 data: {
                     uuid: uuidv4(), // can the DB generate this? Should it?
                 },
@@ -70,7 +70,7 @@ createService(
         const { file: { originalname, filename } = {} } = req
 
         try {
-            await prisma.former22_attestations.update({
+            await prisma.former22_attestation.update({
                 where: {
                     uuid,
                 },
@@ -107,7 +107,7 @@ createService(
         const { uuid } = req.params
 
         try {
-            const { title } = await prisma.former22_attestations.delete({
+            const { title } = await prisma.former22_attestation.delete({
                 where: {
                     uuid,
                 },

@@ -5456,11 +5456,11 @@ model former22_template {
 }
 
 model former22_inscription {
-  inscriptionId         String                 @id @db.VarChar(255)
-  inscriptionStatus     String?                @db.Text
-  updatedAt             DateTime?              @default(now()) @db.DateTime(0)
-  attestationId         Int?                   @unique(map: "attestationId")
-  former22_attestations former22_attestations? @relation(fields: [attestationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription_attestation")
+  inscriptionId        String                @id @db.VarChar(255)
+  inscriptionStatus    String?               @db.Text
+  updatedAt            DateTime?             @default(now()) @db.DateTime(0)
+  attestationId        Int?                  @unique(map: "attestationId")
+  former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription_attestation")
 
   @@index([attestationId], map: "inscription_index")
 }
@@ -5623,7 +5623,7 @@ model messenger_messages {
   @@index([delivered_at], map: "IDX_75EA56E016BA31DB")
 }
 
-model former22_attestations {
+model former22_attestation {
   id                   Int                   @id @default(autoincrement())
   uuid                 String?               @unique(map: "uuid") @db.VarChar(36)
   title                String?               @default("Nouveau modèle d'attestation") @db.VarChar(255)

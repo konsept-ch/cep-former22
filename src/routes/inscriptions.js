@@ -160,7 +160,7 @@ createService(
             }
 
             if (selectedAttestationTemplateUuid) {
-                const attestation = await prisma.former22_attestations.findUnique({
+                const attestation = await prisma.former22_attestation.findUnique({
                     where: {
                         uuid: selectedAttestationTemplateUuid,
                     },
