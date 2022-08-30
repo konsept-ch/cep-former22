@@ -173,6 +173,36 @@ createService(
                 }
             }
 
+            // if (statusesForRefusalRh.includes(newStatus)) {
+            //     await callApi({
+            //         req,
+            //         path: `cursus_session/${session.uuid}/pending`,
+            //         params: { 'ids[0]': user.uuid },
+            //         method: 'patch',
+            //     })
+            // } else if (statusesForValidation.includes(newStatus)) {
+            //     await callApi({
+            //         req,
+            //         path: `cursus_session/${session.uuid}/pending/validate`,
+            //         params: { 'ids[0]': currentInscription.uuid },
+            //         method: 'put',
+            //     })
+            // } else
+            if (statusesForAnnulation.includes(newStatus)) {
+                await callApi({
+                    req,
+                    path: `cursus_session/${session.uuid}/users/learner`,
+                    params: { 'ids[0]': currentInscription.uuid },
+                    method: 'delete',
+                })
+            }
+
+            await prisma.former22_inscription.upsert({
+                where: { inscriptionId: req.params.inscriptionId },
+                update: { inscriptionStatus: newStatus, updatedAt: new Date() },
+                create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
+            })
+
             if (selectedAttestationTemplateUuid) {
                 const attestation = await prisma.former22_attestation.findUnique({
                     where: {
@@ -236,36 +266,6 @@ createService(
 
                 // TODO: upload to personal workspace
             }
-
-            // if (statusesForRefusalRh.includes(newStatus)) {
-            //     await callApi({
-            //         req,
-            //         path: `cursus_session/${session.uuid}/pending`,
-            //         params: { 'ids[0]': user.uuid },
-            //         method: 'patch',
-            //     })
-            // } else if (statusesForValidation.includes(newStatus)) {
-            //     await callApi({
-            //         req,
-            //         path: `cursus_session/${session.uuid}/pending/validate`,
-            //         params: { 'ids[0]': currentInscription.uuid },
-            //         method: 'put',
-            //     })
-            // } else
-            if (statusesForAnnulation.includes(newStatus)) {
-                await callApi({
-                    req,
-                    path: `cursus_session/${session.uuid}/users/learner`,
-                    params: { 'ids[0]': currentInscription.uuid },
-                    method: 'delete',
-                })
-            }
-
-            await prisma.former22_inscription.upsert({
-                where: { inscriptionId: req.params.inscriptionId },
-                update: { inscriptionStatus: newStatus, updatedAt: new Date() },
-                create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
-            })
 
             const mainOrganization = user.user_organization[0]?.claro__organization
 
