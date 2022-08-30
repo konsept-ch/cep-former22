@@ -241,22 +241,14 @@ createService(
                     SESSION_NOM: currentInscription.claro_cursusbundle_course_session.course_name,
                 })
 
-                const buf = doc.getZip().generate({
+                const docxBuf = doc.getZip().generate({
                     type: 'nodebuffer',
                     // compression: DEFLATE adds a compression step.
                     // For a 50MB output document, expect 500ms additional CPU time
                     compression: 'DEFLATE',
                 })
 
-                // fs.writeFileSync(path.resolve(attestationTemplateFilesDest, `${attestation.fileStoredName}.docx`), buf)
-
                 const ext = '.pdf'
-                // const inputPath = path.join(__dirname, '/resources/example.docx');
-                // const outputPath = path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`)
-
-                // // Read file
-                // const docxBuf = await fs.readFile(inputPath);
-                const docxBuf = buf
 
                 // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
                 const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
@@ -265,6 +257,19 @@ createService(
                 fs.writeFileSync(path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`), pdfBuf)
 
                 // TODO: upload to personal workspace
+                const workspace = await prisma.claro_workspace.findMany({
+                    where: {
+                        is_personal: true,
+                        creator_id: currentInscription.id,
+                    },
+                    select: {
+                        uuid: true,
+                        claro_resource_node: true,
+                    },
+                })
+
+                console.error(workspace[0]?.uuid)
+                console.error(workspace[0]?.claro_resource_node)
             }
 
             const mainOrganization = user.user_organization[0]?.claro__organization
