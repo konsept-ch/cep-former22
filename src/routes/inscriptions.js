@@ -241,22 +241,14 @@ createService(
                     SESSION_NOM: currentInscription.claro_cursusbundle_course_session.course_name,
                 })
 
-                const buf = doc.getZip().generate({
+                const docxBuf = doc.getZip().generate({
                     type: 'nodebuffer',
                     // compression: DEFLATE adds a compression step.
                     // For a 50MB output document, expect 500ms additional CPU time
                     compression: 'DEFLATE',
                 })
 
-                // fs.writeFileSync(path.resolve(attestationTemplateFilesDest, `${attestation.fileStoredName}.docx`), buf)
-
                 const ext = '.pdf'
-                // const inputPath = path.join(__dirname, '/resources/example.docx');
-                // const outputPath = path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`)
-
-                // // Read file
-                // const docxBuf = await fs.readFile(inputPath);
-                const docxBuf = buf
 
                 // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
                 const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
