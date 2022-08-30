@@ -257,6 +257,19 @@ createService(
                 fs.writeFileSync(path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`), pdfBuf)
 
                 // TODO: upload to personal workspace
+                const workspace = await prisma.claro_workspace.findMany({
+                    where: {
+                        is_personal: true,
+                        creator_id: currentInscription.id,
+                    },
+                    select: {
+                        uuid: true,
+                        claro_resource_node: true,
+                    },
+                })
+
+                console.error(workspace[0]?.uuid)
+                console.error(workspace[0]?.claro_resource_node)
             }
 
             const mainOrganization = user.user_organization[0]?.claro__organization
