@@ -41,7 +41,7 @@ createService(
                 },
             })
 
-            res.json("L'attestation a été créé") // return uuid in order to be selected on the frontend
+            res.json({ uuid }) // return uuid in order to be selected on the frontend
 
             return {
                 entityName: title, // uses the default value, which is set in the DB structure
