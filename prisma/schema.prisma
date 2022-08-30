@@ -5459,7 +5459,7 @@ model former22_inscription {
   inscriptionId        String                @id @db.VarChar(255)
   inscriptionStatus    String?               @db.Text
   updatedAt            DateTime?             @default(now()) @db.DateTime(0)
-  attestationId        Int?                  @unique(map: "attestationId")
+  attestationId        Int?
   former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription_attestation")
 
   @@index([attestationId], map: "inscription_index")
@@ -5624,11 +5624,11 @@ model messenger_messages {
 }
 
 model former22_attestation {
-  id                   Int                   @id @default(autoincrement())
-  uuid                 String?               @unique(map: "uuid") @db.VarChar(36)
-  title                String?               @default("Nouveau modèle d'attestation") @db.VarChar(255)
-  description          String?               @db.MediumText
-  fileStoredName       String?               @db.VarChar(255)
-  fileOriginalName     String?               @db.MediumText
-  former22_inscription former22_inscription?
+  id                   Int                    @id @default(autoincrement())
+  uuid                 String                 @unique(map: "uuid") @db.VarChar(36)
+  title                String?                @default("Nouveau modèle d'attestation") @db.VarChar(255)
+  description          String?                @db.MediumText
+  fileStoredName       String?                @db.VarChar(255)
+  fileOriginalName     String?                @db.MediumText
+  former22_inscription former22_inscription[]
 }

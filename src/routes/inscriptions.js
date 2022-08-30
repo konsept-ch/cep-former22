@@ -13,7 +13,13 @@ import { callApi } from '../callApi'
 import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, getLogDescriptions, LOG_TYPES, uploadedFilesDest } from '../utils'
+import {
+    createService,
+    getLogDescriptions,
+    LOG_TYPES,
+    attestationTemplateFilesDest,
+    attestationFilesDest,
+} from '../utils'
 import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,
@@ -167,68 +173,6 @@ createService(
                 }
             }
 
-            if (selectedAttestationTemplateUuid) {
-                const attestation = await prisma.former22_attestation.findUnique({
-                    where: {
-                        uuid: selectedAttestationTemplateUuid,
-                    },
-                    select: {
-                        id: true,
-                        fileOriginalName: true,
-                        fileStoredName: true,
-                    },
-                })
-
-                await prisma.former22_inscription.update({
-                    where: {
-                        inscriptionId: req.params.inscriptionId,
-                    },
-                    data: {
-                        attestationId: attestation.id,
-                    },
-                })
-
-                const content = fs.readFileSync(path.resolve(uploadedFilesDest, attestation.fileStoredName), 'binary')
-
-                const zip = new PizZip(content)
-
-                const doc = new Docxtemplater(zip, {
-                    delimiters: { start: '[', end: ']' },
-                    paragraphLoop: true,
-                    linebreaks: true,
-                })
-
-                doc.render({
-                    SESSION_NOM: currentInscription.claro_cursusbundle_course_session.course_name,
-                })
-
-                const buf = doc.getZip().generate({
-                    type: 'nodebuffer',
-                    // compression: DEFLATE adds a compression step.
-                    // For a 50MB output document, expect 500ms additional CPU time
-                    compression: 'DEFLATE',
-                })
-
-                fs.writeFileSync(path.resolve(uploadedFilesDest, `${attestation.fileStoredName}.docx`), buf)
-
-                // TODO: convert to PDF
-                const ext = '.pdf'
-                // const inputPath = path.join(__dirname, '/resources/example.docx');
-                const outputPath = path.join(uploadedFilesDest, `${attestation.fileStoredName}${ext}`)
-
-                // // Read file
-                // const docxBuf = await fs.readFile(inputPath);
-                const docxBuf = buf
-
-                // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
-                const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
-
-                // Here in done you have pdf file which you can save or transfer in another stream
-                fs.writeFileSync(outputPath, pdfBuf)
-
-                // TODO: upload to personal workspace
-            }
-
             // if (statusesForRefusalRh.includes(newStatus)) {
             //     await callApi({
             //         req,
@@ -258,6 +202,70 @@ createService(
                 update: { inscriptionStatus: newStatus, updatedAt: new Date() },
                 create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
+
+            if (selectedAttestationTemplateUuid) {
+                const attestation = await prisma.former22_attestation.findUnique({
+                    where: {
+                        uuid: selectedAttestationTemplateUuid,
+                    },
+                    select: {
+                        id: true,
+                        fileOriginalName: true,
+                        fileStoredName: true,
+                    },
+                })
+
+                await prisma.former22_inscription.update({
+                    where: {
+                        inscriptionId: req.params.inscriptionId,
+                    },
+                    data: {
+                        attestationId: attestation.id,
+                    },
+                })
+
+                const content = fs.readFileSync(
+                    path.resolve(attestationTemplateFilesDest, attestation.fileStoredName),
+                    'binary'
+                )
+
+                const zip = new PizZip(content)
+
+                const doc = new Docxtemplater(zip, {
+                    delimiters: { start: '[', end: ']' },
+                    paragraphLoop: true,
+                    linebreaks: true,
+                })
+
+                doc.render({
+                    SESSION_NOM: currentInscription.claro_cursusbundle_course_session.course_name,
+                })
+
+                const buf = doc.getZip().generate({
+                    type: 'nodebuffer',
+                    // compression: DEFLATE adds a compression step.
+                    // For a 50MB output document, expect 500ms additional CPU time
+                    compression: 'DEFLATE',
+                })
+
+                // fs.writeFileSync(path.resolve(attestationTemplateFilesDest, `${attestation.fileStoredName}.docx`), buf)
+
+                const ext = '.pdf'
+                // const inputPath = path.join(__dirname, '/resources/example.docx');
+                // const outputPath = path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`)
+
+                // // Read file
+                // const docxBuf = await fs.readFile(inputPath);
+                const docxBuf = buf
+
+                // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
+                const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
+
+                // Here in done you have pdf file which you can save or transfer in another stream
+                fs.writeFileSync(path.join(attestationFilesDest, `${attestation.fileStoredName}${ext}`), pdfBuf)
+
+                // TODO: upload to personal workspace
+            }
 
             const mainOrganization = user.user_organization[0]?.claro__organization
 

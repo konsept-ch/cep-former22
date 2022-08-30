@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from 'uuid'
 import multer from 'multer'
 
 import { prisma } from '..'
-import { createService, LOG_TYPES, uploadedFilesDest } from '../utils'
+import { createService, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
 
-const upload = multer({ dest: uploadedFilesDest })
+const upload = multer({ dest: attestationTemplateFilesDest })
 
 export const attestationsRouter = Router()
 
@@ -41,7 +41,7 @@ createService(
                 },
             })
 
-            res.json("L'attestation a été créé")
+            res.json({ uuid }) // return uuid in order to be selected on the frontend
 
             return {
                 entityName: title, // uses the default value, which is set in the DB structure
