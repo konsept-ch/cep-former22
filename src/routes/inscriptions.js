@@ -278,7 +278,7 @@ createService(
                     isFormData: true,
                 })
 
-                console.log(uploadedFile)
+                // console.log(uploadedFile)
 
                 // TODO: upload to personal workspace
                 const workspace = await prisma.claro_workspace.findMany({

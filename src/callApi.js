@@ -8,22 +8,20 @@ export const CLAROLINE_TOKEN = 'CLAROLINE-API-TOKEN'
 export const callApi = async ({
     req,
     body,
-    isFormData = false,
+    isFormData = false, // TODO: deprecated, check if body is instance of FormData
     path = '',
     params = {},
     headers = {},
     method = 'GET',
     predicate = () => true,
 }) => {
-    const url = isFormData
-        ? `${new URL(path, clarolineApiUrl)}`
-        : `${new URL(path, clarolineApiUrl)}?${new URLSearchParams(params)}`
+    const url = `${new URL(path, clarolineApiUrl)}?${new URLSearchParams(params)}`
 
-    if (isFormData) {
-        for (const pair of body.entries()) {
-            console.log(pair[0] + ', ' + pair[1])
-        }
-    }
+    // if (isFormData) {
+    //     for (const pair of body.entries()) {
+    //         console.log(pair[0] + ', ' + pair[1])
+    //     }
+    // }
 
     const response = await fetch(url, {
         method,
@@ -31,10 +29,10 @@ export const callApi = async ({
         body: isFormData ? body : JSON.stringify(body),
     })
 
-    if (isFormData) {
-        console.log(response)
-        return await response.json()
-    }
+    // if (isFormData) {
+    //     // console.log(response)
+    //     return await response.json()
+    // }
 
     try {
         if (method.toLowerCase() !== 'delete') {
