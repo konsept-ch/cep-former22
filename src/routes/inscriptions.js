@@ -273,6 +273,7 @@ createService(
                 console.error(rootResourceUuid)
 
                 const resources = await callApi({
+                    req,
                     path: `https://www.cep-val.ch/apiv2/resource/${rootResourceUuid}?filters%5BresourceType%5D=directory`,
                 })
 
