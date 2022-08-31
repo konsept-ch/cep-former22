@@ -18,7 +18,7 @@ import {
     getLogDescriptions,
     LOG_TYPES,
     attestationTemplateFilesDest,
-    attestationFilesDest,
+    // attestationFilesDest,
 } from '../utils'
 import {
     fetchInscriptionsWithStatuses,
@@ -97,6 +97,38 @@ createService(
                     select: {
                         uuid: true,
                         course_name: true,
+                        claro_cursusbundle_course: {
+                            select: {
+                                course_name: true,
+                                session_days: true,
+                            },
+                        },
+                        claro_cursusbundle_course_session_user: {
+                            where: {
+                                registration_type: 'tutor',
+                            },
+                            select: {
+                                claro_user: {
+                                    select: {
+                                        first_name: true,
+                                        last_name: true,
+                                    },
+                                },
+                            },
+                        },
+                        claro_cursusbundle_session_event: {
+                            orderBy: {
+                                claro_planned_object: { start_date: 'asc' },
+                            },
+                            select: {
+                                claro_planned_object: {
+                                    select: {
+                                        start_date: true,
+                                        end_date: true,
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
                 claro_user: {
@@ -120,7 +152,12 @@ createService(
         })
 
         const session = currentInscription.claro_cursusbundle_course_session
-        const { course_name: sessionName } = session
+        const {
+            // course_name: sessionName,
+            claro_cursusbundle_course: { course_name: courseName, session_days: sessionDuration },
+            claro_cursusbundle_course_session_user: { claro_user: tutors },
+            claro_cursusbundle_session_event: sessionDates,
+        } = session
         const user = currentInscription.claro_user
 
         const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
@@ -239,8 +276,26 @@ createService(
                     linebreaks: true,
                 })
 
+                // [SESSION_DATES] sur une ligne, séparés par des virgules, format long ( 26 août 2022 et pas 26.08.2022 )
                 doc.render({
-                    SESSION_NOM: sessionName,
+                    FORMATION_NOM: courseName,
+                    SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    }).format(sessionDates.at(-1)?.claro_planned_object?.start_date),
+                    SESSION_DURÉE: sessionDuration,
+                    SESSION_DATES: sessionDates
+                        .map(({ claro_planned_object: { start_date } }) =>
+                            Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: 'long', day: 'numeric' }).format(
+                                start_date
+                            )
+                        )
+                        .join(', '),
+                    OBJECTIFS: '',
+                    FORMATEURS:
+                        tutors?.map(({ first_name, last_name }) => `${first_name} ${last_name}`).join(', ') ??
+                        'Aucun formateur',
                 })
 
                 const docxBuf = doc.getZip().generate({
@@ -7775,7 +7830,7 @@ createService(
 
                     // TODO do something with the response? Verify that it worked?
 
-                    // console.log(fileResource)
+                    console.log(fileResource)
                 }
             }
 
