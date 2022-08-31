@@ -269,7 +269,20 @@ createService(
                 })
 
                 console.error(workspace[0]?.uuid)
-                console.error(workspace[0]?.claro_resource_node)
+                const rootResourceUuid = workspace[0]?.claro_resource_node.uuid
+                console.error(rootResourceUuid)
+
+                const resources = await callApi({
+                    path: `https://www.cep-val.ch/apiv2/resource/${rootResourceUuid}?filters%5BresourceType%5D=directory`,
+                })
+
+                console.error(resources)
+
+                const ATTESTATIONS_FOLDER_NAME = 'Mes attestations'
+
+                const foundAttestationsFolder = resources.data.find(({ name }) => name === ATTESTATIONS_FOLDER_NAME)
+
+                console.error(foundAttestationsFolder)
             }
 
             const mainOrganization = user.user_organization[0]?.claro__organization
