@@ -329,16 +329,10 @@ createService(
                     path: `resource/${rootResource[0]?.uuid}`,
                 })
 
-                if (resources) {
-                    const ATTESTATIONS_FOLDER_NAME = 'Mes attestations'
-
-                    const foundAttestationsFolder = resources.find(({ name }) => name === ATTESTATIONS_FOLDER_NAME)
-
-                    const destinationParentResource = foundAttestationsFolder?.id ?? rootResource[0]?.uuid
-
+                const createResource = async ({ uuid }) => {
                     const fileResource = await callApi({
                         req,
-                        path: `/resources/add/${destinationParentResource}`,
+                        path: `/resources/add/${uuid}`,
                         method: 'post',
                         body: {
                             resource: {
@@ -392,180 +386,6 @@ createService(
                                             dates: [null, '2100-01-01T00:00:00'],
                                         },
                                         poster: null,
-                                        roles: [
-                                            {
-                                                id: 'cde9f187-50ba-417b-93c7-fae555dffc13',
-                                                type: 1,
-                                                name: 'ROLE_USER',
-                                                translationKey: 'user',
-                                                workspace: null,
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '0a51a59f-6d37-4927-97d3-a068e95d7091',
-                                                type: 1,
-                                                name: 'ROLE_ADMIN',
-                                                translationKey: 'admin',
-                                                workspace: null,
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: 'a4a0f69b-1ada-4cb1-a8d9-74943c6123f3',
-                                                type: 4,
-                                                name: 'ROLE_USER_ROOT',
-                                                translationKey: 'root',
-                                                workspace: null,
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '6120748d-98f6-4da8-8e77-d577e253f956',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_8b19a992-8088-4fbc-aaaf-16ca29e7e8fb',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '8b19a992-8088-4fbc-aaaf-16ca29e7e8fb',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '34e239ec-01c4-4e1c-beec-c87a063cc67c',
-                                                type: 2,
-                                                name: 'ROLE_WS_COLLABORATOR_82f3b5fc-d31e-436b-b09d-4443afc9a839',
-                                                translationKey: 'collaborator',
-                                                workspace: {
-                                                    id: '82f3b5fc-d31e-436b-b09d-4443afc9a839',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '10d5f5f5-5360-4922-a802-d319af52094e',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_6de368ef-cc1a-4d51-bee0-9260a269c455',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '6de368ef-cc1a-4d51-bee0-9260a269c455',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '179179d2-792e-47e8-a048-44a9df2445de',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_916c446c-f6d5-4ff4-9cf0-709713560cbe',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '916c446c-f6d5-4ff4-9cf0-709713560cbe',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '3e533000-62a2-4b82-a264-94df041083bd',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_c3f27b39-5884-4515-b989-21d222a920aa',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: 'c3f27b39-5884-4515-b989-21d222a920aa',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '54b5b7ad-7177-4ef5-ae84-032560a5cc01',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_4bbcf857-c7da-41b7-b842-d796a212f4ab',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '4bbcf857-c7da-41b7-b842-d796a212f4ab',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: 'eb3dcf62-83e6-4879-9518-cfe0badecc23',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_13ffc9bf-8767-4c09-9658-dcfbc6fd478f',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '13ffc9bf-8767-4c09-9658-dcfbc6fd478f',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '2e3bd01e-087e-4123-a288-dce0356c0d5f',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_70010fa9-b9ff-4f6f-8f5c-4cb26d16712d',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '70010fa9-b9ff-4f6f-8f5c-4cb26d16712d',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '77b1d738-4c6e-4661-a504-7ae5d2628704',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_9e897371-79a0-48e5-8a9c-558753775fba',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: '9e897371-79a0-48e5-8a9c-558753775fba',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '8610ae9b-151e-4f25-9340-afc041f5cb45',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_a89d6f24-826a-4807-9111-6904ded81824',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: 'a89d6f24-826a-4807-9111-6904ded81824',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: '70d1bb36-cde4-4324-b765-7a1acb037e28',
-                                                type: 2,
-                                                name: 'ROLE_WS_MANAGER_ed8f9853-908d-4316-af2b-b4598db41769',
-                                                translationKey: 'manager',
-                                                workspace: {
-                                                    id: 'ed8f9853-908d-4316-af2b-b4598db41769',
-                                                },
-                                                context: 'user',
-                                            },
-                                            {
-                                                id: 'cde9f187-50ba-417b-93c7-fae555dffc13',
-                                                type: 1,
-                                                name: 'ROLE_USER',
-                                                translationKey: 'user',
-                                                workspace: null,
-                                                context: 'group',
-                                            },
-                                        ],
-                                        groups: [
-                                            {
-                                                id: '47ae96f5-6cd0-4469-923b-54e0306138a7',
-                                                name: 'ROLE_USER',
-                                            },
-                                        ],
-                                        mainOrganization: {
-                                            id: 'a4278ecb-9155-446b-b82e-2fb936e6eb07',
-                                            name: "Centre d'éducation permanente",
-                                            code: 'CEP',
-                                            email: null,
-                                            type: 'internal',
-                                            meta: {
-                                                default: false,
-                                                position: null,
-                                            },
-                                            restrictions: {
-                                                public: false,
-                                                users: -1,
-                                            },
-                                            parent: {
-                                                id: '479b8348-5a39-4c68-86db-a99ef69b759c',
-                                                name: 'Organisations (para)publiques et autres entreprises clientes enregistrées',
-                                                code: 'AUTRES',
-                                                meta: {
-                                                    default: false,
-                                                },
-                                            },
-                                            locations: [],
-                                        },
                                     },
                                 },
                                 display: {
@@ -687,6 +507,190 @@ createService(
                     // TODO do something with the response? Verify that it worked?
 
                     console.log(fileResource)
+                }
+
+                if (resources) {
+                    const ATTESTATIONS_FOLDER_NAME = 'Mes attestations'
+
+                    const foundAttestationsFolder = resources.find(({ name }) => name === ATTESTATIONS_FOLDER_NAME)
+
+                    if (foundAttestationsFolder != null) {
+                        await createResource({ uuid: foundAttestationsFolder?.id })
+                    } else {
+                        const newAttestationsFolder = await callApi({
+                            req,
+                            path: `/resources/add/${rootResource[0]?.uuid}`,
+                            method: 'post',
+                            body: {
+                                resource: null,
+                                resourceNode: {
+                                    autoId: 0,
+                                    id: uuidv4(),
+                                    name: 'Mes attestations',
+                                    meta: {
+                                        published: true,
+                                        active: true,
+                                        views: 0,
+                                        mimeType: 'custom/directory',
+                                        type: 'directory',
+                                        creator: {
+                                            autoId: 2,
+                                            id: 'b344ea3b-d492-4f50-af7b-d17e752e50a7',
+                                            name: 'John Doe',
+                                            firstName: 'John',
+                                            lastName: 'Doe',
+                                            username: 'root',
+                                            picture: null,
+                                            thumbnail: null,
+                                            email: 'claroline@example.com',
+                                            administrativeCode: null,
+                                            phone: null,
+                                            meta: {
+                                                acceptedTerms: true,
+                                                lastActivity: '2022-08-31T11:04:37',
+                                                created: '2021-05-31T13:37:16',
+                                                description: null,
+                                                mailValidated: false,
+                                                mailNotified: false,
+                                                personalWorkspace: true,
+                                                locale: 'fr',
+                                            },
+                                            permissions: {
+                                                open: true,
+                                                contact: false,
+                                                edit: true,
+                                                administrate: true,
+                                                delete: true,
+                                            },
+                                            restrictions: {
+                                                locked: false,
+                                                disabled: false,
+                                                removed: false,
+                                                dates: [null, '2100-01-01T00:00:00'],
+                                            },
+                                            poster: null,
+                                        },
+                                    },
+                                    display: {
+                                        fullscreen: false,
+                                        showIcon: true,
+                                    },
+                                    restrictions: {
+                                        dates: [],
+                                        hidden: false,
+                                        code: null,
+                                        allowedIps: [],
+                                    },
+                                    notifications: {
+                                        enabled: false,
+                                    },
+                                    workspace: {
+                                        id: '5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                        autoId: 1863,
+                                        slug: 'paul-henri-hons-unil-ch',
+                                        name: 'paul-henri.hons@unil.ch',
+                                        code: 'paul-henri.hons@unil.ch',
+                                    },
+                                    rights: [
+                                        {
+                                            id: 6161,
+                                            name: 'ROLE_USER',
+                                            translationKey: 'user',
+                                            permissions: {
+                                                open: false,
+                                                copy: false,
+                                                export: false,
+                                                delete: false,
+                                                edit: false,
+                                                administrate: false,
+                                                create: [],
+                                            },
+                                            workspace: null,
+                                        },
+                                        {
+                                            id: 6160,
+                                            name: 'ROLE_ANONYMOUS',
+                                            translationKey: 'anonymous',
+                                            permissions: {
+                                                open: false,
+                                                copy: false,
+                                                export: false,
+                                                delete: false,
+                                                edit: false,
+                                                administrate: false,
+                                                create: [],
+                                            },
+                                            workspace: null,
+                                        },
+                                        {
+                                            id: 6159,
+                                            name: 'ROLE_WS_COLLABORATOR_5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                            translationKey: 'collaborator',
+                                            permissions: {
+                                                open: true,
+                                                copy: false,
+                                                export: false,
+                                                delete: false,
+                                                edit: false,
+                                                administrate: false,
+                                                create: [],
+                                            },
+                                            workspace: {
+                                                id: '5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                                code: 'paul-henri.hons@unil.ch',
+                                                name: 'paul-henri.hons@unil.ch',
+                                            },
+                                        },
+                                        {
+                                            id: 8545,
+                                            name: 'ROLE_WS_MANAGER_5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                            translationKey: 'manager',
+                                            permissions: {
+                                                open: true,
+                                                copy: true,
+                                                export: true,
+                                                delete: true,
+                                                edit: true,
+                                                administrate: true,
+                                                create: [
+                                                    'file',
+                                                    'directory',
+                                                    'text',
+                                                    'claroline_forum',
+                                                    'rss_feed',
+                                                    'claroline_announcement_aggregate',
+                                                    'claroline_scorm',
+                                                    'claroline_web_resource',
+                                                    'hevinci_url',
+                                                    'icap_blog',
+                                                    'icap_wiki',
+                                                    'innova_path',
+                                                    'ujm_exercise',
+                                                    'icap_lesson',
+                                                    'claroline_claco_form',
+                                                    'ujm_lti_resource',
+                                                    'icap_bibliography',
+                                                    'claroline_dropzone',
+                                                    'shortcut',
+                                                    'claro_slideshow',
+                                                    'claroline_big_blue_button',
+                                                ],
+                                            },
+                                            workspace: {
+                                                id: '5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                                code: 'paul-henri.hons@unil.ch',
+                                                name: 'paul-henri.hons@unil.ch',
+                                            },
+                                        },
+                                    ],
+                                },
+                            },
+                        })
+
+                        console.log(newAttestationsFolder)
+
+                        await createResource({ uuid: newAttestationsFolder?.resourceNode?.id })
+                    }
                 }
             }
 
