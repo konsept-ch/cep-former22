@@ -149,7 +149,7 @@ createService(
         const {
             course_name: sessionName,
             claro_cursusbundle_course: { course_name: courseName, session_days: sessionDuration },
-            claro_cursusbundle_course_session_user: { claro_user: tutors },
+            claro_cursusbundle_course_session_user: tutors,
             claro_cursusbundle_session_event: sessionDates,
         } = session
         const user = currentInscription.claro_user
@@ -270,8 +270,9 @@ createService(
                         .join(', '),
                     OBJECTIFS: '', // TODO use from former22_course once implemented
                     FORMATEURS:
-                        tutors?.map(({ first_name, last_name }) => `${first_name} ${last_name}`).join(', ') ??
-                        'Aucun formateur',
+                        tutors
+                            ?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
+                            .join(', ') ?? 'Aucun formateur',
                 })
 
                 const docxBuf = doc.getZip().generate({
