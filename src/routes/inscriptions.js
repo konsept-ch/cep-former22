@@ -93,6 +93,7 @@ createService(
                         course_name: true,
                         claro_cursusbundle_course: {
                             select: {
+                                uuid: true,
                                 course_name: true,
                                 session_days: true,
                             },
@@ -148,7 +149,7 @@ createService(
         const session = currentInscription.claro_cursusbundle_course_session
         const {
             course_name: sessionName,
-            claro_cursusbundle_course: { course_name: courseName, session_days: sessionDuration },
+            claro_cursusbundle_course: { uuid: courseUuid, course_name: courseName, session_days: sessionDuration },
             claro_cursusbundle_course_session_user: tutors,
             claro_cursusbundle_session_event: sessionDates,
         } = session
@@ -253,6 +254,13 @@ createService(
                     linebreaks: true,
                 })
 
+                const additionalCourseData = await prisma.former22_course.findUnique({
+                    where: { courseId: courseUuid },
+                    select: {
+                        goals: true,
+                    },
+                })
+
                 doc.render({
                     FORMATION_NOM: courseName,
                     SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
@@ -268,7 +276,7 @@ createService(
                             )
                         )
                         .join(', '),
-                    OBJECTIFS: '', // TODO use from former22_course once implemented
+                    OBJECTIFS: additionalCourseData.goals,
                     FORMATEURS:
                         tutors
                             ?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
