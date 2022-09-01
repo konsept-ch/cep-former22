@@ -96,6 +96,7 @@ createService(
                                 uuid: true,
                                 course_name: true,
                                 session_days: true,
+                                session_hours: true,
                             },
                         },
                         claro_cursusbundle_course_session_user: {
@@ -149,7 +150,12 @@ createService(
         const session = currentInscription.claro_cursusbundle_course_session
         const {
             course_name: sessionName,
-            claro_cursusbundle_course: { uuid: courseUuid, course_name: courseName, session_days: sessionDuration },
+            claro_cursusbundle_course: {
+                uuid: courseUuid,
+                course_name: courseName,
+                session_days: courseDurationDays,
+                session_hours: courseDurationHours,
+            },
             claro_cursusbundle_course_session_user: tutors,
             claro_cursusbundle_session_event: sessionDates,
         } = session
@@ -261,6 +267,14 @@ createService(
                     },
                 })
 
+                const getDurationText = ({ days, hours }) =>
+                    [
+                        ...(days != null ? [`${days} ${days < 2 ? 'jour' : 'jours'}`] : []),
+                        ...(hours != null ? [`${hours} ${hours < 2 ? 'heure' : 'heures'}`] : []),
+                    ].join(' + ')
+
+                const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
+
                 doc.render({
                     FORMATION_NOM: courseName,
                     SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
@@ -268,7 +282,7 @@ createService(
                         month: 'long',
                         day: 'numeric',
                     }).format(sessionDates.at(-1)?.claro_planned_object?.start_date),
-                    SESSION_DURÉE: sessionDuration,
+                    SESSION_DURÉE: courseDurationText.length > 0 ? courseDurationText : 'non renseigné',
                     SESSION_DATES: sessionDates
                         .map(({ claro_planned_object: { start_date } }) =>
                             Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: 'long', day: 'numeric' }).format(
@@ -287,7 +301,7 @@ createService(
                     type: 'nodebuffer',
                     // compression: DEFLATE adds a compression step.
                     // For a 50MB output document, expect 500ms additional CPU time
-                    compression: 'DEFLATE',
+                    // compression: 'DEFLATE',
                 })
 
                 const ext = '.pdf'
