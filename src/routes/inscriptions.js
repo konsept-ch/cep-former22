@@ -276,7 +276,7 @@ createService(
                             )
                         )
                         .join(', '),
-                    OBJECTIFS: additionalCourseData.goals,
+                    OBJECTIFS: additionalCourseData.goals.split('\n').map((goal) => ({ OBJECTIF: goal })),
                     FORMATEURS:
                         tutors
                             ?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
