@@ -10,8 +10,7 @@ CREATE TABLE
 
 ALTER TABLE
     former22_inscription
-ADD
-    COLUMN attestationId INT UNIQUE;
+ADD COLUMN attestationId INT;
 
 ALTER TABLE
     former22_inscription
