@@ -8,9 +8,7 @@ CREATE TABLE
         fileOriginalName TEXT COMMENT 'The original name of the uploaded docx file by the user'
     ) DEFAULT CHARSET UTF8 COMMENT '';
 
-ALTER TABLE
-    former22_inscription
-ADD COLUMN attestationId INT;
+ALTER TABLE former22_inscription ADD COLUMN attestationId INT;
 
 ALTER TABLE
     former22_inscription
@@ -20,4 +18,5 @@ ADD
 ALTER TABLE
     former22_inscription
 ADD
-    CONSTRAINT fk_inscription_attestation FOREIGN KEY (attestationId) REFERENCES former22_attestation (id);
+    CONSTRAINT fk_inscription_attestation FOREIGN KEY (attestationId) REFERENCES former22_attestation (id) ON DELETE
+SET NULL;

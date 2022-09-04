@@ -5460,7 +5460,7 @@ model former22_inscription {
   inscriptionStatus    String?               @db.Text
   updatedAt            DateTime?             @default(now()) @db.DateTime(0)
   attestationId        Int?
-  former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription_attestation")
+  former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
 
   @@index([attestationId], map: "inscription_index")
 }
