@@ -104,6 +104,22 @@ createService(
     async (req, res) => {
         const { uuid } = req.params
 
+        const isAttestationUsed =
+            (
+                await prisma.former22_attestation.findUnique({
+                    where: {
+                        uuid,
+                    },
+                    include: {
+                        former22_inscription: true,
+                    },
+                })
+            )?.former22_inscription.length > 0
+
+        if (isAttestationUsed) {
+            res.status(400).json({ error: 'Attestation template is used and therefore cannot be deleted.' })
+        }
+
         try {
             const { title } = await prisma.former22_attestation.delete({
                 where: {
@@ -121,7 +137,7 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.json('Erreur')
+            res.status(500).json({ error: 'Error' })
         }
     },
     { entityType: LOG_TYPES.ATTESTATION },
