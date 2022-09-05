@@ -3,7 +3,9 @@
 FROM node:16.17
 
 # use libreoffice for docx to pdf
-RUN apk add libreoffice
+RUN apt update && apt install -y \
+    libreoffice \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
