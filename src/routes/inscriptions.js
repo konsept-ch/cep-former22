@@ -133,6 +133,8 @@ createService(
                         uuid: true,
                         mail: true,
                         username: true,
+                        first_name: true,
+                        last_name: true,
                         phone: true,
                         user_organization: {
                             where: {
@@ -269,13 +271,14 @@ createService(
 
                 const getDurationText = ({ days, hours }) =>
                     [
-                        ...(days != null ? [`${days} ${days < 2 ? 'jour' : 'jours'}`] : []),
-                        ...(hours != null ? [`${hours} ${hours < 2 ? 'heure' : 'heures'}`] : []),
+                        ...(days !== 0 ? [`${days} ${days < 2 ? 'jour' : 'jours'}`] : []),
+                        ...(hours !== 0 ? [`${hours} ${hours < 2 ? 'heure' : 'heures'}`] : []),
                     ].join(' + ')
 
                 const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
 
                 doc.render({
+                    PARTICIPANT_NOM: `${user.first_name} ${user.last_name}`,
                     FORMATION_NOM: courseName,
                     SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
                         year: 'numeric',
