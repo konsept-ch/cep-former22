@@ -180,13 +180,6 @@ export const fetchInscriptionsWithStatuses = async (
                                 },
                             },
                         },
-                        // claro_cursusbundle_course_session: {
-                        //     select: {
-                        //         claro_cursusbundle_course: {
-                        //             select: { uuid: true, course_name: true },
-                        //         },
-                        //     },
-                        // },
                     },
                 },
                 claro_cursusbundle_course_session_cancellation: shouldFetchCancellations && {
@@ -211,73 +204,12 @@ export const fetchInscriptionsWithStatuses = async (
                                 course_name: true,
                                 quota_days: true,
                                 used_by_quotas: true,
-                                // claro_cursusbundle_course: {
-                                //     select: { uuid: true, course_name: true },
-                                // },
                             },
                         },
                     },
                 },
             },
         })
-
-        // const inscriptionCancellationsRecords = shouldFetchCancellations
-        //     ? await prisma.claro_cursusbundle_course_session_cancellation.findMany({
-        //           select: {
-        //               registration_date: true,
-        //               uuid: true,
-        //               inscription_uuid: true,
-        //               claro_user: {
-        //                   select: {
-        //                       first_name: true,
-        //                       last_name: true,
-        //                       mail: true,
-        //                       username: true,
-        //                       phone: true,
-        //                       uuid: true,
-        //                   },
-        //               },
-        //               claro_cursusbundle_course_session: {
-        //                   select: {
-        //                       uuid: true,
-        //                       start_date: true,
-        //                       course_name: true,
-        //                       quota_days: true,
-        //                       used_by_quotas: true,
-        //                       claro_cursusbundle_course: {
-        //                           select: { uuid: true, course_name: true },
-        //                       },
-        //                   },
-        //               },
-        //           },
-        //       })
-        //     : []
-
-        // const cancellations = shouldFetchCancellations
-        //     ? sessions.map((current) => {
-        //           const { claro_cursusbundle_course, ...sessionData } = current.claro_cursusbundle_course_session
-
-        //           return {
-        //               ...sessionData,
-        //               claro_cursusbundle_course_session_user: [
-        //                   {
-        //                       registration_type: REGISTRATION_TYPES.CANCELLATION,
-        //                       validated: false,
-        //                       uuid: current.uuid,
-        //                       inscription_uuid: current.inscription_uuid,
-        //                       registration_date: current.registration_date,
-        //                       claro_user: current.claro_user,
-        //                       claro_cursusbundle_course_session: {
-        //                           claro_cursusbundle_course: {
-        //                               uuid: claro_cursusbundle_course.uuid,
-        //                               course_name: claro_cursusbundle_course.course_name,
-        //                           },
-        //                       },
-        //                   },
-        //               ],
-        //           }
-        //       })
-        //     : []
 
         const professionFacetsValues = await getProfessionFacetsValues()
         const coursesAdditionalData = await prisma.former22_course.findMany({
@@ -339,12 +271,15 @@ export const fetchInscriptionsWithStatuses = async (
                                       coordinator,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
                                       status: deriveInscriptionStatus({
-                                          savedStatus:
-                                              inscriptionStatusForId?.inscriptionStatus ??
-                                              inscriptionStatusForIdWhenCancellation?.inscriptionStatus,
+                                          savedStatus: (shouldFetchCancellations
+                                              ? inscriptionStatusForIdWhenCancellation
+                                              : inscriptionStatusForId
+                                          )?.inscriptionStatus,
                                           transformedStatus: transformFlagsToStatus({
                                               validated: inscription.validated,
-                                              registrationType: REGISTRATION_TYPES.CANCELLATION,
+                                              registrationType: shouldFetchCancellations
+                                                  ? REGISTRATION_TYPES.CANCELLATION
+                                                  : inscription.registration_type,
                                               hrValidationStatus: inscription.status,
                                               isHrValidationEnabled,
                                           }),
