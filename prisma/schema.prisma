@@ -1287,6 +1287,8 @@ model claro_cursusbundle_quota {
   threshold           Float
   uuid                String              @unique(map: "UNIQ_C4725F5FD17F50A6") @db.VarChar(36)
   use_quotas          Boolean
+  def                 String              @db.LongText
+  years               String              @db.LongText
   claro__organization claro__organization @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C4725F5F32C8A3DE")
 }
 
@@ -2676,10 +2678,10 @@ model claro_resource_rights {
 
 model claro_resource_shortcut {
   id                                                                               Int                  @id @default(autoincrement())
-  target_id                                                                        Int
+  target_id                                                                        Int?
   resourceNode_id                                                                  Int?                 @unique(map: "UNIQ_5E7F4AB8B87FAB32")
   uuid                                                                             String               @unique(map: "UNIQ_5E7F4AB8D17F50A6") @db.VarChar(36)
-  claro_resource_node_claro_resource_nodeToclaro_resource_shortcut_target_id       claro_resource_node  @relation("claro_resource_nodeToclaro_resource_shortcut_target_id", fields: [target_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5E7F4AB8158E0B66")
+  claro_resource_node_claro_resource_nodeToclaro_resource_shortcut_target_id       claro_resource_node? @relation("claro_resource_nodeToclaro_resource_shortcut_target_id", fields: [target_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5E7F4AB8158E0B66")
   claro_resource_node_claro_resource_nodeToclaro_resource_shortcut_resourceNode_id claro_resource_node? @relation("claro_resource_nodeToclaro_resource_shortcut_resourceNode_id", fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5E7F4AB8B87FAB32")
 
   @@index([target_id], map: "IDX_5E7F4AB8158E0B66")
@@ -5191,8 +5193,8 @@ model ujm_question_grid {
   id           Int           @id @default(autoincrement())
   question_id  Int?          @unique(map: "UNIQ_2412DE371E27F6BF")
   sumMode      String        @db.VarChar(255)
-  rows         Int
-  columns      Int
+  grid_rows    Int
+  grid_columns Int
   borderWidth  Int
   borderColor  String        @db.VarChar(255)
   penalty      Float
@@ -5460,9 +5462,10 @@ model former22_inscription {
   inscriptionStatus    String?               @db.Text
   updatedAt            DateTime?             @default(now()) @db.DateTime(0)
   attestationId        Int?
-  former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
+  former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription_attestation")
 
   @@index([attestationId], map: "inscription_index")
+  @@index([attestationId], map: "attestationId")
 }
 
 model former22_course {
@@ -5626,10 +5629,10 @@ model messenger_messages {
 
 model former22_attestation {
   id                   Int                    @id @default(autoincrement())
-  uuid                 String                 @unique(map: "uuid") @db.VarChar(36)
+  uuid                 String?                @unique(map: "uuid") @db.VarChar(36)
   title                String?                @default("Nouveau modèle d'attestation") @db.VarChar(255)
-  description          String?                @db.MediumText
+  description          String?                @db.Text
   fileStoredName       String?                @db.VarChar(255)
-  fileOriginalName     String?                @db.MediumText
+  fileOriginalName     String?                @db.Text
   former22_inscription former22_inscription[]
 }

@@ -436,13 +436,13 @@ createService(
                                 },
                                 rights: [
                                     {
-                                        id: 8783,
+                                        // id: 8783,
                                         name: 'ROLE_USER',
                                         translationKey: 'user',
                                         permissions: {
-                                            open: false,
+                                            open: true,
                                             copy: false,
-                                            export: false,
+                                            export: true,
                                             delete: false,
                                             edit: false,
                                             administrate: false,
@@ -451,7 +451,7 @@ createService(
                                         workspace: null,
                                     },
                                     {
-                                        id: 8784,
+                                        // id: 8784,
                                         name: 'ROLE_ANONYMOUS',
                                         translationKey: 'anonymous',
                                         permissions: {
@@ -466,13 +466,13 @@ createService(
                                         workspace: null,
                                     },
                                     {
-                                        id: 8785,
+                                        // id: 8785,
                                         name: `ROLE_WS_COLLABORATOR_${workspace[0]?.uuid}`,
                                         translationKey: 'collaborator',
                                         permissions: {
                                             open: true,
                                             copy: false,
-                                            export: false,
+                                            export: true,
                                             delete: false,
                                             edit: false,
                                             administrate: false,
@@ -485,7 +485,7 @@ createService(
                                         },
                                     },
                                     {
-                                        id: 8786,
+                                        // id: 8786,
                                         name: `ROLE_WS_MANAGER_${workspace[0]?.uuid}`,
                                         translationKey: 'manager',
                                         permissions: {
