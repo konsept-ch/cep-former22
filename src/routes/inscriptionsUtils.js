@@ -67,7 +67,7 @@ export const getMainOrganization = (organizations) => {
 }
 
 export const parsePhoneForSms = ({ phone }) => {
-    // remove (0) and then spaces and chars: -–./)(+ and then starting zeroes
+    // explanation: remove (0) and then spaces and chars: -–./)(+ and then starting zeroes
     if (phone) {
         const cleanPhone = `${parseInt(
             phone
@@ -83,7 +83,6 @@ export const parsePhoneForSms = ({ phone }) => {
     }
 }
 
-//TODO check how it is in production
 export const getProfessionFacetsValues = async () => {
     const professionFacets = await prisma.claro_field_facet.findMany({
         where: { name: { contains: 'FONCTION PROFESSIONNELLE' } },
@@ -144,7 +143,6 @@ export const fetchInscriptionsWithStatuses = async (
                             user_organization: {
                                 select: {
                                     is_main: true,
-                                    // claro__organization: true, // TODO: wait for Anthony to fix?
                                     claro__organization: {
                                         include: {
                                             claro_cursusbundle_quota: true,
@@ -280,9 +278,7 @@ export const fetchInscriptionsWithStatuses = async (
                 start_date,
                 uuid: sessionUuid,
             }) =>
-                // (() => {
                 claro_cursusbundle_course_session_user?.map((inscription) => {
-                    // (() => {
                     try {
                         const inscriptionStatusForId = inscriptionsAdditionalData.find(
                             ({ inscriptionId }) => inscriptionId === inscription.uuid
@@ -305,7 +301,6 @@ export const fetchInscriptionsWithStatuses = async (
 
                         const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
 
-                        // const isHrValidationEnabled = false // TODO: wait for Anthony to fix?
                         const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
                         return {
@@ -365,15 +360,7 @@ export const fetchInscriptionsWithStatuses = async (
                         console.error(error)
                     }
                 })
-
-            // const fetchedLearnerStatuses = await Promise.allSettled(allLearnersToFetchStatus)
-
-            // return fetchedLearnerStatuses.flatMap(({ value }) => value)
         )
-
-        // const fetchedInscriptions = await Promise.allSettled(inscriptionsToFetch)
-
-        // console.error(fetchedInscriptions)
 
         let fetchedPendingLearners = []
 
@@ -390,7 +377,6 @@ export const fetchInscriptionsWithStatuses = async (
                             user_organization: {
                                 select: {
                                     is_main: true,
-                                    // claro__organization: true, // TODO: wait for Anthony to fix?
                                     claro__organization: {
                                         include: {
                                             claro_cursusbundle_quota: true,
@@ -405,7 +391,6 @@ export const fetchInscriptionsWithStatuses = async (
 
             if (allPendingInscriptionsOnCourseLevel) {
                 fetchedPendingLearners = allPendingInscriptionsOnCourseLevel.map((inscription) => {
-                    // (async () => {
                     const { shouldReceiveSms } =
                         usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ?? {}
 
@@ -456,8 +441,6 @@ export const fetchInscriptionsWithStatuses = async (
                         },
                     }
                 })
-
-                // fetchedPendingLearners = await Promise.allSettled(pendingList)
             }
         }
 
