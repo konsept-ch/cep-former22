@@ -18,7 +18,6 @@ import {
     fetchInscriptionsWithStatuses,
     FINAL_STATUSES,
     parsePhoneForSms,
-    REGISTRATION_TYPES,
     STATUSES,
     transformFlagsToStatus,
 } from './inscriptionsUtils'
@@ -33,7 +32,6 @@ createService(
     '/',
     async (req, res) => {
         const participations = await fetchInscriptionsWithStatuses()
-        // const participations = inscriptions.filter(({ type }) => type === REGISTRATION_TYPES.LEARNER)
 
         if (participations.length > 0) {
             res.json(participations)
