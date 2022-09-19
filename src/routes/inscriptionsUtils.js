@@ -296,6 +296,7 @@ export const fetchInscriptionsWithStatuses = async (
             const fetchedInscriptions = sessions.flatMap(
                 ({
                     claro_cursusbundle_course_session_user: inscriptions,
+                    claro_cursusbundle_course_session_cancellation: cancellations,
                     claro_cursusbundle_course: courseData,
                     course_name,
                     quota_days,
@@ -303,8 +304,8 @@ export const fetchInscriptionsWithStatuses = async (
                     start_date,
                     uuid: sessionUuid,
                 }) =>
-                    inscriptions?.length > 0
-                        ? inscriptions.map((inscription) => {
+                    inscriptions?.length > 0 || cancellations?.length > 0
+                        ? (shouldFetchCancellations ? cancellations : inscriptions).map((inscription) => {
                               try {
                                   const inscriptionStatusForId = inscriptionsAdditionalData.find(
                                       ({ inscriptionId }) => inscriptionId === inscription.uuid
