@@ -5,21 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { sendEmail } from './sendEmail'
 import { createService, formatDate } from './utils'
 import { prisma } from '.'
-import { fetchInscriptionsWithStatuses } from './routes/inscriptionsUtils'
 
 export const generateEndpoints = () => {
-    // formateurs START
-    createService('get', '/formateurs', async (req, res) => {
-        const inscriptions = await fetchInscriptionsWithStatuses({ shouldFetchTutors: true })
-
-        if (inscriptions.length > 0) {
-            res.json(inscriptions)
-        } else {
-            res.json('Aucuns formateurs trouvés')
-        }
-    })
-    // formateurs END
-
     // reportError START
     createService('post', '/reportError', async (req, res) => {
         const date = formatDate({

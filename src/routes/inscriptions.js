@@ -47,9 +47,25 @@ createService(
 
 createService(
     'get',
-    '/annulations',
+    '/formateurs',
     async (req, res) => {
-        const inscriptions = await fetchInscriptionsWithStatuses()
+        const inscriptions = await fetchInscriptionsWithStatuses({ shouldFetchTutors: true })
+
+        if (inscriptions.length > 0) {
+            res.json(inscriptions)
+        } else {
+            res.json('Aucuns formateurs trouvés')
+        }
+    },
+    null,
+    inscriptionsRouter
+)
+
+createService(
+    'get',
+    '/cancellations',
+    async (req, res) => {
+        const inscriptions = await fetchInscriptionsWithStatuses({ shouldFetchCancellations: true })
 
         const inscriptionCancellationsRecords = inscriptions.reduce((acc, inscription) => {
             if (inscription) {
