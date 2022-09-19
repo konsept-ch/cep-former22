@@ -108,7 +108,9 @@ export const getUserProfession = ({ userId, professionFacetsValues }) => {
     }
 }
 
-export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { shouldFetchTutors: false }) => {
+export const fetchInscriptionsWithStatuses = async (
+    { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
+) => {
     const sessionsWithInscriptions = await prisma.claro_cursusbundle_course_session.findMany({
         select: {
             uuid: true,
@@ -166,7 +168,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
 
     const inscriptionCancellationsRecords = shouldFetchTutors
         ? []
-        : await prisma.claro_cursusbundle_course_session_cancellation.findMany({
+        : shouldFetchCancellations
+        ? await prisma.claro_cursusbundle_course_session_cancellation.findMany({
               select: {
                   registration_date: true,
                   uuid: true,
@@ -195,10 +198,12 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                   },
               },
           })
+        : []
 
     const inscriptionCancellations = shouldFetchTutors
         ? []
-        : inscriptionCancellationsRecords.map((current) => {
+        : shouldFetchCancellations
+        ? inscriptionCancellationsRecords.map((current) => {
               const { claro_cursusbundle_course, ...sessionData } = current.claro_cursusbundle_course_session
 
               return {
@@ -221,6 +226,7 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                   ],
               }
           })
+        : []
 
     const formatOrganizationsHierarchy = ({ organizations, allOrganizations }) => {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
