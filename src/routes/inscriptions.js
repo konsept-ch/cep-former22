@@ -440,9 +440,9 @@ createService(
                                         name: 'ROLE_USER',
                                         translationKey: 'user',
                                         permissions: {
-                                            open: true,
+                                            open: false,
                                             copy: false,
-                                            export: true,
+                                            export: false,
                                             delete: false,
                                             edit: false,
                                             administrate: false,
@@ -619,7 +619,7 @@ createService(
                                     },
                                     rights: [
                                         {
-                                            id: 6161,
+                                            // id: 6161,
                                             name: 'ROLE_USER',
                                             translationKey: 'user',
                                             permissions: {
@@ -634,7 +634,7 @@ createService(
                                             workspace: null,
                                         },
                                         {
-                                            id: 6160,
+                                            // id: 6160,
                                             name: 'ROLE_ANONYMOUS',
                                             translationKey: 'anonymous',
                                             permissions: {
@@ -649,7 +649,7 @@ createService(
                                             workspace: null,
                                         },
                                         {
-                                            id: 6159,
+                                            // id: 6159,
                                             name: 'ROLE_WS_COLLABORATOR_5f61e20b-297f-4007-a8d7-dbb6879a7405',
                                             translationKey: 'collaborator',
                                             permissions: {
@@ -668,7 +668,7 @@ createService(
                                             },
                                         },
                                         {
-                                            id: 8545,
+                                            // id: 8545,
                                             name: 'ROLE_WS_MANAGER_5f61e20b-297f-4007-a8d7-dbb6879a7405',
                                             translationKey: 'manager',
                                             permissions: {

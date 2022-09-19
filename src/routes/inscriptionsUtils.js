@@ -142,12 +142,12 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             user_organization: {
                                 select: {
                                     is_main: true,
-                                    claro__organization: true, // TODO: wait for Anthony to fix?
-                                    // claro__organization: {
-                                    //     include: {
-                                    //         claro_cursusbundle_quota: true,
-                                    //     },
-                                    // },
+                                    // claro__organization: true, // TODO: wait for Anthony to fix?
+                                    claro__organization: {
+                                        include: {
+                                            claro_cursusbundle_quota: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -297,8 +297,8 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                     inscription.claro_user.user_organization
                                 )
 
-                                const isHrValidationEnabled = false // TODO: wait for Anthony to fix?
-                                // const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
+                                // const isHrValidationEnabled = false // TODO: wait for Anthony to fix?
+                                const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
                                 return {
                                     id: inscription.uuid,
@@ -381,12 +381,12 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                             user_organization: {
                                 select: {
                                     is_main: true,
-                                    claro__organization: true, // TODO: wait for Anthony to fix?
-                                    // claro__organization: {
-                                    //     include: {
-                                    //         claro_cursusbundle_quota: true,
-                                    //     },
-                                    // },
+                                    // claro__organization: true, // TODO: wait for Anthony to fix?
+                                    claro__organization: {
+                                        include: {
+                                            claro_cursusbundle_quota: true,
+                                        },
+                                    },
                                 },
                             },
                         },
