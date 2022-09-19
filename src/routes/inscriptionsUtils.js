@@ -121,12 +121,8 @@ export const fetchInscriptionsWithStatuses = async (
                   used_by_quotas: true,
                   claro_cursusbundle_course_session_user: {
                       where: shouldFetchTutors
-                          ? { registration_type: 'tutor' }
-                          : {
-                                NOT: {
-                                    registration_type: 'tutor',
-                                },
-                            },
+                          ? { registration_type: REGISTRATION_TYPES.TUTOR }
+                          : { registration_type: REGISTRATION_TYPES.LEARNER },
                       select: {
                           uuid: true,
                           validated: true,
@@ -366,7 +362,7 @@ export const fetchInscriptionsWithStatuses = async (
 
         let fetchedPendingLearners = []
 
-        if (!shouldFetchTutors) {
+        if (!shouldFetchTutors && !shouldFetchCancellations) {
             const allPendingInscriptionsOnCourseLevel = await prisma.claro_cursusbundle_course_course_user.findMany({
                 include: {
                     claro_cursusbundle_course: {

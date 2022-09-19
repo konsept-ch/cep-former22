@@ -32,13 +32,13 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const inscriptions = await fetchInscriptionsWithStatuses()
-        const participants = inscriptions.filter(({ type }) => type === REGISTRATION_TYPES.LEARNER)
+        const participations = await fetchInscriptionsWithStatuses()
+        // const participations = inscriptions.filter(({ type }) => type === REGISTRATION_TYPES.LEARNER)
 
-        if (participants.length > 0) {
-            res.json(participants)
+        if (participations.length > 0) {
+            res.json(participations)
         } else {
-            res.json('Aucune inscription trouvée')
+            res.json('Aucune participation trouvée')
         }
     },
     null,
@@ -49,10 +49,10 @@ createService(
     'get',
     '/formateurs',
     async (req, res) => {
-        const inscriptions = await fetchInscriptionsWithStatuses({ shouldFetchTutors: true })
+        const tutors = await fetchInscriptionsWithStatuses({ shouldFetchTutors: true })
 
-        if (inscriptions.length > 0) {
-            res.json(inscriptions)
+        if (tutors.length > 0) {
+            res.json(tutors)
         } else {
             res.json('Aucun formateur trouvé')
         }
@@ -65,8 +65,7 @@ createService(
     'get',
     '/cancellations',
     async (req, res) => {
-        const inscriptions = await fetchInscriptionsWithStatuses({ shouldFetchCancellations: true })
-        const cancellations = inscriptions.filter(({ type }) => type === REGISTRATION_TYPES.CANCELLATION)
+        const cancellations = await fetchInscriptionsWithStatuses({ shouldFetchCancellations: true })
 
         if (cancellations.length > 0) {
             res.json(cancellations)
