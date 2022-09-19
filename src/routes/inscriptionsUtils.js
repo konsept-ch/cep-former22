@@ -221,24 +221,24 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
               }
           })
 
-    const formatOrganizationsHierarchy = async (organizations) => {
+    const formatOrganizationsHierarchy = ({ organizations, allOrganizations }) => {
         const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
 
-        const getHierarchy = async ({ organization, hierarchy = [] }) => {
+        const getHierarchy = ({ organization, hierarchy = [] }) => {
             const hierarchyLatest = [...hierarchy, organization.name]
 
-            const parentId = organization.parent_id
+            const { parent_id: parentId } = organization
 
             if (parentId) {
-                const parent = await prisma.claro__organization.findUnique({ where: { id: parentId } })
+                const parent = allOrganizations?.find(({ id }) => id === parentId)
 
-                return getHierarchy({ organization: parent, hierarchy: hierarchyLatest }) // TODO: await
+                return getHierarchy({ organization: parent, hierarchy: hierarchyLatest })
             } else {
                 return hierarchyLatest.reverse().join(' > ')
             }
         }
 
-        return await getHierarchy({ organization: mainOrganization })
+        return getHierarchy({ organization: mainOrganization })
     }
 
     const getOrganizationCode = (organizations) => {
@@ -256,6 +256,13 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
         },
     })
 
+    const inscriptionsAdditionalData = await prisma.former22_inscription.findMany({
+        include: { former22_attestation: true },
+    })
+
+    const usersAdditionalData = await prisma.former22_user.findMany()
+    const allOrganizations = await prisma.claro__organization.findMany()
+
     if (typeof sessionsWithInscriptions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
         const inscriptionsToFetch = [...sessionsWithInscriptions, ...inscriptionCancellations].map(
             ({
@@ -270,21 +277,19 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                     const allLearnersToFetchStatus = claro_cursusbundle_course_session_user?.map((inscription) =>
                         (async () => {
                             try {
-                                const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
-                                    where: { inscriptionId: inscription.uuid },
-                                    include: { former22_attestation: true },
-                                })
+                                const inscriptionStatusForId = inscriptionsAdditionalData.find(
+                                    ({ inscriptionId }) => inscriptionId === inscription.uuid
+                                )
                                 const inscriptionStatusForIdWhenCancellation =
                                     inscription.registration_type === 'cancellation'
-                                        ? await prisma.former22_inscription.findUnique({
-                                              where: { inscriptionId: inscription.inscription_uuid },
-                                          })
+                                        ? inscriptionsAdditionalData.find(
+                                              ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
+                                          )
                                         : null
 
                                 const { shouldReceiveSms } =
-                                    (await prisma.former22_user.findUnique({
-                                        where: { userId: inscription.claro_user.uuid },
-                                    })) ?? {}
+                                    usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ??
+                                    {}
 
                                 const courseData =
                                     inscription.claro_cursusbundle_course_session.claro_cursusbundle_course
@@ -337,16 +342,17 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                         userId: inscription.claro_user.uuid,
                                         shouldReceiveSms,
                                         hierarchy: inscription.claro_user.user_organization
-                                            ? await formatOrganizationsHierarchy(
-                                                  inscription.claro_user.user_organization
-                                              )
+                                            ? formatOrganizationsHierarchy({
+                                                  organizations: inscription.claro_user.user_organization,
+                                                  allOrganizations,
+                                              })
                                             : null,
                                         organization: userMainOrganization?.name,
                                         organizationId: userMainOrganization?.uuid,
                                         organizationCode: inscription.claro_user.user_organization
                                             ? getOrganizationCode(inscription.claro_user.user_organization)
                                             : null,
-                                        profession: await getUserProfession({
+                                        profession: getUserProfession({
                                             userId: inscription.claro_user.id,
                                             professionFacetsValues,
                                         }),
@@ -398,9 +404,10 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                 const pendingList = allPendingInscriptionsOnCourseLevel.map((inscription) =>
                     (async () => {
                         const { shouldReceiveSms } =
-                            (await prisma.former22_user.findUnique({
-                                where: { userId: inscription.claro_user.uuid },
-                            })) ?? {}
+                            // (await prisma.former22_user.findUnique({
+                            //     where: { userId: inscription.claro_user.uuid },
+                            // })) ?? {}
+                            usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ?? {}
 
                         const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
 
@@ -432,14 +439,17 @@ export const fetchInscriptionsWithStatuses = async ({ shouldFetchTutors } = { sh
                                 userId: inscription.claro_user.uuid,
                                 shouldReceiveSms,
                                 hierarchy: inscription.claro_user.user_organization
-                                    ? await formatOrganizationsHierarchy(inscription.claro_user.user_organization)
+                                    ? formatOrganizationsHierarchy({
+                                          organizations: inscription.claro_user.user_organization,
+                                          allOrganizations,
+                                      })
                                     : null,
                                 organization: userMainOrganization?.name,
                                 organizationId: userMainOrganization?.uuid,
                                 organizationCode: inscription.claro_user.user_organization
                                     ? getOrganizationCode(inscription.claro_user.user_organization)
                                     : null,
-                                profession: await getUserProfession({
+                                profession: getUserProfession({
                                     userId: inscription.claro_user.id,
                                     professionFacetsValues,
                                 }),
