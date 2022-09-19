@@ -35,6 +35,8 @@ createService(
 
         if (participations.length > 0) {
             res.json(participations)
+        } else if (participations === -1) {
+            res.status(500).json('Erreur')
         } else {
             res.json('Aucune participation trouvée')
         }
@@ -51,6 +53,8 @@ createService(
 
         if (tutors.length > 0) {
             res.json(tutors)
+        } else if (tutors === -1) {
+            res.status(500).json('Erreur')
         } else {
             res.json('Aucun formateur trouvé')
         }
@@ -67,6 +71,8 @@ createService(
 
         if (cancellations.length > 0) {
             res.json(cancellations)
+        } else if (cancellations === -1) {
+            res.status(500).json('Erreur')
         } else {
             res.json('Aucune annulation trouvée')
         }

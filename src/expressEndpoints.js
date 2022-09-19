@@ -1,4 +1,4 @@
-// file expressEndpoints is deprecated, use /routes folder instead
+// READ: file expressEndpoints is deprecated, use /routes folder instead
 
 import { v4 as uuidv4 } from 'uuid'
 
@@ -6,8 +6,11 @@ import { sendEmail } from './sendEmail'
 import { createService, formatDate } from './utils'
 import { prisma } from '.'
 
+// READ: file expressEndpoints is deprecated, use /routes folder instead
+
 export const generateEndpoints = () => {
-    // reportError START
+    // READ: file expressEndpoints is deprecated, use /routes folder instead
+
     createService('post', '/reportError', async (req, res) => {
         const date = formatDate({
             dateObject: new Date(),
@@ -31,13 +34,14 @@ export const generateEndpoints = () => {
 
         res.json({ emailResponse })
     })
-    // reportError END
 
-    // logs START
+    // READ: file expressEndpoints is deprecated, use /routes folder instead
+
     createService('get', '/logs', async (_req, res) => {
         const logs = await prisma.former22_log.findMany()
 
-        res.json(logs ? 'Des logs trouvés' : 'Aucuns logs trouvés')
+        res.json(logs ? 'Des logs trouvés' : 'Aucun log trouvé')
     })
-    // logs END
+
+    // READ: file expressEndpoints is deprecated, use /routes folder instead
 }

@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 import { prisma } from '..'
 
 export const STATUSES = {
@@ -107,226 +109,359 @@ export const getUserProfession = ({ userId, professionFacetsValues }) => {
     }
 }
 
+const formatOrganizationsHierarchy = ({ organizations, allOrganizations }) => {
+    const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+
+    const getHierarchy = ({ organization, hierarchy = [] }) => {
+        const hierarchyLatest = [...hierarchy, organization.name]
+
+        const { parent_id: parentId } = organization
+
+        if (parentId) {
+            const parent = allOrganizations?.find(({ id }) => id === parentId)
+
+            return getHierarchy({ organization: parent, hierarchy: hierarchyLatest })
+        } else {
+            return hierarchyLatest.reverse().join(' > ')
+        }
+    }
+
+    return getHierarchy({ organization: mainOrganization })
+}
+
+const getOrganizationCode = (organizations) => {
+    const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+
+    return mainOrganization?.code
+}
+
 export const fetchInscriptionsWithStatuses = async (
     { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
 ) => {
-    const sessionsWithInscriptions = shouldFetchCancellations
-        ? []
-        : await prisma.claro_cursusbundle_course_session.findMany({
-              select: {
-                  uuid: true,
-                  start_date: true,
-                  course_name: true,
-                  quota_days: true,
-                  used_by_quotas: true,
-                  claro_cursusbundle_course_session_user: {
-                      where: shouldFetchTutors
-                          ? { registration_type: REGISTRATION_TYPES.TUTOR }
-                          : { registration_type: REGISTRATION_TYPES.LEARNER },
-                      select: {
-                          uuid: true,
-                          validated: true,
-                          status: true,
-                          registration_date: true,
-                          registration_type: true,
-                          claro_user: {
-                              select: {
-                                  first_name: true,
-                                  last_name: true,
-                                  mail: true,
-                                  username: true,
-                                  phone: true,
-                                  uuid: true,
-                                  id: true,
-                                  user_organization: {
-                                      select: {
-                                          is_main: true,
-                                          claro__organization: {
-                                              include: {
-                                                  claro_cursusbundle_quota: true,
-                                              },
-                                          },
-                                      },
-                                  },
-                              },
-                          },
-                          claro_cursusbundle_course_session: {
-                              select: {
-                                  claro_cursusbundle_course: {
-                                      select: { uuid: true, course_name: true },
-                                  },
-                              },
-                          },
-                      },
-                  },
-              },
-          })
+    try {
+        const sessions = await prisma.claro_cursusbundle_course_session.findMany({
+            select: {
+                uuid: true,
+                start_date: true,
+                course_name: true,
+                quota_days: true,
+                used_by_quotas: true,
+                claro_cursusbundle_course: {
+                    select: { uuid: true, course_name: true },
+                },
+                claro_cursusbundle_course_session_user: !shouldFetchCancellations && {
+                    where: shouldFetchTutors
+                        ? { registration_type: REGISTRATION_TYPES.TUTOR }
+                        : { registration_type: REGISTRATION_TYPES.LEARNER },
+                    select: {
+                        uuid: true,
+                        validated: true,
+                        status: true,
+                        registration_date: true,
+                        registration_type: true,
+                        claro_user: {
+                            select: {
+                                first_name: true,
+                                last_name: true,
+                                mail: true,
+                                username: true,
+                                phone: true,
+                                uuid: true,
+                                id: true,
+                                user_organization: {
+                                    select: {
+                                        is_main: true,
+                                        claro__organization: {
+                                            include: {
+                                                claro_cursusbundle_quota: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        // claro_cursusbundle_course_session: {
+                        //     select: {
+                        //         claro_cursusbundle_course: {
+                        //             select: { uuid: true, course_name: true },
+                        //         },
+                        //     },
+                        // },
+                    },
+                },
+                claro_cursusbundle_course_session_cancellation: shouldFetchCancellations && {
+                    select: {
+                        registration_date: true,
+                        uuid: true,
+                        inscription_uuid: true,
+                        claro_user: {
+                            select: {
+                                first_name: true,
+                                last_name: true,
+                                mail: true,
+                                username: true,
+                                phone: true,
+                                uuid: true,
+                            },
+                        },
+                        claro_cursusbundle_course_session: {
+                            select: {
+                                uuid: true,
+                                start_date: true,
+                                course_name: true,
+                                quota_days: true,
+                                used_by_quotas: true,
+                                // claro_cursusbundle_course: {
+                                //     select: { uuid: true, course_name: true },
+                                // },
+                            },
+                        },
+                    },
+                },
+            },
+        })
 
-    const inscriptionCancellationsRecords = shouldFetchTutors
-        ? []
-        : shouldFetchCancellations
-        ? await prisma.claro_cursusbundle_course_session_cancellation.findMany({
-              select: {
-                  registration_date: true,
-                  uuid: true,
-                  inscription_uuid: true,
-                  claro_user: {
-                      select: {
-                          first_name: true,
-                          last_name: true,
-                          mail: true,
-                          username: true,
-                          phone: true,
-                          uuid: true,
-                      },
-                  },
-                  claro_cursusbundle_course_session: {
-                      select: {
-                          uuid: true,
-                          start_date: true,
-                          course_name: true,
-                          quota_days: true,
-                          used_by_quotas: true,
-                          claro_cursusbundle_course: {
-                              select: { uuid: true, course_name: true },
-                          },
-                      },
-                  },
-              },
-          })
-        : []
+        // const inscriptionCancellationsRecords = shouldFetchCancellations
+        //     ? await prisma.claro_cursusbundle_course_session_cancellation.findMany({
+        //           select: {
+        //               registration_date: true,
+        //               uuid: true,
+        //               inscription_uuid: true,
+        //               claro_user: {
+        //                   select: {
+        //                       first_name: true,
+        //                       last_name: true,
+        //                       mail: true,
+        //                       username: true,
+        //                       phone: true,
+        //                       uuid: true,
+        //                   },
+        //               },
+        //               claro_cursusbundle_course_session: {
+        //                   select: {
+        //                       uuid: true,
+        //                       start_date: true,
+        //                       course_name: true,
+        //                       quota_days: true,
+        //                       used_by_quotas: true,
+        //                       claro_cursusbundle_course: {
+        //                           select: { uuid: true, course_name: true },
+        //                       },
+        //                   },
+        //               },
+        //           },
+        //       })
+        //     : []
 
-    const inscriptionCancellations = shouldFetchTutors
-        ? []
-        : shouldFetchCancellations
-        ? inscriptionCancellationsRecords.map((current) => {
-              const { claro_cursusbundle_course, ...sessionData } = current.claro_cursusbundle_course_session
+        // const cancellations = shouldFetchCancellations
+        //     ? sessions.map((current) => {
+        //           const { claro_cursusbundle_course, ...sessionData } = current.claro_cursusbundle_course_session
 
-              return {
-                  ...sessionData,
-                  claro_cursusbundle_course_session_user: [
-                      {
-                          registration_type: REGISTRATION_TYPES.CANCELLATION,
-                          validated: false,
-                          uuid: current.uuid,
-                          inscription_uuid: current.inscription_uuid,
-                          registration_date: current.registration_date,
-                          claro_user: current.claro_user,
-                          claro_cursusbundle_course_session: {
-                              claro_cursusbundle_course: {
-                                  uuid: claro_cursusbundle_course.uuid,
-                                  course_name: claro_cursusbundle_course.course_name,
-                              },
-                          },
-                      },
-                  ],
-              }
-          })
-        : []
+        //           return {
+        //               ...sessionData,
+        //               claro_cursusbundle_course_session_user: [
+        //                   {
+        //                       registration_type: REGISTRATION_TYPES.CANCELLATION,
+        //                       validated: false,
+        //                       uuid: current.uuid,
+        //                       inscription_uuid: current.inscription_uuid,
+        //                       registration_date: current.registration_date,
+        //                       claro_user: current.claro_user,
+        //                       claro_cursusbundle_course_session: {
+        //                           claro_cursusbundle_course: {
+        //                               uuid: claro_cursusbundle_course.uuid,
+        //                               course_name: claro_cursusbundle_course.course_name,
+        //                           },
+        //                       },
+        //                   },
+        //               ],
+        //           }
+        //       })
+        //     : []
 
-    const formatOrganizationsHierarchy = ({ organizations, allOrganizations }) => {
-        const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+        const professionFacetsValues = await getProfessionFacetsValues()
+        const coursesAdditionalData = await prisma.former22_course.findMany({
+            select: {
+                courseId: true,
+                coordinator: true,
+            },
+        })
+        const inscriptionsAdditionalData = await prisma.former22_inscription.findMany({
+            include: { former22_attestation: true },
+        })
+        const usersAdditionalData = await prisma.former22_user.findMany()
+        const allOrganizations = await prisma.claro__organization.findMany()
 
-        const getHierarchy = ({ organization, hierarchy = [] }) => {
-            const hierarchyLatest = [...hierarchy, organization.name]
-
-            const { parent_id: parentId } = organization
-
-            if (parentId) {
-                const parent = allOrganizations?.find(({ id }) => id === parentId)
-
-                return getHierarchy({ organization: parent, hierarchy: hierarchyLatest })
-            } else {
-                return hierarchyLatest.reverse().join(' > ')
-            }
-        }
-
-        return getHierarchy({ organization: mainOrganization })
-    }
-
-    const getOrganizationCode = (organizations) => {
-        const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
-
-        return mainOrganization?.code
-    }
-
-    const professionFacetsValues = await getProfessionFacetsValues()
-
-    const coursesAdditionalData = await prisma.former22_course.findMany({
-        select: {
-            courseId: true,
-            coordinator: true,
-        },
-    })
-
-    const inscriptionsAdditionalData = await prisma.former22_inscription.findMany({
-        include: { former22_attestation: true },
-    })
-
-    const usersAdditionalData = await prisma.former22_user.findMany()
-    const allOrganizations = await prisma.claro__organization.findMany()
-
-    if (typeof sessionsWithInscriptions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
-        const fetchedInscriptions = [...sessionsWithInscriptions, ...inscriptionCancellations].flatMap(
-            ({
-                claro_cursusbundle_course_session_user,
-                course_name,
-                quota_days,
-                used_by_quotas,
-                start_date,
-                uuid: sessionUuid,
-            }) =>
-                claro_cursusbundle_course_session_user?.map((inscription) => {
-                    try {
-                        const inscriptionStatusForId = inscriptionsAdditionalData.find(
-                            ({ inscriptionId }) => inscriptionId === inscription.uuid
-                        )
-                        const inscriptionStatusForIdWhenCancellation =
-                            inscription.registration_type === 'cancellation'
-                                ? inscriptionsAdditionalData.find(
-                                      ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
+        if (typeof sessions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
+            const fetchedInscriptions = sessions.flatMap(
+                ({
+                    claro_cursusbundle_course_session_user: inscriptions,
+                    claro_cursusbundle_course: courseData,
+                    course_name,
+                    quota_days,
+                    used_by_quotas,
+                    start_date,
+                    uuid: sessionUuid,
+                }) =>
+                    inscriptions?.length > 0
+                        ? inscriptions.map((inscription) => {
+                              try {
+                                  const inscriptionStatusForId = inscriptionsAdditionalData.find(
+                                      ({ inscriptionId }) => inscriptionId === inscription.uuid
                                   )
-                                : null
+                                  const inscriptionStatusForIdWhenCancellation =
+                                      inscription.registration_type === 'cancellation'
+                                          ? inscriptionsAdditionalData.find(
+                                                ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
+                                            )
+                                          : null
 
+                                  const { shouldReceiveSms } =
+                                      usersAdditionalData.find(
+                                          ({ userId }) => userId === inscription.claro_user.uuid
+                                      ) ?? {}
+
+                                  const coordinator = coursesAdditionalData.find(
+                                      ({ courseId }) => courseId === courseData.uuid
+                                  )?.coordinator
+
+                                  const userMainOrganization = getMainOrganization(
+                                      inscription.claro_user.user_organization
+                                  )
+
+                                  const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
+
+                                  return {
+                                      id: inscription.uuid,
+                                      inscriptionDate: inscription.registration_date,
+                                      type: inscription.registration_type,
+                                      deletedInscriptionUuid: inscription.inscription_uuid,
+                                      coordinator,
+                                      attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
+                                      status: deriveInscriptionStatus({
+                                          savedStatus:
+                                              inscriptionStatusForId?.inscriptionStatus ??
+                                              inscriptionStatusForIdWhenCancellation?.inscriptionStatus,
+                                          transformedStatus: transformFlagsToStatus({
+                                              validated: inscription.validated,
+                                              registrationType: inscription.registration_type,
+                                              hrValidationStatus: inscription.status,
+                                              isHrValidationEnabled,
+                                          }),
+                                      }),
+                                      session: {
+                                          id: sessionUuid,
+                                          name: course_name,
+                                          startDate: start_date,
+                                          quotaDays: quota_days,
+                                          isUsedForQuota: used_by_quotas,
+                                          courseName: courseData.course_name,
+                                          startYear: new Date(start_date).getFullYear(),
+                                      },
+                                      user: {
+                                          firstName: inscription.claro_user.first_name,
+                                          lastName: inscription.claro_user.last_name,
+                                          email: inscription.claro_user.mail,
+                                          username: inscription.claro_user.username,
+                                          phone: inscription.claro_user.phone,
+                                          phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
+                                          userId: inscription.claro_user.uuid,
+                                          shouldReceiveSms,
+                                          hierarchy: inscription.claro_user.user_organization
+                                              ? formatOrganizationsHierarchy({
+                                                    organizations: inscription.claro_user.user_organization,
+                                                    allOrganizations,
+                                                })
+                                              : null,
+                                          organization: userMainOrganization?.name,
+                                          organizationId: userMainOrganization?.uuid,
+                                          organizationCode: inscription.claro_user.user_organization
+                                              ? getOrganizationCode(inscription.claro_user.user_organization)
+                                              : null,
+                                          profession: getUserProfession({
+                                              userId: inscription.claro_user.id,
+                                              professionFacetsValues,
+                                          }),
+                                      },
+                                  }
+                              } catch (error) {
+                                  console.error(error)
+                              }
+                          })
+                        : shouldFetchTutors || shouldFetchCancellations
+                        ? []
+                        : [
+                              {
+                                  id: uuidv4(),
+                                  coordinator: coursesAdditionalData.find(
+                                      ({ courseId }) => courseId === courseData.uuid
+                                  )?.coordinator,
+                                  session: {
+                                      id: sessionUuid,
+                                      name: course_name,
+                                      startDate: start_date,
+                                      quotaDays: quota_days,
+                                      isUsedForQuota: used_by_quotas,
+                                      courseName: courseData.course_name,
+                                      startYear: new Date(start_date).getFullYear(),
+                                  },
+                              },
+                          ]
+            )
+
+            let fetchedPendingLearners = []
+
+            if (!shouldFetchTutors && !shouldFetchCancellations) {
+                const allPendingInscriptionsOnCourseLevel = await prisma.claro_cursusbundle_course_course_user.findMany(
+                    {
+                        include: {
+                            claro_cursusbundle_course: {
+                                include: {
+                                    claro_cursusbundle_course_session: true,
+                                },
+                            },
+                            claro_user: {
+                                include: {
+                                    user_organization: {
+                                        select: {
+                                            is_main: true,
+                                            claro__organization: {
+                                                include: {
+                                                    claro_cursusbundle_quota: true,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    }
+                )
+
+                if (allPendingInscriptionsOnCourseLevel) {
+                    fetchedPendingLearners = allPendingInscriptionsOnCourseLevel.map((inscription) => {
                         const { shouldReceiveSms } =
                             usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ?? {}
 
-                        const courseData = inscription.claro_cursusbundle_course_session.claro_cursusbundle_course
-
-                        const coordinator = coursesAdditionalData.find(
-                            ({ courseId }) => courseId === courseData.uuid
-                        )?.coordinator
-
                         const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
-
-                        const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
                         return {
                             id: inscription.uuid,
                             inscriptionDate: inscription.registration_date,
                             type: inscription.registration_type,
-                            deletedInscriptionUuid: inscription.inscription_uuid,
-                            coordinator,
-                            attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
-                            status: deriveInscriptionStatus({
-                                savedStatus:
-                                    inscriptionStatusForId?.inscriptionStatus ??
-                                    inscriptionStatusForIdWhenCancellation?.inscriptionStatus,
-                                transformedStatus: transformFlagsToStatus({
-                                    validated: inscription.validated,
-                                    registrationType: inscription.registration_type,
-                                    hrValidationStatus: inscription.status,
-                                    isHrValidationEnabled,
-                                }),
-                            }),
+                            coordinator: coursesAdditionalData.find(
+                                ({ courseId }) => courseId === inscription.claro_cursusbundle_course.uuid
+                            )?.coordinator,
+                            status: STATUSES.EN_ATTENTE,
+                            isPending: true,
                             session: {
-                                id: sessionUuid,
-                                name: course_name,
-                                startDate: start_date,
-                                quotaDays: quota_days,
-                                isUsedForQuota: used_by_quotas,
-                                courseName: courseData.course_name,
-                                startYear: new Date(start_date).getFullYear(),
+                                id: inscription.claro_cursusbundle_course.uuid,
+                                name: `En attente - ${inscription.claro_cursusbundle_course.course_name}`,
+                                startDate: 'En attente',
+                                quotaDays: 0,
+                                isUsedForQuota: false,
+                                courseName: inscription.claro_cursusbundle_course.course_name,
+                                startYear: new Date().getFullYear(),
                             },
                             user: {
                                 firstName: inscription.claro_user.first_name,
@@ -354,97 +489,18 @@ export const fetchInscriptionsWithStatuses = async (
                                 }),
                             },
                         }
-                    } catch (error) {
-                        console.error(error)
-                    }
-                })
-        )
-
-        let fetchedPendingLearners = []
-
-        if (!shouldFetchTutors && !shouldFetchCancellations) {
-            const allPendingInscriptionsOnCourseLevel = await prisma.claro_cursusbundle_course_course_user.findMany({
-                include: {
-                    claro_cursusbundle_course: {
-                        include: {
-                            claro_cursusbundle_course_session: true,
-                        },
-                    },
-                    claro_user: {
-                        include: {
-                            user_organization: {
-                                select: {
-                                    is_main: true,
-                                    claro__organization: {
-                                        include: {
-                                            claro_cursusbundle_quota: true,
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            })
-
-            if (allPendingInscriptionsOnCourseLevel) {
-                fetchedPendingLearners = allPendingInscriptionsOnCourseLevel.map((inscription) => {
-                    const { shouldReceiveSms } =
-                        usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ?? {}
-
-                    const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
-
-                    return {
-                        id: inscription.uuid,
-                        inscriptionDate: inscription.registration_date,
-                        type: inscription.registration_type,
-                        coordinator: coursesAdditionalData.find(
-                            ({ courseId }) => courseId === inscription.claro_cursusbundle_course.uuid
-                        )?.coordinator,
-                        status: STATUSES.EN_ATTENTE,
-                        isPending: true,
-                        session: {
-                            id: inscription.claro_cursusbundle_course.uuid,
-                            name: `En attente - ${inscription.claro_cursusbundle_course.course_name}`,
-                            startDate: 'En attente',
-                            quotaDays: 0,
-                            isUsedForQuota: false,
-                            courseName: inscription.claro_cursusbundle_course.course_name,
-                            startYear: new Date().getFullYear(),
-                        },
-                        user: {
-                            firstName: inscription.claro_user.first_name,
-                            lastName: inscription.claro_user.last_name,
-                            email: inscription.claro_user.mail,
-                            username: inscription.claro_user.username,
-                            phone: inscription.claro_user.phone,
-                            phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
-                            userId: inscription.claro_user.uuid,
-                            shouldReceiveSms,
-                            hierarchy: inscription.claro_user.user_organization
-                                ? formatOrganizationsHierarchy({
-                                      organizations: inscription.claro_user.user_organization,
-                                      allOrganizations,
-                                  })
-                                : null,
-                            organization: userMainOrganization?.name,
-                            organizationId: userMainOrganization?.uuid,
-                            organizationCode: inscription.claro_user.user_organization
-                                ? getOrganizationCode(inscription.claro_user.user_organization)
-                                : null,
-                            profession: getUserProfession({
-                                userId: inscription.claro_user.id,
-                                professionFacetsValues,
-                            }),
-                        },
-                    }
-                })
+                    })
+                }
             }
-        }
 
-        return [...fetchedInscriptions, ...fetchedPendingLearners]
-    } else {
-        return []
+            return [...fetchedInscriptions, ...fetchedPendingLearners]
+        } else {
+            return []
+        }
+    } catch (error) {
+        console.error(error)
+
+        return -1
     }
 }
 
