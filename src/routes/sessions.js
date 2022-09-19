@@ -4,7 +4,13 @@ import { prisma } from '..'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, LOG_TYPES } from '../utils'
-import { getNamesByType } from './inscriptionsUtils'
+import {
+    deriveInscriptionStatus,
+    getMainOrganization,
+    getNamesByType,
+    STATUSES,
+    transformFlagsToStatus,
+} from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
 export const sessionsRouter = Router()
@@ -107,11 +113,25 @@ createService(
                         },
                     ],
                     select: {
+                        uuid: true,
                         registration_type: true,
+                        validated: true,
+                        status: true,
                         claro_user: {
                             select: {
                                 first_name: true,
                                 last_name: true,
+                                user_organization: {
+                                    select: {
+                                        is_main: true,
+                                        // claro__organization: true, // TODO: wait for Anthony to fix?
+                                        claro__organization: {
+                                            include: {
+                                                claro_cursusbundle_quota: true,
+                                            },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -119,25 +139,45 @@ createService(
             },
         })
 
-        res.json(
-            sessionPresenceList
-                ? {
-                      courseName: sessionPresenceList.claro_cursusbundle_course.course_name,
-                      sessionCode: sessionPresenceList.code,
-                      eventDates: sessionPresenceList.claro_cursusbundle_session_event.map(
-                          ({ claro_planned_object: { start_date } }) => start_date
-                      ),
-                      learners: getNamesByType({
-                          inscriptions: sessionPresenceList.claro_cursusbundle_course_session_user,
-                          registrationType: 'learner',
-                      }),
-                      tutors: getNamesByType({
-                          inscriptions: sessionPresenceList.claro_cursusbundle_course_session_user,
-                          registrationType: 'tutor',
-                      }),
-                  }
-                : "La session n'est pas trouvée"
-        )
+        if (sessionPresenceList != null) {
+            const {
+                claro_cursusbundle_course: courseName,
+                code: sessionCode,
+                claro_cursusbundle_session_event: events,
+                claro_cursusbundle_course_session_user: inscriptions,
+            } = sessionPresenceList
+            const inscriptionAdditionalData = await prisma.former22_inscription.findMany({
+                where: { OR: inscriptions.map(({ uuid: inscriptionId }) => ({ inscriptionId })) },
+            })
+
+            res.json({
+                courseName,
+                sessionCode,
+                eventDates: events.map(({ claro_planned_object: { start_date } }) => start_date),
+                learners: getNamesByType({
+                    inscriptions: inscriptions.filter(
+                        ({ uuid, validated, registration_type, status, claro_user }) =>
+                            deriveInscriptionStatus({
+                                savedStatus: inscriptionAdditionalData.find(
+                                    ({ inscriptionId }) => inscriptionId === uuid
+                                ).inscriptionStatus,
+                                transformedStatus: transformFlagsToStatus({
+                                    validated,
+                                    registrationType: registration_type,
+                                    hrValidationStatus: status,
+                                    isHrValidationEnabled:
+                                        getMainOrganization(claro_user.user_organization)?.claro_cursusbundle_quota !=
+                                        null,
+                                }),
+                            }) !== STATUSES.REFUSEE_PAR_RH
+                    ),
+                    registrationType: 'learner',
+                }),
+                tutors: getNamesByType({ inscriptions, registrationType: 'tutor' }),
+            })
+        } else {
+            res.status(400).json({ error: "La session n'est pas trouvée" })
+        }
     },
     null,
     sessionsRouter
