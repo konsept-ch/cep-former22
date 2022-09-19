@@ -310,12 +310,11 @@ export const fetchInscriptionsWithStatuses = async (
                                   const inscriptionStatusForId = inscriptionsAdditionalData.find(
                                       ({ inscriptionId }) => inscriptionId === inscription.uuid
                                   )
-                                  const inscriptionStatusForIdWhenCancellation =
-                                      inscription.registration_type === 'cancellation'
-                                          ? inscriptionsAdditionalData.find(
-                                                ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
-                                            )
-                                          : null
+                                  const inscriptionStatusForIdWhenCancellation = shouldFetchCancellations
+                                      ? inscriptionsAdditionalData.find(
+                                            ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
+                                        )
+                                      : null
 
                                   const { shouldReceiveSms } =
                                       usersAdditionalData.find(
@@ -339,17 +338,17 @@ export const fetchInscriptionsWithStatuses = async (
                                       deletedInscriptionUuid: inscription.inscription_uuid,
                                       coordinator,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
-                                      status: deriveInscriptionStatus({
-                                          savedStatus:
-                                              inscriptionStatusForId?.inscriptionStatus ??
-                                              inscriptionStatusForIdWhenCancellation?.inscriptionStatus,
-                                          transformedStatus: transformFlagsToStatus({
-                                              validated: inscription.validated,
-                                              registrationType: inscription.registration_type,
-                                              hrValidationStatus: inscription.status,
-                                              isHrValidationEnabled,
-                                          }),
-                                      }),
+                                      status: shouldFetchCancellations
+                                          ? STATUSES.ANNULEE
+                                          : deriveInscriptionStatus({
+                                                savedStatus: inscriptionStatusForId?.inscriptionStatus,
+                                                transformedStatus: transformFlagsToStatus({
+                                                    validated: inscription.validated,
+                                                    registrationType: inscription.registration_type,
+                                                    hrValidationStatus: inscription.status,
+                                                    isHrValidationEnabled,
+                                                }),
+                                            }),
                                       session: {
                                           id: sessionUuid,
                                           name: course_name,
