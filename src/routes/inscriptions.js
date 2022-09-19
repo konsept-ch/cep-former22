@@ -38,7 +38,7 @@ createService(
         if (participants.length > 0) {
             res.json(participants)
         } else {
-            res.json('Aucunes inscriptions trouvées')
+            res.json('Aucune inscription trouvée')
         }
     },
     null,
@@ -54,7 +54,7 @@ createService(
         if (inscriptions.length > 0) {
             res.json(inscriptions)
         } else {
-            res.json('Aucuns formateurs trouvés')
+            res.json('Aucun formateur trouvé')
         }
     },
     null,
@@ -66,23 +66,12 @@ createService(
     '/cancellations',
     async (req, res) => {
         const inscriptions = await fetchInscriptionsWithStatuses({ shouldFetchCancellations: true })
+        const cancellations = inscriptions.filter(({ type }) => type === REGISTRATION_TYPES.CANCELLATION)
 
-        const inscriptionCancellationsRecords = inscriptions.reduce((acc, inscription) => {
-            if (inscription) {
-                if (inscription.type === REGISTRATION_TYPES.CANCELLATION) {
-                    return [...acc, inscription]
-                } else {
-                    return [...acc]
-                }
-            } else {
-                return [...acc]
-            }
-        }, [])
-
-        if (inscriptionCancellationsRecords.length > 0) {
-            res.json(inscriptionCancellationsRecords)
+        if (cancellations.length > 0) {
+            res.json(cancellations)
         } else {
-            res.json('Aucunes inscriptions trouvées')
+            res.json('Aucune annulation trouvée')
         }
     },
     null,

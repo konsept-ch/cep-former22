@@ -110,59 +110,61 @@ export const getUserProfession = ({ userId, professionFacetsValues }) => {
 export const fetchInscriptionsWithStatuses = async (
     { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
 ) => {
-    const sessionsWithInscriptions = await prisma.claro_cursusbundle_course_session.findMany({
-        select: {
-            uuid: true,
-            start_date: true,
-            course_name: true,
-            quota_days: true,
-            used_by_quotas: true,
-            claro_cursusbundle_course_session_user: {
-                where: shouldFetchTutors
-                    ? { registration_type: 'tutor' }
-                    : {
-                          NOT: {
-                              registration_type: 'tutor',
-                          },
-                      },
-                select: {
-                    uuid: true,
-                    validated: true,
-                    status: true,
-                    registration_date: true,
-                    registration_type: true,
-                    claro_user: {
-                        select: {
-                            first_name: true,
-                            last_name: true,
-                            mail: true,
-                            username: true,
-                            phone: true,
-                            uuid: true,
-                            id: true,
-                            user_organization: {
-                                select: {
-                                    is_main: true,
-                                    claro__organization: {
-                                        include: {
-                                            claro_cursusbundle_quota: true,
-                                        },
-                                    },
+    const sessionsWithInscriptions = shouldFetchCancellations
+        ? []
+        : await prisma.claro_cursusbundle_course_session.findMany({
+              select: {
+                  uuid: true,
+                  start_date: true,
+                  course_name: true,
+                  quota_days: true,
+                  used_by_quotas: true,
+                  claro_cursusbundle_course_session_user: {
+                      where: shouldFetchTutors
+                          ? { registration_type: 'tutor' }
+                          : {
+                                NOT: {
+                                    registration_type: 'tutor',
                                 },
                             },
-                        },
-                    },
-                    claro_cursusbundle_course_session: {
-                        select: {
-                            claro_cursusbundle_course: {
-                                select: { uuid: true, course_name: true },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    })
+                      select: {
+                          uuid: true,
+                          validated: true,
+                          status: true,
+                          registration_date: true,
+                          registration_type: true,
+                          claro_user: {
+                              select: {
+                                  first_name: true,
+                                  last_name: true,
+                                  mail: true,
+                                  username: true,
+                                  phone: true,
+                                  uuid: true,
+                                  id: true,
+                                  user_organization: {
+                                      select: {
+                                          is_main: true,
+                                          claro__organization: {
+                                              include: {
+                                                  claro_cursusbundle_quota: true,
+                                              },
+                                          },
+                                      },
+                                  },
+                              },
+                          },
+                          claro_cursusbundle_course_session: {
+                              select: {
+                                  claro_cursusbundle_course: {
+                                      select: { uuid: true, course_name: true },
+                                  },
+                              },
+                          },
+                      },
+                  },
+              },
+          })
 
     const inscriptionCancellationsRecords = shouldFetchTutors
         ? []
