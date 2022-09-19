@@ -338,17 +338,17 @@ export const fetchInscriptionsWithStatuses = async (
                                       deletedInscriptionUuid: inscription.inscription_uuid,
                                       coordinator,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
-                                      status: shouldFetchCancellations
-                                          ? STATUSES.ANNULEE
-                                          : deriveInscriptionStatus({
-                                                savedStatus: inscriptionStatusForId?.inscriptionStatus,
-                                                transformedStatus: transformFlagsToStatus({
-                                                    validated: inscription.validated,
-                                                    registrationType: inscription.registration_type,
-                                                    hrValidationStatus: inscription.status,
-                                                    isHrValidationEnabled,
-                                                }),
-                                            }),
+                                      status: deriveInscriptionStatus({
+                                          savedStatus:
+                                              inscriptionStatusForId?.inscriptionStatus ??
+                                              inscriptionStatusForIdWhenCancellation?.inscriptionStatus,
+                                          transformedStatus: transformFlagsToStatus({
+                                              validated: inscription.validated,
+                                              registrationType: REGISTRATION_TYPES.CANCELLATION,
+                                              hrValidationStatus: inscription.status,
+                                              isHrValidationEnabled,
+                                          }),
+                                      }),
                                       session: {
                                           id: sessionUuid,
                                           name: course_name,
