@@ -641,11 +641,11 @@ createService(
                                         enabled: false,
                                     },
                                     workspace: {
-                                        id: '5f61e20b-297f-4007-a8d7-dbb6879a7405',
-                                        autoId: 1863,
-                                        slug: 'paul-henri-hons-unil-ch',
-                                        name: 'paul-henri.hons@unil.ch',
-                                        code: 'paul-henri.hons@unil.ch',
+                                        id: workspace[0]?.uuid,
+                                        autoId: workspace[0]?.id,
+                                        slug: workspace[0]?.slug,
+                                        name: workspace[0]?.entity_name,
+                                        code: workspace[0]?.code,
                                     },
                                     rights: [
                                         {
@@ -685,16 +685,16 @@ createService(
                                             permissions: {
                                                 open: true,
                                                 copy: false,
-                                                export: false,
+                                                export: true,
                                                 delete: false,
                                                 edit: false,
                                                 administrate: false,
                                                 create: [],
                                             },
                                             workspace: {
-                                                id: '5f61e20b-297f-4007-a8d7-dbb6879a7405',
-                                                code: 'paul-henri.hons@unil.ch',
-                                                name: 'paul-henri.hons@unil.ch',
+                                                id: workspace[0]?.uuid,
+                                                name: workspace[0]?.entity_name,
+                                                code: workspace[0]?.code,
                                             },
                                         },
                                         {
@@ -733,9 +733,9 @@ createService(
                                                 ],
                                             },
                                             workspace: {
-                                                id: '5f61e20b-297f-4007-a8d7-dbb6879a7405',
-                                                code: 'paul-henri.hons@unil.ch',
-                                                name: 'paul-henri.hons@unil.ch',
+                                                id: workspace[0]?.uuid,
+                                                name: workspace[0]?.entity_name,
+                                                code: workspace[0]?.code,
                                             },
                                         },
                                     ],
