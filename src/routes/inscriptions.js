@@ -85,9 +85,9 @@ createService(
 
 createService(
     'get',
-    '/refusals-by-hr',
+    '/refused-by-hr',
     async (req, res) => {
-        const hrRefusals = await fetchInscriptionsWithStatuses().filter(
+        const hrRefusals = (await fetchInscriptionsWithStatuses()).filter(
             ({ status }) => status === STATUSES.REFUSEE_PAR_RH
         )
 
