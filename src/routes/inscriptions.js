@@ -680,7 +680,7 @@ createService(
                                         },
                                         {
                                             // id: 6159,
-                                            name: 'ROLE_WS_COLLABORATOR_5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                            name: `ROLE_WS_COLLABORATOR_${workspace[0]?.uuid}`,
                                             translationKey: 'collaborator',
                                             permissions: {
                                                 open: true,
@@ -699,7 +699,7 @@ createService(
                                         },
                                         {
                                             // id: 8545,
-                                            name: 'ROLE_WS_MANAGER_5f61e20b-297f-4007-a8d7-dbb6879a7405',
+                                            name: `ROLE_WS_MANAGER_${workspace[0]?.uuid}`,
                                             translationKey: 'manager',
                                             permissions: {
                                                 open: true,
