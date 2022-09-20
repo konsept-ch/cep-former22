@@ -160,7 +160,7 @@ createService(
                             deriveInscriptionStatus({
                                 savedStatus: inscriptionAdditionalData.find(
                                     ({ inscriptionId }) => inscriptionId === uuid
-                                ).inscriptionStatus,
+                                )?.inscriptionStatus,
                                 transformedStatus: transformFlagsToStatus({
                                     validated,
                                     registrationType: registration_type,
