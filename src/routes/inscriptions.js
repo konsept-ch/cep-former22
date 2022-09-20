@@ -31,7 +31,9 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const participations = await fetchInscriptionsWithStatuses()
+        const participations = (await fetchInscriptionsWithStatuses()).filter(
+            ({ status }) => status !== STATUSES.REFUSEE_PAR_RH
+        )
 
         if (participations.length > 0) {
             res.json(participations)
@@ -75,6 +77,26 @@ createService(
             res.status(500).json('Erreur')
         } else {
             res.json('Aucune annulation trouvée')
+        }
+    },
+    null,
+    inscriptionsRouter
+)
+
+createService(
+    'get',
+    '/refusals-by-hr',
+    async (req, res) => {
+        const hrRefusals = await fetchInscriptionsWithStatuses().filter(
+            ({ status }) => status === STATUSES.REFUSEE_PAR_RH
+        )
+
+        if (hrRefusals.length > 0) {
+            res.json(hrRefusals)
+        } else if (hrRefusals === -1) {
+            res.status(500).json('Erreur')
+        } else {
+            res.json('Aucun refus RH trouvé')
         }
     },
     null,
