@@ -793,37 +793,37 @@ createService(
     inscriptionsRouter
 )
 
-createService(
-    'post',
-    '/mass/update',
-    async (req, res) => {
-        const { emailTemplateId, status: newStatus, inscriptionsIds } = req.body
-        let createdInvoicesCount = 0
+// createService(
+//     'post',
+//     '/mass/update',
+//     async (req, res) => {
+//         const { emailTemplateId, status: newStatus, inscriptionsIds } = req.body
+//         let createdInvoicesCount = 0
 
-        for (const id of inscriptionsIds) {
-            // TODO: create a separate callOwnService function
-            const response = await fetch(`${MIDDLEWARE_URL}/inscriptions/${id}`, {
-                method: 'post',
-                headers: req.headers,
-                body: JSON.stringify({
-                    emailTemplateId,
-                    status: newStatus,
-                }),
-            })
+//         for (const id of inscriptionsIds) {
+//             // TODO: create a separate callOwnService function
+//             const response = await fetch(`${MIDDLEWARE_URL}/inscriptions/${id}`, {
+//                 method: 'post',
+//                 headers: req.headers,
+//                 body: JSON.stringify({
+//                     emailTemplateId,
+//                     status: newStatus,
+//                 }),
+//             })
 
-            const { isInvoiceCreated } = await response.json()
+//             const { isInvoiceCreated } = await response.json()
 
-            if (isInvoiceCreated) {
-                createdInvoicesCount += 1
-            }
-        }
+//             if (isInvoiceCreated) {
+//                 createdInvoicesCount += 1
+//             }
+//         }
 
-        if (createdInvoicesCount > 0) {
-            res.json({ createdInvoicesCount })
-        } else {
-            res.json('Les statuts ont été modifiés')
-        }
-    },
-    null,
-    inscriptionsRouter
-)
+//         if (createdInvoicesCount > 0) {
+//             res.json({ createdInvoicesCount })
+//         } else {
+//             res.json('Les statuts ont été modifiés')
+//         }
+//     },
+//     null,
+//     inscriptionsRouter
+// )
