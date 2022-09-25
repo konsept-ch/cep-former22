@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import fetch, { File, FormData } from 'node-fetch'
+import { File, FormData } from 'node-fetch'
 import { v4 as uuidv4 } from 'uuid'
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
@@ -10,7 +10,7 @@ import util from 'util'
 
 import { prisma } from '..'
 import { callApi } from '../callApi'
-import { MIDDLEWARE_URL } from '../credentialsConfig'
+// import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
@@ -104,7 +104,7 @@ createService(
 )
 
 createService(
-    'post',
+    'put',
     '/:inscriptionId',
     async (req, res) => {
         const { emailTemplateId, selectedAttestationTemplateUuid, shouldSendSms, status: newStatus } = req.body
@@ -258,7 +258,7 @@ createService(
                 create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
 
-            if (selectedAttestationTemplateUuid) {
+            if (selectedAttestationTemplateUuid && selectedAttestationTemplateUuid !== 'no-attestation') {
                 const attestation = await prisma.former22_attestation.findUnique({
                     where: {
                         uuid: selectedAttestationTemplateUuid,
@@ -792,38 +792,3 @@ createService(
     { entityType: LOG_TYPES.INSCRIPTION },
     inscriptionsRouter
 )
-
-// createService(
-//     'post',
-//     '/mass/update',
-//     async (req, res) => {
-//         const { emailTemplateId, status: newStatus, inscriptionsIds } = req.body
-//         let createdInvoicesCount = 0
-
-//         for (const id of inscriptionsIds) {
-//             // TODO: create a separate callOwnService function
-//             const response = await fetch(`${MIDDLEWARE_URL}/inscriptions/${id}`, {
-//                 method: 'post',
-//                 headers: req.headers,
-//                 body: JSON.stringify({
-//                     emailTemplateId,
-//                     status: newStatus,
-//                 }),
-//             })
-
-//             const { isInvoiceCreated } = await response.json()
-
-//             if (isInvoiceCreated) {
-//                 createdInvoicesCount += 1
-//             }
-//         }
-
-//         if (createdInvoicesCount > 0) {
-//             res.json({ createdInvoicesCount })
-//         } else {
-//             res.json('Les statuts ont été modifiés')
-//         }
-//     },
-//     null,
-//     inscriptionsRouter
-// )
