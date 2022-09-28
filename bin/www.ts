@@ -86,7 +86,8 @@ function onListening() {
  */
 
 server.listen(port, () => {
-    console.log(`Middleware app listening on port: ${port}`)
+    // eslint-disable-next-line no-console
+    console.info(`Middleware app listening on port: ${port}`)
 })
 server.on('error', onError)
 server.on('listening', onListening)

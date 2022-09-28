@@ -54,6 +54,9 @@ export const sendEmail = async ({
 
     const emailResponse = await result.json()
 
+    // TODO use debug logging instead of console.log
+
+    // eslint-disable-next-line no-console
     console.info(emailResponse)
 
     // TODO: refactor to split logic between to, cc and bcc
@@ -75,11 +78,14 @@ export const sendEmail = async ({
                 html: html_body,
             })
 
+            // eslint-disable-next-line no-console
             console.info(`E-mail domain is in suppression list, mailgun used: ${to.join(', ')}`)
+            // eslint-disable-next-line no-console
             console.info(mailgunResult)
 
             return { emailResponse, mailgunResult }
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(error)
             return { emailResponse, mailgunResult: error.message }
         }

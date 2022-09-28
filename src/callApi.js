@@ -45,7 +45,9 @@ export const callApi = async ({
             return responseText
         }
     } catch (error) {
+        // eslint-disable-next-line no-console
         console.warn(response)
+        // eslint-disable-next-line no-console
         console.error(error)
 
         return response

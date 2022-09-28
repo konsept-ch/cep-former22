@@ -114,6 +114,7 @@ export const createService = (
                 })
             }
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(error)
             winstonLogger.error(
                 `${req.method} request to ${req.originalUrl} failed. IP: ${req.ip} Response code: ${

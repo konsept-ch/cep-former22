@@ -22,15 +22,20 @@ export const sendSms = async ({ to, content }) => {
         },
     })
 
+    // TODO use debug logging instead of console.log
+
+    // eslint-disable-next-line no-console
     console.info(`Sent SMS to ${to} with content "${content}"`)
 
     try {
         const resultJson = await result.json()
 
+        // eslint-disable-next-line no-console
         console.info(resultJson)
 
         return { success: resultJson.status === 1 }
     } catch (error) {
+        // eslint-disable-next-line no-console
         console.error(error)
     }
 }
