@@ -22,7 +22,7 @@ const options = {
 }
 
 // instantiate a new Winston Logger with the settings defined above
-export const winstonLogger = new createLogger({
+export const winstonLogger = createLogger({
     transports: [new transports.File(options.file), new transports.Console(options.console)],
     exitOnError: false, // do not exit on handled exceptions
 })

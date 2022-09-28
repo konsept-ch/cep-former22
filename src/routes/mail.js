@@ -31,7 +31,7 @@ createService(
         console.info(req.body)
         console.info(req.headers)
 
-        const { emailResponse, mailgunResult } = sendEmail({
+        const { emailResponse, mailgunResult } = await sendEmail({
             to,
             cc,
             bcc,

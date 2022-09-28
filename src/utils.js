@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { DateTime } from 'luxon'
 
-import { app, prisma } from './'
+import { app, prisma } from '.'
 import { callApi } from './callApi'
 import { winstonLogger } from './winston'
 

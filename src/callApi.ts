@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { Request } from 'express'
 
 import { clarolineApiUrl } from './credentialsConfig'
 
@@ -14,6 +15,15 @@ export const callApi = async ({
     headers = {},
     method = 'GET',
     predicate = () => true,
+}: {
+    req: Request
+    body: any
+    isFormData: boolean
+    path: string
+    params: any
+    headers: any
+    method: string
+    predicate: (value: any, index: number) => unknown
 }) => {
     const url = `${new URL(path, clarolineApiUrl)}?${new URLSearchParams(params)}`
 
@@ -36,9 +46,17 @@ export const callApi = async ({
 
     try {
         if (method.toLowerCase() !== 'delete') {
-            const responseJson = await response.json()
+            const responseJson: unknown = await response.json()
 
-            return responseJson?.data ? responseJson?.data?.filter(predicate) : responseJson
+            interface DataResponse {
+                data: unknown[]
+            }
+
+            const hasData = (resp: unknown): resp is DataResponse => {
+                return typeof resp === 'object' && resp !== null && 'data' in resp
+            }
+
+            return hasData(responseJson) ? responseJson?.data?.filter(predicate) : responseJson
         } else {
             const responseText = await response.text()
 
