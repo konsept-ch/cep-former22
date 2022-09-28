@@ -148,7 +148,6 @@ createService(
                     claro_cursusbundle_session_event,
                     claro_user: { first_name: firstName, last_name: lastName, mail: email },
                     uuid,
-                    // eslint-disable-next-line no-unused-vars
                     // claro__location: _claro__location,
                     ...rest
                 }) => {

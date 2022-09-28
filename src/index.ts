@@ -67,8 +67,11 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
 
 // Make sure the schema file is publicly accessible, otherwise break our Swagger UI as well
 // https://github.com/scottie1984/swagger-ui-express#load-swagger-from-url
-// @ts-ignore
-app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi.setup(null, swaggerUiOptions))
+app.use(
+    SWAGGER_UI_PATH,
+    swaggerUi.serveFiles(undefined, swaggerUiOptions),
+    swaggerUi.setup(undefined, swaggerUiOptions)
+)
 
 generateEndpoints()
 

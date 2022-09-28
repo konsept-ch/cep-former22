@@ -67,8 +67,8 @@ createService(
             }
 
             if (currentUserSettings) {
-                // eslint-disable-next-line no-unused-vars
-                const { _userId, ...settings } = currentUserSettings
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { userId, ...settings } = currentUserSettings
 
                 enrichedUser = { ...enrichedUser, ...settings }
             }
