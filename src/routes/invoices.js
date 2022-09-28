@@ -144,6 +144,7 @@ createService(
                 id: '0-1-1', // primary key
                 // -----> client address
                 organizationId: 1, // is foreignkey
+                organizationUuid: 'af9a3bba-941e-4c03-956e-b748acea4bd7',
                 customClientEmail: 'test@example.com',
                 customClientAddress: `Adresse custom
 multi-ligne`,
@@ -180,6 +181,7 @@ Dates: ...
             {
                 id: '0-1-2',
                 organizationId: 2,
+                organizationUuid: '56014d29-79df-46d4-b073-2edda57236c9',
                 customClientAddress: 'Adresse du client custom 2',
                 customClientEmail: 'test@example.com',
                 vatCode: 'EXONERE',
