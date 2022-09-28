@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
 import prismaClientPkg from '@prisma/client'
@@ -28,9 +29,11 @@ export const prisma = new PrismaClient()
 export const app = express()
 
 app.use(cors())
+app.use(logger('dev'))
 app.use(express.json({ limit: '50mb' }))
+// app.use(express.urlencoded({ extended: false })) // TODO check if needed
 
-const port = process.env.PORT ?? 4000
+// const port = process.env.PORT ?? 4000
 // const apiPrefix = '/api/v1'
 const SWAGGER_UI_PATH = '/api-docs'
 const SWAGGER_SCHEMA_PATH = `${SWAGGER_UI_PATH}/swagger.json`
@@ -61,6 +64,10 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
     const yml = yaml.dump(openapiSpecification, { lineWidth: -1 })
     res.set('Content-Type', 'text/yaml; charset=utf-8').status(200).send(yml)
 })
+
+// Make sure the schema file is publicly accessible, otherwise break our Swagger UI as well
+// https://github.com/scottie1984/swagger-ui-express#load-swagger-from-url
+// @ts-ignore
 app.use(SWAGGER_UI_PATH, swaggerUi.serveFiles(null, swaggerUiOptions), swaggerUi.setup(null, swaggerUiOptions))
 
 generateEndpoints()
@@ -108,6 +115,6 @@ app.get('/', (_req, res) => {
     )
 })
 
-app.listen(port, () => {
-    console.log(`Middleware app listening at port: ${port}`)
-})
+// app.listen(port, () => {
+//     console.log(`Middleware app listening at port: ${port}`)
+// })

@@ -5,12 +5,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-node",
+      "name": "Launch and debug via NPM",
       "request": "launch",
-      "name": "Launch Program",
+      "runtimeArgs": ["run", "ts-node"],
+      "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/src/index.js",
-      "runtimeArgs": ["--experimental-specifier-resolution=node", "--trace-warnings"]
+      "type": "node"
     }
   ]
 }
