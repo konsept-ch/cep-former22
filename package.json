@@ -23,6 +23,7 @@
     "prettier:fix": "prettier . --ignore-unknown --write",
     "eslint:check": "eslint --ext .js,.jsx,.ts,.tsx . --report-unused-disable-directives",
     "eslint:fix": "eslint --ext .js,.jsx,.ts,.tsx . --fix",
+    "tsc:check": "tsc --noEmit",
     "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start"
   },
   "dependencies": {
