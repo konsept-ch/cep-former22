@@ -24,7 +24,8 @@
     "eslint:check": "eslint --ext .js,.jsx,.ts,.tsx . --report-unused-disable-directives",
     "eslint:fix": "eslint --ext .js,.jsx,.ts,.tsx . --fix",
     "tsc:check": "tsc --noEmit",
-    "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start"
+    "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@prisma/client": "4.4.0",
@@ -70,7 +71,7 @@
     "eslint": "8.24.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-import": "2.26.0",
-    "husky": "8.0.1",
+    "husky": "^8.0.0",
     "lint-staged": "13.0.3",
     "prettier": "2.7.1"
   }
