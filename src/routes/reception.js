@@ -49,6 +49,8 @@ createService(
                 uuid: true,
                 start_date: true,
                 end_date: true,
+                entity_name: true,
+                description: true,
                 claro_location_room: {
                     select: {
                         event_name: true,
@@ -84,7 +86,16 @@ createService(
 
         if (typeof eventsPrisma !== 'undefined') {
             const events = eventsPrisma.map(
-                ({ uuid, start_date, end_date, claro_location_room, claro_cursusbundle_session_event, ...rest }) => ({
+                ({
+                    uuid,
+                    entity_name,
+                    description,
+                    start_date,
+                    end_date,
+                    claro_location_room,
+                    claro_cursusbundle_session_event,
+                    ...rest
+                }) => ({
                     ...rest,
                     id: uuid,
                     start: start_date,
@@ -92,10 +103,15 @@ createService(
                     roomName: claro_location_room?.event_name,
                     roomFloor: claro_location_room?.description?.replace(/(<([^>]+)>)/gi, ''),
                     tutors: claro_cursusbundle_session_event?.claro_cursusbundle_session_event_user?.map(
-                        ({ claro_user: { first_name, last_name } }) => ({ firstName: first_name, lastName: last_name })
+                        ({ claro_user: { first_name, last_name } }) => ({
+                            firstName: first_name,
+                            lastName: last_name,
+                        })
                     ),
-                    name: claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_course
-                        ?.course_name,
+                    name:
+                        claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_course
+                            ?.course_name ?? entity_name,
+                    description,
                 })
             )
 
