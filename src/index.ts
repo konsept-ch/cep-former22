@@ -14,6 +14,7 @@ import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { attestationsRouter } from './routes/attestations'
+import { contractTemplatesRouter } from './routes/contractTemplates'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
 import { organizationsRouter } from './routes/organizations'
@@ -82,6 +83,7 @@ app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
 app.use('/mail', mailRouter)
 app.use('/attestations', attestationsRouter)
+app.use('/contract-templates', contractTemplatesRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
 app.use('/organizations', organizationsRouter)
