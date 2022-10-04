@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:18.9
+FROM node:18
 
 # use libreoffice for docx to pdf
 RUN apt update && apt install -y \
