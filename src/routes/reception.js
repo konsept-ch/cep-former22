@@ -111,7 +111,7 @@ createService(
                     name:
                         claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_course
                             ?.course_name ?? entity_name,
-                    description,
+                    description: description?.replace(/(<([^>]+)>)/gi, ''),
                 })
             )
 
