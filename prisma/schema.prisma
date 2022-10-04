@@ -1874,7 +1874,7 @@ model claro_general_facet_preference {
 
 model claro_group {
   id                                      Int                                       @id @default(autoincrement())
-  name                                    String                                    @unique(map: "group_unique_name") @db.VarChar(255)
+  name                                    String                                    @unique(map: "UNIQ_E7C393D75E237E06") @db.VarChar(255)
   is_read_only                            Boolean
   uuid                                    String                                    @unique(map: "UNIQ_E7C393D7D17F50A6") @db.VarChar(36)
   badgeclass_group                        badgeclass_group[]
@@ -2554,8 +2554,8 @@ model claro_resource_node {
   showIcon                                                                             Boolean                                      @default(true)
   name                                                                                 String                                       @db.VarChar(255)
   lvl                                                                                  Int?
-  path                                                                                 String?                                      @db.VarChar(3000)
-  materializedPath                                                                     String?                                      @db.VarChar(3000)
+  path                                                                                 String?                                      @db.LongText
+  materializedPath                                                                     String?                                      @db.LongText
   value                                                                                Int?
   mime_type                                                                            String?                                      @db.VarChar(255)
   published                                                                            Boolean                                      @default(true)
@@ -5534,6 +5534,7 @@ model former22_organization {
   postalAddressDepartmentCode String?              @db.Text
   postalAddressLocality       String?              @db.Text
   organizationId              Int?                 @unique(map: "organizationId")
+  clientNumber                Int?
   claro__organization         claro__organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
 
   @@index([organizationId], map: "organization_index")
