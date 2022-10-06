@@ -141,7 +141,7 @@ createService(
 
         if (sessionPresenceList != null) {
             const {
-                claro_cursusbundle_course: courseName,
+                claro_cursusbundle_course: { course_name: courseName },
                 code: sessionCode,
                 claro_cursusbundle_session_event: events,
                 claro_cursusbundle_course_session_user: inscriptions,
