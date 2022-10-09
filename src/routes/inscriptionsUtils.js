@@ -85,25 +85,27 @@ export const parsePhoneForSms = ({ phone }) => {
     }
 }
 
-// TODO: not used in CFFE
-export const getProfessionFacetsValues = async () => {
-    const professionFacets = await prisma.claro_field_facet.findMany({
-        where: { name: { contains: 'FONCTION PROFESSIONNELLE' } },
+export const getCustomFacetValues = async ({ customFieldName }) => {
+    const customFacets = await prisma.claro_field_facet.findMany({
+        where: { name: { contains: customFieldName } },
     })
 
-    const { id: professionFacetId } = professionFacets[0]
+    const customFacetValues = []
 
-    const professionFacetsValues = await prisma.claro_field_facet_value.findMany({
-        where: { fieldFacet_id: professionFacetId },
-    })
+    for (const { id: customFacetId } of customFacets) {
+        customFacetValues.push(
+            await prisma.claro_field_facet_value.findMany({
+                where: { fieldFacet_id: customFacetId },
+            })
+        )
+    }
 
-    return professionFacetsValues
+    return customFacetValues.flat()
 }
 
-// TODO: not used in CFFE
-export const getUserProfession = ({ userId, professionFacetsValues }) => {
-    if (professionFacetsValues.some(({ user_id }) => user_id === userId)) {
-        const { field_value } = professionFacetsValues.find(({ user_id }) => user_id === userId)
+export const getUserCustomFieldValue = ({ userId, customFacetValues }) => {
+    if (customFacetValues.some(({ user_id }) => user_id === userId)) {
+        const { field_value } = customFacetValues.find(({ user_id }) => user_id === userId)
 
         return JSON.parse(field_value).join(', ')
     } else {
@@ -213,6 +215,7 @@ export const fetchInscriptionsWithStatuses = async (
             },
         })
 
+        const civilityFacetValues = await getCustomFacetValues({ customFieldName: 'Civilit' })
         const coursesAdditionalData = await prisma.former22_course.findMany({
             select: {
                 courseId: true,
@@ -314,6 +317,10 @@ export const fetchInscriptionsWithStatuses = async (
                                           organizationCode: inscription.claro_user.user_organization
                                               ? getOrganizationCode(inscription.claro_user.user_organization)
                                               : null,
+                                          civility: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: civilityFacetValues,
+                                          }),
                                       },
                                   }
                               } catch (error) {
