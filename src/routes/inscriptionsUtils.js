@@ -107,7 +107,7 @@ export const getUserCustomFieldValue = ({ userId, customFacetValues }) => {
     if (customFacetValues.some(({ user_id }) => user_id === userId)) {
         const { field_value } = customFacetValues.find(({ user_id }) => user_id === userId)
 
-        return JSON.parse(field_value).join(', ')
+        return Array.isArray(field_value) ? JSON.parse(field_value).join(', ') : `${field_value}`
     } else {
         return null
     }
@@ -216,6 +216,8 @@ export const fetchInscriptionsWithStatuses = async (
         })
 
         const civilityFacetValues = await getCustomFacetValues({ customFieldName: 'Civilit' })
+        const phoneNumberFacetValues = await getCustomFacetValues({ customFieldName: 'phone portable' })
+        const birthDateFacetValues = await getCustomFacetValues({ customFieldName: 'Date de naissance' })
         const coursesAdditionalData = await prisma.former22_course.findMany({
             select: {
                 courseId: true,
@@ -320,6 +322,14 @@ export const fetchInscriptionsWithStatuses = async (
                                           civility: getUserCustomFieldValue({
                                               userId: inscription.claro_user.id,
                                               customFacetValues: civilityFacetValues,
+                                          }),
+                                          phoneNumber: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: phoneNumberFacetValues,
+                                          }),
+                                          birthDate: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: birthDateFacetValues,
                                           }),
                                       },
                                   }
