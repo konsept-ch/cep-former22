@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { prisma } from '..'
 import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
-import { getProfessionFacetsValues, getUserProfession, parsePhoneForSms } from './inscriptionsUtils'
+import { parsePhoneForSms } from './inscriptionsUtils'
 
 export const usersRouter = Router()
 
@@ -46,14 +46,9 @@ createService(
         })
 
         const usersSettings = await prisma.former22_user.findMany()
-        const professionFacetsValues = await getProfessionFacetsValues()
 
         const enrichedUsersData = users.map((current) => {
             const currentUserSettings = usersSettings.find(({ userId }) => userId === current.uuid)
-            const currentUserProfession = getUserProfession({
-                userId: current.id,
-                professionFacetsValues,
-            })
 
             let enrichedUser = {
                 id: current.uuid,
@@ -71,10 +66,6 @@ createService(
                 const { userId, ...settings } = currentUserSettings
 
                 enrichedUser = { ...enrichedUser, ...settings }
-            }
-
-            if (currentUserProfession) {
-                enrichedUser = { ...enrichedUser, profession: currentUserProfession }
             }
 
             return enrichedUser

@@ -85,6 +85,7 @@ export const parsePhoneForSms = ({ phone }) => {
     }
 }
 
+// TODO: not used in CFFE
 export const getProfessionFacetsValues = async () => {
     const professionFacets = await prisma.claro_field_facet.findMany({
         where: { name: { contains: 'FONCTION PROFESSIONNELLE' } },
@@ -99,6 +100,7 @@ export const getProfessionFacetsValues = async () => {
     return professionFacetsValues
 }
 
+// TODO: not used in CFFE
 export const getUserProfession = ({ userId, professionFacetsValues }) => {
     if (professionFacetsValues.some(({ user_id }) => user_id === userId)) {
         const { field_value } = professionFacetsValues.find(({ user_id }) => user_id === userId)
@@ -211,7 +213,6 @@ export const fetchInscriptionsWithStatuses = async (
             },
         })
 
-        const professionFacetsValues = await getProfessionFacetsValues()
         const coursesAdditionalData = await prisma.former22_course.findMany({
             select: {
                 courseId: true,
@@ -313,10 +314,6 @@ export const fetchInscriptionsWithStatuses = async (
                                           organizationCode: inscription.claro_user.user_organization
                                               ? getOrganizationCode(inscription.claro_user.user_organization)
                                               : null,
-                                          profession: getUserProfession({
-                                              userId: inscription.claro_user.id,
-                                              professionFacetsValues,
-                                          }),
                                       },
                                   }
                               } catch (error) {
@@ -418,10 +415,6 @@ export const fetchInscriptionsWithStatuses = async (
                                 organizationCode: inscription.claro_user.user_organization
                                     ? getOrganizationCode(inscription.claro_user.user_organization)
                                     : null,
-                                profession: getUserProfession({
-                                    userId: inscription.claro_user.id,
-                                    professionFacetsValues,
-                                }),
                             },
                         }
                     })
