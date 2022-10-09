@@ -118,7 +118,11 @@ export const getUserCustomFieldValue = ({ userId, customFacetValues }) => {
         const json = parseStringIfValidJson({ possiblyJsonString: field_value })
 
         // TODO improve handling when neither array nor simple string if such cases ever exist
-        return Array.isArray(json) ? json.join(', ') : `${field_value}`.replace(/^"(.+(?="$))"$/, '$1')
+        return Array.isArray(json)
+            ? json.join(', ')
+            : field_value === '""'
+            ? ''
+            : `${field_value}`.replace(/^"(.+(?="$))"$/, '$1')
     } else {
         return null
     }
@@ -327,8 +331,8 @@ export const fetchInscriptionsWithStatuses = async (
                                           startYear: new Date(start_date).getFullYear(),
                                       },
                                       user: {
-                                          firstName: inscription.claro_user.first_name,
                                           lastName: inscription.claro_user.last_name,
+                                          firstName: inscription.claro_user.first_name,
                                           email: inscription.claro_user.mail,
                                           username: inscription.claro_user.username,
                                           phone: inscription.claro_user.phone,
