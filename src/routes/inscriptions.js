@@ -743,6 +743,7 @@ createService(
                             },
                         })
 
+                        // eslint-disable-next-line no-console
                         console.log(newAttestationsFolder)
 
                         await createResource({ uuid: newAttestationsFolder?.resourceNode?.id })

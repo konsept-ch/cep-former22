@@ -85,6 +85,14 @@ export const parsePhoneForSms = ({ phone }) => {
     }
 }
 
+const parseStringIfValidJson = ({ possiblyJsonString }) => {
+    try {
+        return JSON.parse(possiblyJsonString)
+    } catch (e) {
+        return possiblyJsonString
+    }
+}
+
 export const getCustomFacetValues = async ({ customFieldName }) => {
     const customFacets = await prisma.claro_field_facet.findMany({
         where: { name: { contains: customFieldName } },
@@ -107,7 +115,10 @@ export const getUserCustomFieldValue = ({ userId, customFacetValues }) => {
     if (customFacetValues.some(({ user_id }) => user_id === userId)) {
         const { field_value } = customFacetValues.find(({ user_id }) => user_id === userId)
 
-        return Array.isArray(field_value) ? JSON.parse(field_value).join(', ') : `${field_value}`
+        const json = parseStringIfValidJson({ possiblyJsonString: field_value })
+
+        // TODO improve handling when neither array nor simple string if such cases ever exist
+        return Array.isArray(json) ? json.join(', ') : `${field_value}`.replace(/^"(.+(?="$))"$/, '$1')
     } else {
         return null
     }
@@ -218,6 +229,22 @@ export const fetchInscriptionsWithStatuses = async (
         const civilityFacetValues = await getCustomFacetValues({ customFieldName: 'Civilit' })
         const phoneNumberFacetValues = await getCustomFacetValues({ customFieldName: 'phone portable' })
         const birthDateFacetValues = await getCustomFacetValues({ customFieldName: 'Date de naissance' })
+        const avsNumberFacetValues = await getCustomFacetValues({ customFieldName: 'ro AVS' })
+        const companyNameFacetValues = await getCustomFacetValues({ customFieldName: "Nom de l'entreprise" })
+        const serviceOrSectorInCompanyFacetValues = await getCustomFacetValues({
+            customFieldName: "Service ou secteur dans l'entreprise",
+        })
+        const workplaceAddressFacetValues = await getCustomFacetValues({
+            customFieldName: 'Adresse du lieu de travail',
+        })
+        const homeAddressFacetValues = await getCustomFacetValues({ customFieldName: 'Adresse du domicile' })
+        const additionalAddressInfoFacetValues = await getCustomFacetValues({ customFieldName: 'ment adresse' })
+        const postalCodeFacetValues = await getCustomFacetValues({ customFieldName: 'Code postal' })
+        const localityFacetValues = await getCustomFacetValues({ customFieldName: 'Localit' })
+        const employerFacetValues = await getCustomFacetValues({ customFieldName: 'Employeur' })
+        const diplomaNameFacetValues = await getCustomFacetValues({ customFieldName: 'nom du dipl' })
+        const professionNameFacetValues = await getCustomFacetValues({ customFieldName: 'nom de la profession' })
+
         const coursesAdditionalData = await prisma.former22_course.findMany({
             select: {
                 courseId: true,
@@ -331,9 +358,54 @@ export const fetchInscriptionsWithStatuses = async (
                                               userId: inscription.claro_user.id,
                                               customFacetValues: birthDateFacetValues,
                                           }),
+                                          avsNumber: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: avsNumberFacetValues,
+                                          }),
+                                          companyName: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: companyNameFacetValues,
+                                          }),
+                                          serviceOrSectorInCompany: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: serviceOrSectorInCompanyFacetValues,
+                                          }),
+                                          workplaceAddress: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: workplaceAddressFacetValues,
+                                          }),
+                                          homeAddress: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: homeAddressFacetValues,
+                                          }),
+                                          additionalAddressInfo: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: additionalAddressInfoFacetValues,
+                                          }),
+                                          postalCode: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: postalCodeFacetValues,
+                                          }),
+                                          locality: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: localityFacetValues,
+                                          }),
+                                          employer: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: employerFacetValues,
+                                          }),
+                                          diplomaName: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: diplomaNameFacetValues,
+                                          }),
+                                          professionName: getUserCustomFieldValue({
+                                              userId: inscription.claro_user.id,
+                                              customFacetValues: professionNameFacetValues,
+                                          }),
                                       },
                                   }
                               } catch (error) {
+                                  // eslint-disable-next-line no-console
                                   console.error(error)
                               }
                           })
@@ -443,6 +515,7 @@ export const fetchInscriptionsWithStatuses = async (
             return []
         }
     } catch (error) {
+        // eslint-disable-next-line no-console
         console.error(error)
 
         return -1
