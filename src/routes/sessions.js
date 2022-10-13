@@ -79,15 +79,15 @@ createService(
                 },
                 code: true,
                 claro_cursusbundle_session_event: {
-                    where: {
-                        claro_planned_object: {
-                            claro__location: {
-                                name: {
-                                    equals: 'CEP',
-                                },
-                            },
-                        },
-                    },
+                    // where: {
+                    //     claro_planned_object: {
+                    //         claro__location: {
+                    //             name: {
+                    //                 equals: 'CEP',
+                    //             },
+                    //         },
+                    //     },
+                    // },
                     select: {
                         claro_planned_object: {
                             select: {
