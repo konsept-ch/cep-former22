@@ -18,7 +18,7 @@ module.exports = {
         yoda: ['error', 'never', { exceptRange: true }],
         'object-shorthand': 'error',
         'no-console': 'warn',
-        'no-duplicate-imports': 'error',
+        'no-duplicate-imports': 'off',
         'no-unsafe-optional-chaining': ['error', { disallowArithmeticOperators: true }],
         'no-lone-blocks': 'error',
         'no-return-assign': 'error',

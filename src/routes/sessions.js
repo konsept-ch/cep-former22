@@ -79,15 +79,6 @@ createService(
                 },
                 code: true,
                 claro_cursusbundle_session_event: {
-                    // where: {
-                    //     claro_planned_object: {
-                    //         claro__location: {
-                    //             name: {
-                    //                 equals: 'CEP',
-                    //             },
-                    //         },
-                    //     },
-                    // },
                     select: {
                         claro_planned_object: {
                             select: {
@@ -124,7 +115,6 @@ createService(
                                 user_organization: {
                                     select: {
                                         is_main: true,
-                                        // claro__organization: true, // TODO: wait for Anthony to fix?
                                         claro__organization: {
                                             include: {
                                                 claro_cursusbundle_quota: true,
