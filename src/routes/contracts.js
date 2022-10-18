@@ -3,17 +3,17 @@ import { v4 as uuidv4 } from 'uuid'
 import multer from 'multer'
 
 import { prisma } from '..'
-import { createService, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
+import { createService, LOG_TYPES, contractTemplateFilesDest } from '../utils'
 
-const upload = multer({ dest: attestationTemplateFilesDest })
+const upload = multer({ dest: contractTemplateFilesDest })
 
-export const contractTemplatesRouter = Router()
+export const contractsRouter = Router()
 
 createService(
     'get',
     '/',
     async (_req, res) => {
-        const attestations = await prisma.former22_attestation.findMany({
+        const contracts = await prisma.former22_contract.findMany({
             select: {
                 id: false,
                 uuid: true,
@@ -24,10 +24,10 @@ createService(
             },
         })
 
-        res.json(attestations ?? "Les attestations n'ont pas été trouvés")
+        res.json(contracts ?? "Les contrats n'ont pas été trouvés")
     },
     null,
-    contractTemplatesRouter
+    contractsRouter
 )
 
 createService(
@@ -35,7 +35,7 @@ createService(
     '/',
     async (req, res) => {
         try {
-            const { uuid, title } = await prisma.former22_attestation.create({
+            const { uuid, title } = await prisma.former22_contract.create({
                 data: {
                     uuid: uuidv4(), // can the DB generate this? Should it?
                 },
@@ -46,7 +46,7 @@ createService(
             return {
                 entityName: title, // uses the default value, which is set in the DB structure
                 entityId: uuid,
-                actionName: 'Added an attestation',
+                actionName: 'Added an contract',
             }
         } catch (error) {
             console.error(error)
@@ -54,8 +54,8 @@ createService(
             res.json('Erreur')
         }
     },
-    { entityType: LOG_TYPES.ATTESTATION },
-    contractTemplatesRouter
+    { entityType: LOG_TYPES.CONTRACT },
+    contractsRouter
 )
 
 createService(
@@ -68,7 +68,7 @@ createService(
         const { file: { originalname, filename } = {} } = req
 
         try {
-            await prisma.former22_attestation.update({
+            await prisma.former22_contract.update({
                 where: {
                     uuid,
                 },
@@ -80,12 +80,12 @@ createService(
                 },
             })
 
-            res.json("L'attestation a été modifié")
+            res.json('Le contrat a été modifié')
 
             return {
                 entityName: title,
                 entityId: uuid,
-                actionName: 'Updated an attestation',
+                actionName: 'Updated an contract',
             }
         } catch (error) {
             console.error(error)
@@ -93,8 +93,8 @@ createService(
             res.json('Erreur')
         }
     },
-    { entityType: LOG_TYPES.ATTESTATION },
-    contractTemplatesRouter,
+    { entityType: LOG_TYPES.CONTRACT },
+    contractsRouter,
     upload.single('file')
 )
 
@@ -103,41 +103,20 @@ createService(
     '/:uuid',
     async (req, res) => {
         const { uuid } = req.params
-        const { shouldForceDelete } = req.query
-
-        if (!shouldForceDelete) {
-            const isAttestationUsed =
-                (
-                    await prisma.former22_attestation.findUnique({
-                        where: {
-                            uuid,
-                        },
-                        include: {
-                            former22_inscription: true,
-                        },
-                    })
-                )?.former22_inscription.length > 0
-
-            if (isAttestationUsed) {
-                res.status(400).json({ error: 'Attestation template is used and therefore cannot be deleted.' })
-
-                return {}
-            }
-        }
 
         try {
-            const { title } = await prisma.former22_attestation.delete({
+            const { title } = await prisma.former22_contract.delete({
                 where: {
                     uuid,
                 },
             })
 
-            res.json("L'attestation a été supprimé")
+            res.json('Le contrat a été supprimé')
 
             return {
                 entityName: title,
                 entityId: uuid,
-                actionName: 'Deleted an attestation',
+                actionName: 'Deleted an contract',
             }
         } catch (error) {
             console.error(error)
@@ -147,6 +126,6 @@ createService(
             return {}
         }
     },
-    { entityType: LOG_TYPES.ATTESTATION },
-    contractTemplatesRouter
+    { entityType: LOG_TYPES.CONTRACT },
+    contractsRouter
 )

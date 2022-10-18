@@ -5401,19 +5401,23 @@ model former22_inscription {
 }
 
 model former22_course {
-  courseId       String   @id @db.VarChar(255)
-  coordinator    String?  @db.Text
-  responsible    String?  @db.Text
-  typeStage      String?  @db.Text
-  teachingMethod String?  @db.Text
-  codeCategory   String?  @db.Text
-  theme          String?  @db.Text
-  targetAudience String?  @db.Text
-  billingMode    String?  @db.Text
-  pricingType    String?  @db.Text
-  baseRate       Float?   @db.Float
-  isRecurrent    Boolean? @default(false)
-  goals          String?  @db.Text
+  courseId          String             @id @db.VarChar(255)
+  coordinator       String?            @db.Text
+  responsible       String?            @db.Text
+  typeStage         String?            @db.Text
+  teachingMethod    String?            @db.Text
+  codeCategory      String?            @db.Text
+  theme             String?            @db.Text
+  targetAudience    String?            @db.Text
+  billingMode       String?            @db.Text
+  pricingType       String?            @db.Text
+  baseRate          Float?             @db.Float
+  isRecurrent       Boolean?           @default(false)
+  goals             String?            @db.Text
+  contractId        Int?
+  former22_contract former22_contract? @relation(fields: [contractId], references: [id], onUpdate: NoAction, map: "fk_course_contract")
+
+  @@index([contractId], map: "course_index")
 }
 
 model former22_error_report {
@@ -5664,4 +5668,14 @@ model icap__socialmedia_wall_item {
   @@index([like_id], map: "IDX_436BC420859BFA32")
   @@index([user_id], map: "IDX_436BC420A76ED395")
   @@index([comment_id], map: "IDX_436BC420F8697D13")
+}
+
+model former22_contract {
+  id               Int               @id @default(autoincrement())
+  uuid             String            @unique(map: "uuid") @db.VarChar(36)
+  title            String?           @default("Nouveau modèle de contrat") @db.VarChar(255)
+  description      String?           @db.Text
+  fileStoredName   String?           @db.VarChar(255)
+  fileOriginalName String?           @db.Text
+  former22_course  former22_course[]
 }
