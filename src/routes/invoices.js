@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
 import { createService, formatDate, LOG_TYPES } from '../utils'
@@ -139,75 +140,95 @@ createService(
     'get',
     '/manual',
     async (req, res) => {
-        const manualInvoices = [
-            {
-                id: '0-1-1', // primary key
-                // -----> client address
-                organizationId: 1, // is foreignkey
-                organizationUuid: 'af9a3bba-941e-4c03-956e-b748acea4bd7',
-                customClientEmail: 'test@example.com',
-                customClientAddress: `Adresse custom
-multi-ligne`,
-                // -----> vat code
-                vatCode: 'TVA 7.7%', // can be also 'EXONERE'
-                // -----> invoice date
-                invoiceDate: '2022-06-22T21:15:21.000Z', // date is required and with no default value. FE will provide
-                // -----> invoice number
-                courseYear: 2022, //Front end field is called 'Exercice'
-                creatorCode: 1,
-                invoiceNumberForCurrentYear: 1,
-                // -----> Concerne
-                invoiceReason: 'Explication de la raison du document', // field Concerne
-                items: [
-                    {
-                        designation: `Formation catalogue de M. Marc Pittet
-Méconnaissance de soit
-Dates: ...`, // multi-line
-                        unit: 'jours', // heures ou jours, drop-down
-                        amount: 2,
-                        price: 130,
+        const invoices = await prisma.former22_manual_invoice.findMany({
+            select: {
+                uuid: true,
+                claro_user: {
+                    select: {
+                        uuid: true,
+                        first_name: true,
+                        last_name: true,
                     },
-                    {
-                        designation: `Formation sur mesure
-Méconnaissance de soit
-Dates: ...
-14 participant.e.s`,
-                        unit: 'heures',
-                        amount: 1,
-                        price: 60,
+                },
+                claro__organization: {
+                    select: {
+                        uuid: true,
+                        name: true,
                     },
-                ],
+                },
+                invoiceNumberForCurrentYear: true,
+                customClientEmail: true,
+                customClientAddress: true,
+                invoiceDate: true,
+                courseYear: true,
+                itemDesignations: true,
+                itemUnits: true,
+                itemAmounts: true,
+                itemPrices: true,
+                itemVatCodes: true,
             },
-            {
-                id: '0-1-2',
-                organizationId: 2,
-                organizationUuid: '56014d29-79df-46d4-b073-2edda57236c9',
-                customClientAddress: 'Adresse du client custom 2',
-                customClientEmail: 'test@example.com',
-                vatCode: 'EXONERE',
-                invoiceDate: '2024-06-22T21:15:21.000Z',
-                courseYear: 2023,
-                creatorCode: 1,
-                invoiceNumberForCurrentYear: 1,
-                invoiceReason: 'Explication de la raison du document',
-                items: [
-                    {
-                        designation: `Formation catalogue`,
-                        unit: 'jours',
-                        amount: 2,
-                        price: 130,
-                    },
-                    {
-                        designation: `Formation sur mesure`,
-                        unit: 'heures',
-                        amount: 1,
-                        price: 60,
-                    },
-                ],
-            },
-        ]
+        })
 
-        res.json(manualInvoices)
+        res.json(
+            invoices.map(
+                ({
+                    uuid,
+                    claro_user: { uuid: userUuid, first_name: firstName, last_name: lastName },
+                    claro__organization: { uuid: organizationUuid, name: organizationName },
+                    invoiceNumberForCurrentYear,
+                    customClientEmail,
+                    customClientAddress,
+                    invoiceDate,
+                    courseYear,
+                    itemDesignations,
+                    itemUnits,
+                    itemAmounts,
+                    itemPrices,
+                    itemVatCodes,
+                }) => ({
+                    uuid,
+                    user: {
+                        uuid: userUuid,
+                        firstName,
+                        lastName,
+                    },
+                    organizationUuid,
+                    organizationName,
+                    invoiceNumberForCurrentYear,
+                    customClientEmail,
+                    customClientAddress,
+                    invoiceDate,
+                    courseYear,
+                    itemDesignations,
+                    itemUnits,
+                    itemAmounts,
+                    itemPrices,
+                    itemVatCodes,
+                })
+            )
+        )
+    },
+    null,
+    invoicesRouter
+)
+
+createService(
+    'post',
+    '/manual',
+    async (req, res) => {
+        try {
+            const { invoice } = req.body
+
+            // TODO handle foreign keys from uuid to id
+            const { uuid } = await prisma.former22_manual_invoice.create({
+                data: { ...invoice, uuid: uuidv4() },
+            })
+
+            res.json(uuid)
+        } catch (error) {
+            console.error(error)
+            res.status(500).send({ error: 'Error' })
+        }
     },
     null,
     invoicesRouter

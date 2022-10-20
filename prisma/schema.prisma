@@ -243,6 +243,7 @@ model claro__organization {
   claro_cursusbundle_cursus_organizations claro_cursusbundle_cursus_organizations[]
   claro_cursusbundle_quota                claro_cursusbundle_quota?
   claro_user_administrator                claro_user_administrator[]
+  former22_manual_invoice                 former22_manual_invoice[]
   former22_organization                   former22_organization?
   group_organization                      group_organization[]
   user_organization                       user_organization[]
@@ -3411,6 +3412,7 @@ model claro_user {
   claro_workspace_recent                                                                                                      claro_workspace_recent[]
   claro_workspace_registration_queue                                                                                          claro_workspace_registration_queue[]
   claro_workspace_requirements                                                                                                claro_workspace_requirements[]
+  former22_manual_invoice                                                                                                     former22_manual_invoice[]
   hevinci_ability_progress                                                                                                    hevinci_ability_progress[]
   hevinci_competency_progress                                                                                                 hevinci_competency_progress[]
   hevinci_competency_progress_log                                                                                             hevinci_competency_progress_log[]
@@ -5370,76 +5372,6 @@ model workspace_organization {
   @@index([workspace_id], map: "IDX_D212AD8082D40A1F")
 }
 
-model doctrine_clarolinebookingbundle_versions {
-  version String @id @db.VarChar(255)
-}
-
-model icap__socialmedia_comment {
-  id                          Int                           @id @default(autoincrement())
-  resource_id                 Int?
-  user_id                     Int?
-  text                        String?                       @db.LongText
-  url                         String?                       @db.VarChar(255)
-  title                       String?                       @db.VarChar(255)
-  creation_date               DateTime                      @db.DateTime(0)
-  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6FC00C3089329D25")
-  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6FC00C30A76ED395")
-  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
-
-  @@index([resource_id], map: "IDX_6FC00C3089329D25")
-  @@index([user_id], map: "IDX_6FC00C30A76ED395")
-}
-
-model icap__socialmedia_note {
-  id                  Int                  @id @default(autoincrement())
-  resource_id         Int?
-  user_id             Int?
-  text                String?              @db.LongText
-  url                 String?              @db.VarChar(255)
-  title               String?              @db.VarChar(255)
-  creation_date       DateTime             @db.DateTime(0)
-  claro_resource_node claro_resource_node? @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F46173789329D25")
-  claro_user          claro_user?          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F461737A76ED395")
-
-  @@index([resource_id], map: "IDX_1F46173789329D25")
-  @@index([user_id], map: "IDX_1F461737A76ED395")
-}
-
-model icap__socialmedia_share {
-  id                          Int                           @id @default(autoincrement())
-  resource_id                 Int?
-  user_id                     Int?
-  network                     String?                       @db.VarChar(255)
-  url                         String?                       @db.VarChar(255)
-  title                       String?                       @db.VarChar(255)
-  creation_date               DateTime                      @db.DateTime(0)
-  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4DB117C589329D25")
-  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4DB117C5A76ED395")
-  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
-
-  @@index([resource_id], map: "IDX_4DB117C589329D25")
-  @@index([user_id], map: "IDX_4DB117C5A76ED395")
-}
-
-model icap__socialmedia_wall_item {
-  id                        Int                        @id @default(autoincrement())
-  like_id                   Int?
-  share_id                  Int?
-  comment_id                Int?
-  user_id                   Int?
-  creation_date             DateTime                   @db.DateTime(0)
-  visible                   Boolean
-  icap__socialmedia_share   icap__socialmedia_share?   @relation(fields: [share_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC4202AE63FDB")
-  icap__socialmedia_like    icap__socialmedia_like?    @relation(fields: [like_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420859BFA32")
-  claro_user                claro_user?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420A76ED395")
-  icap__socialmedia_comment icap__socialmedia_comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420F8697D13")
-
-  @@index([share_id], map: "IDX_436BC4202AE63FDB")
-  @@index([like_id], map: "IDX_436BC420859BFA32")
-  @@index([user_id], map: "IDX_436BC420A76ED395")
-  @@index([comment_id], map: "IDX_436BC420F8697D13")
-}
-
 model former22_auth_codes {
   email         String  @id @db.VarChar(255)
   code          String? @db.VarChar(255)
@@ -5636,4 +5568,98 @@ model former22_attestation {
   fileStoredName       String?                @db.VarChar(255)
   fileOriginalName     String?                @db.Text
   former22_inscription former22_inscription[]
+}
+
+model former22_manual_invoice {
+  id                          Int                 @id @default(autoincrement())
+  uuid                        String              @db.VarChar(255)
+  organizationId              Int
+  creatorUserId               Int
+  invoiceNumberForCurrentYear Int
+  customClientEmail           String?             @db.Text
+  customClientAddress         String?             @db.Text
+  invoiceDate                 DateTime?           @db.DateTime(0)
+  courseYear                  Int
+  itemDesignations            String?             @db.Text
+  itemUnits                   String?             @db.Text
+  itemAmounts                 String?             @db.Text
+  itemPrices                  String?             @db.Text
+  itemVatCodes                String?             @db.Text
+  createdAt                   DateTime            @default(now()) @db.DateTime(0)
+  updatedAt                   DateTime            @default(now()) @db.DateTime(0)
+  claro_user                  claro_user          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
+  claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
+
+  @@index([creatorUserId], map: "creator_user_index")
+  @@index([organizationId], map: "organization_index")
+}
+
+model doctrine_clarolinebookingbundle_versions {
+  version String @id @db.VarChar(255)
+}
+
+model icap__socialmedia_comment {
+  id                          Int                           @id @default(autoincrement())
+  resource_id                 Int?
+  user_id                     Int?
+  text                        String?                       @db.LongText
+  url                         String?                       @db.VarChar(255)
+  title                       String?                       @db.VarChar(255)
+  creation_date               DateTime                      @db.DateTime(0)
+  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6FC00C3089329D25")
+  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6FC00C30A76ED395")
+  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
+
+  @@index([resource_id], map: "IDX_6FC00C3089329D25")
+  @@index([user_id], map: "IDX_6FC00C30A76ED395")
+}
+
+model icap__socialmedia_note {
+  id                  Int                  @id @default(autoincrement())
+  resource_id         Int?
+  user_id             Int?
+  text                String?              @db.LongText
+  url                 String?              @db.VarChar(255)
+  title               String?              @db.VarChar(255)
+  creation_date       DateTime             @db.DateTime(0)
+  claro_resource_node claro_resource_node? @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F46173789329D25")
+  claro_user          claro_user?          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F461737A76ED395")
+
+  @@index([resource_id], map: "IDX_1F46173789329D25")
+  @@index([user_id], map: "IDX_1F461737A76ED395")
+}
+
+model icap__socialmedia_share {
+  id                          Int                           @id @default(autoincrement())
+  resource_id                 Int?
+  user_id                     Int?
+  network                     String?                       @db.VarChar(255)
+  url                         String?                       @db.VarChar(255)
+  title                       String?                       @db.VarChar(255)
+  creation_date               DateTime                      @db.DateTime(0)
+  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4DB117C589329D25")
+  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4DB117C5A76ED395")
+  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
+
+  @@index([resource_id], map: "IDX_4DB117C589329D25")
+  @@index([user_id], map: "IDX_4DB117C5A76ED395")
+}
+
+model icap__socialmedia_wall_item {
+  id                        Int                        @id @default(autoincrement())
+  like_id                   Int?
+  share_id                  Int?
+  comment_id                Int?
+  user_id                   Int?
+  creation_date             DateTime                   @db.DateTime(0)
+  visible                   Boolean
+  icap__socialmedia_share   icap__socialmedia_share?   @relation(fields: [share_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC4202AE63FDB")
+  icap__socialmedia_like    icap__socialmedia_like?    @relation(fields: [like_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420859BFA32")
+  claro_user                claro_user?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420A76ED395")
+  icap__socialmedia_comment icap__socialmedia_comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420F8697D13")
+
+  @@index([share_id], map: "IDX_436BC4202AE63FDB")
+  @@index([like_id], map: "IDX_436BC420859BFA32")
+  @@index([user_id], map: "IDX_436BC420A76ED395")
+  @@index([comment_id], map: "IDX_436BC420F8697D13")
 }
