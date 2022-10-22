@@ -24,6 +24,7 @@ createService(
                     select: {
                         uuid: true,
                         name: true,
+                        code: true,
                         former22_organization: {
                             select: {
                                 clientNumber: true,
@@ -41,6 +42,13 @@ createService(
                 itemAmounts: true,
                 itemPrices: true,
                 itemVatCodes: true,
+            },
+        })
+
+        const usersAdditionalData = await prisma.former22_user.findMany({
+            select: {
+                userId: true,
+                cfNumber: true,
             },
         })
 
@@ -70,6 +78,7 @@ createService(
                         uuid: userUuid,
                         firstName,
                         lastName,
+                        cfNumber: usersAdditionalData.find(({ userId }) => userId === userUuid)?.cfNumber,
                     },
                     organizationUuid,
                     organizationName,
@@ -97,11 +106,42 @@ createService(
     '/',
     async (req, res) => {
         try {
-            const { invoice } = req.body
+            const {
+                customClientEmail,
+                customClientAddress,
+                invoiceDate,
+                courseYear,
+                itemDesignations,
+                itemUnits,
+                itemAmounts,
+                itemPrices,
+                itemVatCodes,
+            } = req.body
+
+            const [lastInvoiceForSameCourseYear] = await prisma.former22_manual_invoice.findMany({
+                where: {
+                    courseYear,
+                },
+                orderBy: {
+                    invoiceNumberForCurrentYear: 'desc',
+                },
+            })
 
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.create({
-                data: { ...invoice, uuid: uuidv4() },
+                data: {
+                    uuid: uuidv4(),
+                    invoiceNumberForCurrentYear: lastInvoiceForSameCourseYear.invoiceNumberForCurrentYear,
+                    customClientEmail,
+                    customClientAddress,
+                    invoiceDate,
+                    courseYear,
+                    itemDesignations,
+                    itemUnits,
+                    itemAmounts,
+                    itemPrices,
+                    itemVatCodes,
+                },
             })
 
             res.json(uuid)
