@@ -52,6 +52,8 @@ createService(
             },
         })
 
+        console.log(invoices)
+
         res.json(
             invoices.map(
                 ({
@@ -73,7 +75,7 @@ createService(
                     itemPrices,
                     itemVatCodes,
                 }) => ({
-                    uuid,
+                    id: uuid,
                     user: {
                         uuid: userUuid,
                         firstName,
@@ -107,6 +109,7 @@ createService(
     async (req, res) => {
         try {
             const {
+                client,
                 customClientEmail,
                 customClientAddress,
                 invoiceDate,
@@ -118,6 +121,8 @@ createService(
                 itemVatCodes,
             } = req.body
 
+            const { ['x-login-email-address']: cfEmail } = req.headers
+
             const [lastInvoiceForSameCourseYear] = await prisma.former22_manual_invoice.findMany({
                 where: {
                     courseYear,
@@ -127,11 +132,25 @@ createService(
                 },
             })
 
+            const { id: organizationId } = await prisma.claro__organization.findUnique({
+                where: {
+                    uuid: client.uuid,
+                },
+            })
+
+            const { id: creatorUserId } = await prisma.claro_user.findUnique({
+                where: {
+                    mail: cfEmail,
+                },
+            })
+
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.create({
                 data: {
                     uuid: uuidv4(),
-                    invoiceNumberForCurrentYear: lastInvoiceForSameCourseYear.invoiceNumberForCurrentYear,
+                    creatorUserId,
+                    organizationId,
+                    invoiceNumberForCurrentYear: lastInvoiceForSameCourseYear?.invoiceNumberForCurrentYear ?? 1,
                     customClientEmail,
                     customClientAddress,
                     invoiceDate,

@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
 import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
+import cookieParser from 'cookie-parser'
 
 import { generateEndpoints } from './expressEndpoints' // deprecated, use routes instead
 
@@ -33,6 +34,7 @@ export const app = express()
 app.use(cors())
 app.use(logger('dev'))
 app.use(express.json({ limit: '50mb' }))
+app.use(cookieParser())
 // app.use(express.urlencoded({ extended: false })) // TODO check if needed
 
 // const port = process.env.PORT ?? 4000
