@@ -48,6 +48,7 @@ createService(
                 code: true,
                 former22_organization: {
                     select: {
+                        clientNumber: true,
                         addressTitle: true,
                         postalAddressCode: true,
                         postalAddressCountry: true,

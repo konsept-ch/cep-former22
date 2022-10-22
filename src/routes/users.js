@@ -91,12 +91,12 @@ createService(
     '/:userId',
     async (req, res) => {
         const { userId } = req.params
-        const { shouldReceiveSms, colorCode } = req.body
+        const { shouldReceiveSms, colorCode, cfNumber } = req.body
 
         await prisma.former22_user.upsert({
             where: { userId },
-            update: { shouldReceiveSms, colorCode },
-            create: { shouldReceiveSms, colorCode, userId },
+            update: { shouldReceiveSms, colorCode, cfNumber },
+            create: { shouldReceiveSms, colorCode, cfNumber, userId },
         })
 
         res.json("L'utilisateur a été modifié")
