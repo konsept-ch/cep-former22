@@ -4,6 +4,7 @@ CREATE TABLE
         uuid VARCHAR(255) NOT NULL COMMENT 'The UUID of the invoice',
         organizationId INT NOT NULL COMMENT 'The selected organization of the invoice (foreign key)',
         creatorUserId INTEGER NOT NULL COMMENT 'The CF user ID of the invoice (foreign key)',
+        invoiceStatus TEXT COMMENT 'The status of the invoice',
         invoiceNumberForCurrentYear INTEGER NOT NULL COMMENT 'The number of the invoice for the current year',
         customClientEmail TEXT COMMENT 'The custom client e-mail of the invoice',
         customClientAddress TEXT COMMENT 'The custom client address of the invoice',

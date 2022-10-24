@@ -5448,6 +5448,7 @@ model former22_user {
   userId           String   @id @db.VarChar(255)
   shouldReceiveSms Boolean?
   colorCode        String?  @db.VarChar(255)
+  cfNumber         Int?
 }
 
 model former22_organization {
@@ -5587,6 +5588,7 @@ model former22_manual_invoice {
   itemVatCodes                String?             @db.Text
   createdAt                   DateTime            @default(now()) @db.DateTime(0)
   updatedAt                   DateTime            @default(now()) @db.DateTime(0)
+  invoiceStatus               String?             @db.VarChar(255)
   claro_user                  claro_user          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
   claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
 
