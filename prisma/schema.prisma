@@ -5433,6 +5433,7 @@ model former22_session {
   areInvitesSent  Boolean?
   sessionFormat   String?  @db.Text
   sessionLocation String?  @db.Text
+  fees            Float?   @default(0) @db.Float
 }
 
 model former22_log {
@@ -5678,4 +5679,9 @@ model former22_contract {
   fileStoredName   String?           @db.VarChar(255)
   fileOriginalName String?           @db.Text
   former22_course  former22_course[]
+}
+
+model former22_event {
+  eventId    String   @id @db.VarChar(255)
+  isFeesPaid Boolean? @default(false)
 }

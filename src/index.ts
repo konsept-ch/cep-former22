@@ -16,6 +16,7 @@ import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { attestationsRouter } from './routes/attestations'
 import { contractsRouter } from './routes/contracts'
+import { eventsRouter } from './routes/events'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
 import { manualInvoicesRouter } from './routes/manual-invoices'
@@ -87,6 +88,7 @@ app.use('/courses', coursesRouter)
 app.use('/mail', mailRouter)
 app.use('/attestations', attestationsRouter)
 app.use('/contracts', contractsRouter)
+app.use('/events', eventsRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
 app.use('/manual-invoices', manualInvoicesRouter)
