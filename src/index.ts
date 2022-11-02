@@ -15,7 +15,7 @@ import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { attestationsRouter } from './routes/attestations'
-import { contractsRouter } from './routes/contracts'
+import { contractTemplatesRouter } from './routes/contractTemplates'
 import { eventsRouter } from './routes/events'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
@@ -26,6 +26,7 @@ import { sessionsRouter } from './routes/sessions'
 import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
+import { contractsRouter } from './routes/contracts'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -87,7 +88,7 @@ app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
 app.use('/mail', mailRouter)
 app.use('/attestations', attestationsRouter)
-app.use('/contracts', contractsRouter)
+app.use('/contract-templates', contractTemplatesRouter)
 app.use('/events', eventsRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
@@ -97,6 +98,7 @@ app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
 app.use('/reception', receptionRouter)
+app.use('/contracts', contractsRouter)
 
 app.get('/', (_req, res) => {
     const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({

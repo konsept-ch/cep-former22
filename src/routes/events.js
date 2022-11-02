@@ -17,6 +17,7 @@ createService(
             const events = await prisma.former22_event.findMany({
                 select: {
                     eventId: true,
+                    fees: true,
                     isFeesPaid: true,
                 },
             })
@@ -26,12 +27,13 @@ createService(
                     fees: true,
                 },
             })
-            const courses = await prisma.former22_course.findMany({
+            /*const contracts = await prisma.former22_contract.findMany({
                 select: {
+                    userId: true,
                     courseId: true,
-                    former22_contract: true,
+                    templateId: true,
                 },
-            })
+            })*/
 
             const subscriptions = await prisma.claro_cursusbundle_session_event_user.findMany({
                 where: {
@@ -55,7 +57,6 @@ createService(
                             },
                             claro_cursusbundle_course_session: {
                                 select: {
-                                    id: true,
                                     uuid: true,
                                     course_name: true,
                                     claro_cursusbundle_course: {
@@ -71,74 +72,13 @@ createService(
                     },
                     claro_user: {
                         select: {
-                            id: true,
+                            uuid: true,
                             first_name: true,
                             last_name: true,
                         },
                     },
                 },
             })
-
-            /*const eventMap = events.reduce((acc, event) => acc.set(event.eventId, event), new Map())
-            const sessionMap = sessions.reduce((acc, session) => acc.set(session.sessionId, session), new Map())
-            const courseMap = courses.reduce((acc, course) => acc.set(course.courseId, course), new Map())*/
-
-            /*const relatedSessionMap = new Map()
-            for (const {
-                claro_cursusbundle_session_event: {
-                    uuid,
-                    claro_planned_object: { start_date, end_date },
-                    claro_cursusbundle_course_session: session,
-                },
-            } of subscriptions) {
-                if (!relatedSessionMap.has(session.id)) {
-                    relatedSessionMap.set(session.id, {
-                        uuid: session.uuid,
-                        name: session.course_name,
-                        events: [],
-                    })
-                }
-                relatedSessionMap.get(session.id).events.push({
-                    uuid,
-                    start_date,
-                    end_date,
-                })
-            }
-
-            const relatedCourseMap = new Map()
-            for (const {
-                claro_cursusbundle_session_event: {
-                    claro_cursusbundle_course_session: { id, claro_cursusbundle_course: course },
-                },
-            } of subscriptions) {
-                if (!relatedCourseMap.has(course.id)) {
-                    relatedCourseMap.set(course.id, {
-                        uuid: course.uuid,
-                        name: course.course_name,
-                        sessions: [],
-                    })
-                }
-                relatedCourseMap.get(course.id).sessions.push(relatedSessionMap.get(id))
-            }
-
-            const relatedUserMap = new Map()
-            for (const {
-                claro_user: user,
-                claro_cursusbundle_session_event: {
-                    claro_cursusbundle_course_session: { claro_cursusbundle_course: course },
-                },
-            } of subscriptions) {
-                if (!relatedUserMap.has(user.id)) {
-                    relatedUserMap.set(user.id, {
-                        uuid: user.uuid,
-                        firstname: user.first_name,
-                        lastname: user.last_name,
-                        courses: [],
-                    })
-                }
-                relatedUserMap.get(user.id).courses.push(relatedCourseMap.get(course.id))
-            }
-            const result = Array.from(relatedUserMap.values())*/
 
             const result = subscriptions.map(({ id, claro_user: user, claro_cursusbundle_session_event: event }) => {
                 const planned = event.claro_planned_object
@@ -147,7 +87,10 @@ createService(
 
                 const extendEvent = events.find(({ eventId }) => eventId === event.uuid)
                 const extendSession = sessions.find(({ sessionId }) => sessionId === session.uuid)
-                const extendCourse = courses.find(({ courseId }) => courseId === course.uuid)
+                /*const contract = contracts.findFirst(
+                    ({ courseId, userId }) => courseId === course.uuid && userId === user.uuid
+                )*/
+                const contract = null
 
                 const date = Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(
                     planned.start_date
@@ -172,9 +115,10 @@ createService(
                     locationName: planned.claro__location?.name,
                     sessionName: session.course_name,
                     courseName: course.course_name,
-                    fees: extendSession ? extendSession.fees : 0,
+                    sessionFees: extendSession ? extendSession.fees : 0,
+                    eventFees: extendEvent ? extendEvent.fees : 0,
                     isFeesPaid: extendEvent ? extendEvent.isFeesPaid : false,
-                    contract: extendCourse ? extendCourse.former22_contract : null,
+                    contract: contract || null,
                 }
             })
 
