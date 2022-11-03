@@ -5429,7 +5429,6 @@ model former22_session {
   areInvitesSent  Boolean?
   sessionFormat   String?  @db.Text
   sessionLocation String?  @db.Text
-  fees            Float?   @default(0) @db.Float
 }
 
 model former22_log {

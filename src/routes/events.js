@@ -21,19 +21,13 @@ createService(
                     isFeesPaid: true,
                 },
             })
-            const sessions = await prisma.former22_session.findMany({
-                select: {
-                    sessionId: true,
-                    fees: true,
-                },
-            })
-            /*const contracts = await prisma.former22_contract.findMany({
+            const contracts = await prisma.former22_contract.findMany({
                 select: {
                     userId: true,
                     courseId: true,
                     templateId: true,
                 },
-            })*/
+            })
 
             const subscriptions = await prisma.claro_cursusbundle_session_event_user.findMany({
                 where: {
@@ -86,11 +80,9 @@ createService(
                 const course = session.claro_cursusbundle_course
 
                 const extendEvent = events.find(({ eventId }) => eventId === event.uuid)
-                const extendSession = sessions.find(({ sessionId }) => sessionId === session.uuid)
-                /*const contract = contracts.findFirst(
+                const contract = contracts.find(
                     ({ courseId, userId }) => courseId === course.uuid && userId === user.uuid
-                )*/
-                const contract = null
+                )
 
                 const date = Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(
                     planned.start_date
@@ -115,7 +107,6 @@ createService(
                     locationName: planned.claro__location?.name,
                     sessionName: session.course_name,
                     courseName: course.course_name,
-                    sessionFees: extendSession ? extendSession.fees : 0,
                     eventFees: extendEvent ? extendEvent.fees : 0,
                     isFeesPaid: extendEvent ? extendEvent.isFeesPaid : false,
                     contract: contract || null,
