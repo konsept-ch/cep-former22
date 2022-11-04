@@ -100,6 +100,35 @@ createService(
                             id: true,
                             first_name: true,
                             last_name: true,
+                            claro_field_facet_value: {
+                                where: {
+                                    claro_field_facet: {
+                                        type: 'choice',
+                                        name: 'CIVILITÉ',
+                                    },
+                                },
+                                select: {
+                                    claro_field_facet: {
+                                        select: {
+                                            name: true,
+                                            type: true,
+                                        },
+                                    },
+                                    field_value: true,
+                                },
+                            },
+                            user_organization: {
+                                where: {
+                                    is_main: true,
+                                },
+                                select: {
+                                    claro__organization: {
+                                        select: {
+                                            name: true,
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                 },
@@ -116,6 +145,8 @@ createService(
             ).reduce((map, event) => map.set(event.eventId, event), new Map())
 
             const user = subscriptions[0].claro_user
+            const organization = user.user_organization[0]?.claro__organization.name || 'Indéterminé'
+            const civility = user.claro_field_facet_value[0]?.field_value.replaceAll('"', '') || 'Indéterminé'
             const course =
                 subscriptions[0].claro_cursusbundle_session_event.claro_cursusbundle_course_session
                     .claro_cursusbundle_course
@@ -130,8 +161,9 @@ createService(
             })
 
             doc.render({
-                FORMATEUR_CIVILITE: 'Madame', // TODO search value where user -> claro_field_facet_value -> claro_field_facet (name: "Civilité")
+                FORMATEUR_CIVILITE: civility,
                 FORMATEUR_NOM: `${user.first_name} ${user.last_name}`,
+                FORMATEUR_ORGANISATION: organization,
                 COURS_NOM: course.course_name,
                 SESSION_CODE: subscriptions.reduce(
                     (array, subscription) => [
