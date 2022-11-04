@@ -4,13 +4,41 @@ import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import fs from 'fs'
 import path from 'path'
-//import libre from 'libreoffice-convert'
+import libre from 'libreoffice-convert'
 
 import { prisma } from '..'
-import { createService, LOG_TYPES, contractTemplateFilesDest } from '../utils'
+import { createService, LOG_TYPES, contractTemplateFilesDest, contractFilesDest } from '../utils'
 import { CloneRowModule } from '../cloneRowModule'
 
 export const contractsRouter = Router()
+
+createService(
+    'get',
+    '/:id',
+    async (req, res) => {
+        try {
+            const contract = await prisma.former22_contract.findUnique({
+                where: {
+                    uuid: req.params.id,
+                },
+            })
+
+            res.download(`${contractFilesDest}/${contract.uuid}.pdf`)
+
+            return {
+                entityName: 'Contract',
+                entityId: contract.uuid,
+                actionName: 'Downloaded an contract',
+            }
+        } catch (error) {
+            console.error(error)
+
+            res.json('Erreur')
+        }
+    },
+    { entityType: LOG_TYPES.CONTRACT },
+    contractsRouter
+)
 
 createService(
     'put',
@@ -207,26 +235,22 @@ createService(
                 // compression: 'DEFLATE',
             })
 
-            fs.writeFileSync('/mnt/c/Users/anthony/Desktop/cep/generated_by_WSL.docx', docxBuf)
+            const filename = `${contract.uuid}.pdf`
+            const pdfBuf = await libre.convertAsync(docxBuf, 'pdf', undefined)
 
-            /*const ext = '.pdf'
-
-            // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
-            const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
-            const pdfFileName = `${template.fileStoredName}${ext}`
-            const originalPdfName = `${template.fileOriginalName}${ext}`*/
+            fs.writeFileSync(`${contractFilesDest}/${filename}`, pdfBuf)
 
             res.json(true)
 
             return {
                 entityName: 'Contract',
                 entityId: contract.uuid,
-                actionName: 'Created an contract',
+                actionName: 'Updated an contract',
             }
         } catch (error) {
             console.error(error)
 
-            res.json('Erreur')
+            res.status(500).json(error)
         }
     },
     { entityType: LOG_TYPES.CONTRACT },

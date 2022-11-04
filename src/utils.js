@@ -7,6 +7,7 @@ import { winstonLogger } from './winston'
 
 export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
 export const contractTemplateFilesDest = '/data/uploads/contract-templates'
+export const contractFilesDest = '/data/uploads/contracts'
 
 // for testing/development purposes only
 export const delay = (ms) => new Promise((res) => setTimeout(res, ms))

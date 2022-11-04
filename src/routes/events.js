@@ -23,9 +23,9 @@ createService(
             })
             const contracts = await prisma.former22_contract.findMany({
                 select: {
+                    uuid: true,
                     userId: true,
                     courseId: true,
-                    templateId: true,
                 },
             })
 
@@ -109,7 +109,7 @@ createService(
                     courseName: course.course_name,
                     eventFees: extendEvent ? extendEvent.fees : 0,
                     isFeesPaid: extendEvent ? extendEvent.isFeesPaid : false,
-                    contract: contract || null,
+                    contract: contract?.uuid || null,
                 }
             })
 
