@@ -29,7 +29,7 @@ export class CloneRowModule {
                     this.rows.push({
                         start: rowStart,
                         end: part.lIndex,
-                        parts: [...tmp],
+                        parts: tmp,
                     })
                     rowStart = -1
                 }
@@ -49,21 +49,26 @@ export class CloneRowModule {
         if (part.lIndex >= row.start && part.lIndex <= row.end) {
             if (part.lIndex !== row.end) return { value: '' }
 
-            const count = this.data[row.parts.find((p) => this.isPlaceholder(p)).value].length
-
-            let xml = ''
+            let count = 1,
+                xml = ''
             // eslint-disable-next-line no-plusplus
             for (let i = 0; i < count; ++i) {
                 for (const p of row.parts) {
                     if (this.isPlaceholder(p)) {
                         const value = this.data[p.value]
-                        xml += value ? value[i] : ''
+                        if (value) {
+                            if (Array.isArray(value)) {
+                                count = Math.max(count, value.length)
+                                xml += value[i]
+                            } else if (typeof value === 'string') xml += value
+                            else xml += ''
+                        } else xml += ''
                     } else {
                         xml += p.value
                     }
                 }
             }
-            row.parts.shift()
+            this.rows.shift()
             return { value: xml }
         }
 
