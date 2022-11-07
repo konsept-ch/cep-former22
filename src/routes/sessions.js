@@ -31,6 +31,12 @@ createService(
                 updatedAt: true,
                 quota_days: true,
                 used_by_quotas: true,
+                max_users: true,
+                _count: {
+                    select: {
+                        claro_cursusbundle_course_session_user: true,
+                    },
+                },
             },
         })
         const sessionsAdditionalData = await prisma.former22_session.findMany()
@@ -50,6 +56,7 @@ createService(
                     updated: session.updatedAt,
                     quotaDays: session.quota_days,
                     isUsedForQuota: session.used_by_quotas,
+                    availables: session.max_users - session._count.claro_cursusbundle_course_session_user,
                 },
                 ...sessionAdditionalData,
             }
