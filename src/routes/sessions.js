@@ -237,62 +237,67 @@ createService(
     '/:sessionId',
     async (req, res) => {
         const { sessionId } = req.params
+        const { onlyUpdate, ...payload } = req.body
 
         await prisma.former22_session.upsert({
             where: { sessionId },
-            update: { ...req.body },
-            create: { sessionId, ...req.body },
+            update: { ...payload },
+            create: { sessionId, ...payload },
         })
 
-        const { claro_cursusbundle_course_session_user: learners } =
-            await prisma.claro_cursusbundle_course_session.findUnique({
-                where: {
-                    uuid: sessionId,
-                },
-                select: {
-                    claro_cursusbundle_course_session_user: {
-                        where: { registration_type: 'learner' },
-                        select: { uuid: true, claro_user: { select: { mail: true } } },
-                    },
-                },
-            })
-
-        const templateForSessionInvites = await prisma.former22_template.findFirst({
-            where: { isUsedForSessionInvites: true },
-        })
-
-        if (templateForSessionInvites) {
-            const emailsToSend = learners.map(async (learner) => {
-                const {
-                    uuid: learnerId,
-                    claro_user: { mail: learnerEmail },
-                } = learner
-
-                const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                    req,
-                    templateId: templateForSessionInvites.templateId,
-                    sessionId,
-                    inscriptionId: learnerId,
-                })
-
-                const { emailResponse } = await sendEmail({
-                    to: learnerEmail,
-                    subject: emailSubject,
-                    html_body: emailContent,
-                })
-
-                await sendSms({ to: '359877155302', content: smsContent })
-
-                return { emailResponse }
-            })
-
-            const sentEmails = await Promise.allSettled(emailsToSend)
-
-            const data = sentEmails.map(({ value }) => value)
-
-            res.json(data ?? 'Aucun e-mail envoyé')
+        if (onlyUpdate) {
+            res.json(true)
         } else {
-            res.json("Aucun modèle pour sessions invitées n'a été trouvé")
+            const { claro_cursusbundle_course_session_user: learners } =
+                await prisma.claro_cursusbundle_course_session.findUnique({
+                    where: {
+                        uuid: sessionId,
+                    },
+                    select: {
+                        claro_cursusbundle_course_session_user: {
+                            where: { registration_type: 'learner' },
+                            select: { uuid: true, claro_user: { select: { mail: true } } },
+                        },
+                    },
+                })
+
+            const templateForSessionInvites = await prisma.former22_template.findFirst({
+                where: { isUsedForSessionInvites: true },
+            })
+
+            if (templateForSessionInvites) {
+                const emailsToSend = learners.map(async (learner) => {
+                    const {
+                        uuid: learnerId,
+                        claro_user: { mail: learnerEmail },
+                    } = learner
+
+                    const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
+                        req,
+                        templateId: templateForSessionInvites.templateId,
+                        sessionId,
+                        inscriptionId: learnerId,
+                    })
+
+                    const { emailResponse } = await sendEmail({
+                        to: learnerEmail,
+                        subject: emailSubject,
+                        html_body: emailContent,
+                    })
+
+                    await sendSms({ to: '359877155302', content: smsContent })
+
+                    return { emailResponse }
+                })
+
+                const sentEmails = await Promise.allSettled(emailsToSend)
+
+                const data = sentEmails.map(({ value }) => value)
+
+                res.json(data ?? 'Aucun e-mail envoyé')
+            } else {
+                res.json("Aucun modèle pour sessions invitées n'a été trouvé")
+            }
         }
 
         return {

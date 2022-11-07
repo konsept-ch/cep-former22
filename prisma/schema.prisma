@@ -5665,3 +5665,30 @@ model icap__socialmedia_wall_item {
   @@index([user_id], map: "IDX_436BC420A76ED395")
   @@index([comment_id], map: "IDX_436BC420F8697D13")
 }
+
+model former22_event {
+  eventId    String   @id @db.VarChar(255)
+  isFeesPaid Boolean? @default(false)
+  fees       Float?   @default(0) @db.Float
+}
+
+model former22_contract_template {
+  id                Int                 @id @default(autoincrement())
+  uuid              String              @unique(map: "uuid") @db.VarChar(36)
+  title             String?             @default("Nouveau modèle de contrat") @db.VarChar(255)
+  description       String?             @db.Text
+  fileStoredName    String?             @db.VarChar(255)
+  fileOriginalName  String?             @db.Text
+  former22_contract former22_contract[]
+}
+
+model former22_contract {
+  id                         Int                        @id @default(autoincrement())
+  uuid                       String                     @unique(map: "uuid") @db.VarChar(36)
+  userId                     String                     @db.VarChar(36)
+  courseId                   String                     @db.VarChar(36)
+  templateId                 Int
+  former22_contract_template former22_contract_template @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contract_template")
+
+  @@index([templateId], map: "fk_contract_template")
+}
