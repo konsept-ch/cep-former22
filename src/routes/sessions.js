@@ -57,6 +57,7 @@ createService(
                     quotaDays: session.quota_days,
                     isUsedForQuota: session.used_by_quotas,
                     availables: session.max_users - session._count.claro_cursusbundle_course_session_user,
+                    occupation: session._count.claro_cursusbundle_course_session_user,
                 },
                 ...sessionAdditionalData,
             }
