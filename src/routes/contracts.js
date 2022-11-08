@@ -224,7 +224,7 @@ createService(
                     )
                 ),
                 SEANCE_HONORAIRE: subscriptions.map((subscription) =>
-                    (events.get(subscription.claro_cursusbundle_session_event.uuid) || 0).toFixed(2)
+                    (events.get(subscription.claro_cursusbundle_session_event.uuid)?.fees || 0).toFixed(2)
                 ),
             })
 
