@@ -98,6 +98,7 @@ createService(
                 select: {
                     claro_cursusbundle_session_event: {
                         select: {
+                            uuid: true,
                             claro_planned_object: {
                                 select: {
                                     start_date: true,
@@ -167,10 +168,9 @@ createService(
                     select: {
                         eventId: true,
                         fees: true,
-                        isFeesPaid: true,
                     },
                 })
-            ).reduce((map, event) => map.set(event.eventId, event), new Map())
+            ).reduce((map, event) => map.set(event.eventId, event.fees), new Map())
 
             const user = subscriptions[0].claro_user
             const organization = user.user_organization[0]?.claro__organization.name || 'Indéterminé'
@@ -224,7 +224,7 @@ createService(
                     )
                 ),
                 SEANCE_HONORAIRE: subscriptions.map((subscription) =>
-                    (events.get(subscription.claro_cursusbundle_session_event.uuid)?.fees || 0).toFixed(2)
+                    (events.get(subscription.claro_cursusbundle_session_event.uuid) || 0).toFixed(2)
                 ),
             })
 
