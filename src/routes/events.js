@@ -53,6 +53,7 @@ createService(
                                 select: {
                                     uuid: true,
                                     course_name: true,
+                                    start_date: true,
                                     claro_cursusbundle_course: {
                                         select: {
                                             id: true,
@@ -84,6 +85,7 @@ createService(
                     ({ courseId, userId }) => courseId === course.uuid && userId === user.uuid
                 )
 
+                const year = Intl.DateTimeFormat('fr-CH', { year: 'numeric' }).format(session.start_date)
                 const date = Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(
                     planned.start_date
                 )
@@ -101,6 +103,7 @@ createService(
                     courseUuid: course.uuid,
                     sessionUuid: session.uuid,
                     userName: `${user.last_name} ${user.first_name}`,
+                    year,
                     date,
                     startTime,
                     endTime,

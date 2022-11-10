@@ -211,7 +211,7 @@ createService(
                 ),
                 SEANCE_LIEU: subscriptions.map(
                     (subscription) =>
-                        subscription.claro_cursusbundle_session_event.claro_planned_object.claro__location.name
+                        subscription.claro_cursusbundle_session_event.claro_planned_object?.claro__location?.name || ''
                 ),
                 SEANCE_HEURE_DEBUT: subscriptions.map((subscription) =>
                     Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' }).format(
