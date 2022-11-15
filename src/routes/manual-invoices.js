@@ -123,7 +123,7 @@ createService(
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
-            const [lastInvoiceForSameCourseYear] = await prisma.former22_manual_invoice.findMany({
+            const result = await prisma.former22_manual_invoice.findMany({
                 where: {
                     courseYear,
                 },
@@ -131,6 +131,8 @@ createService(
                     invoiceNumberForCurrentYear: 'desc',
                 },
             })
+            console.log(result)
+            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear }] = result
 
             const { id: organizationId } = await prisma.claro__organization.findUnique({
                 where: {
@@ -150,7 +152,7 @@ createService(
                     uuid: uuidv4(),
                     creatorUserId,
                     organizationId,
-                    invoiceNumberForCurrentYear: lastInvoiceForSameCourseYear?.invoiceNumberForCurrentYear ?? 1,
+                    invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
                     customClientEmail,
                     customClientAddress,
                     invoiceDate,
@@ -165,6 +167,7 @@ createService(
 
             res.json(uuid)
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(error)
             res.status(500).send({ error: 'Error' })
         }
