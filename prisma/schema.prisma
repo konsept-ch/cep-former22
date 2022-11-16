@@ -5576,6 +5576,7 @@ model former22_manual_invoice {
   uuid                        String              @db.VarChar(255)
   organizationId              Int
   creatorUserId               Int
+  invoiceStatus               String?             @db.Text
   invoiceNumberForCurrentYear Int
   customClientEmail           String?             @db.Text
   customClientAddress         String?             @db.Text
@@ -5588,7 +5589,7 @@ model former22_manual_invoice {
   itemVatCodes                String?             @db.Text
   createdAt                   DateTime            @default(now()) @db.DateTime(0)
   updatedAt                   DateTime            @default(now()) @db.DateTime(0)
-  invoiceStatus               String?             @db.VarChar(255)
+  items                       Json?
   claro_user                  claro_user          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
   claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
 
