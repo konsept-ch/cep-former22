@@ -90,11 +90,18 @@ createService(
                     customClientAddress,
                     invoiceDate,
                     courseYear,
-                    itemDesignations,
-                    itemUnits,
-                    itemAmounts,
-                    itemPrices,
-                    itemVatCodes,
+                    items: itemDesignations?.split('\\').map((designation, index) => ({
+                        designation,
+                        unit: itemUnits.split('\\').at(index),
+                        amount: itemAmounts.split('\\').at(index),
+                        price: itemPrices.split('\\').at(index),
+                        vatCode: itemVatCodes.split('\\').at(index),
+                    })),
+                    // itemDesignations,
+                    // itemUnits,
+                    // itemAmounts,
+                    // itemPrices,
+                    // itemVatCodes,
                 })
             )
         )
@@ -108,29 +115,25 @@ createService(
     '/',
     async (req, res) => {
         try {
-            const {
-                client,
-                customClientEmail,
-                customClientAddress,
-                invoiceDate,
-                courseYear,
-                itemDesignations,
-                itemUnits,
-                itemAmounts,
-                itemPrices,
-                itemVatCodes,
-            } = req.body
+            const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items } = req.body
+
+            const itemDesignations = items.map(({ designation }) => designation).join('\\')
+            const itemUnits = items.map(({ unit }) => unit.value).join('\\')
+            const itemAmounts = items.map(({ amount }) => amount).join('\\')
+            const itemPrices = items.map(({ price }) => price).join('\\')
+            const itemVatCodes = items.map(({ vatCode }) => vatCode).join('\\')
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
-            const [lastInvoiceForSameCourseYear] = await prisma.former22_manual_invoice.findMany({
-                where: {
-                    courseYear,
-                },
-                orderBy: {
-                    invoiceNumberForCurrentYear: 'desc',
-                },
-            })
+            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear } = {}] =
+                await prisma.former22_manual_invoice.findMany({
+                    where: {
+                        courseYear,
+                    },
+                    orderBy: {
+                        invoiceNumberForCurrentYear: 'desc',
+                    },
+                })
 
             const { id: organizationId } = await prisma.claro__organization.findUnique({
                 where: {
@@ -150,7 +153,7 @@ createService(
                     uuid: uuidv4(),
                     creatorUserId,
                     organizationId,
-                    invoiceNumberForCurrentYear: lastInvoiceForSameCourseYear?.invoiceNumberForCurrentYear ?? 1,
+                    invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
                     customClientEmail,
                     customClientAddress,
                     invoiceDate,
@@ -165,6 +168,74 @@ createService(
 
             res.json(uuid)
         } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(error)
+            res.status(500).send({ error: 'Error' })
+        }
+    },
+    null,
+    manualInvoicesRouter
+)
+
+createService(
+    'put',
+    '/',
+    async (req, res) => {
+        try {
+            const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items } = req.body
+
+            const itemDesignations = items.map(({ designation }) => designation).join('\\')
+            const itemUnits = items.map(({ unit }) => unit.value).join('\\')
+            const itemAmounts = items.map(({ amount }) => amount).join('\\')
+            const itemPrices = items.map(({ price }) => price).join('\\')
+            const itemVatCodes = items.map(({ vatCode }) => vatCode).join('\\')
+
+            const { ['x-login-email-address']: cfEmail } = req.headers
+
+            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear } = {}] =
+                await prisma.former22_manual_invoice.findMany({
+                    where: {
+                        courseYear,
+                    },
+                    orderBy: {
+                        invoiceNumberForCurrentYear: 'desc',
+                    },
+                })
+
+            const { id: organizationId } = await prisma.claro__organization.findUnique({
+                where: {
+                    uuid: client.uuid,
+                },
+            })
+
+            const { id: creatorUserId } = await prisma.claro_user.findUnique({
+                where: {
+                    mail: cfEmail,
+                },
+            })
+
+            // TODO handle foreign keys from uuid to id
+            const { uuid } = await prisma.former22_manual_invoice.create({
+                data: {
+                    uuid: uuidv4(),
+                    creatorUserId,
+                    organizationId,
+                    invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
+                    customClientEmail,
+                    customClientAddress,
+                    invoiceDate,
+                    courseYear,
+                    itemDesignations,
+                    itemUnits,
+                    itemAmounts,
+                    itemPrices,
+                    itemVatCodes,
+                },
+            })
+
+            res.json(uuid)
+        } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(error)
             res.status(500).send({ error: 'Error' })
         }
