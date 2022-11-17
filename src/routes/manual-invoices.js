@@ -38,11 +38,6 @@ createService(
                 invoiceDate: true,
                 courseYear: true,
                 items: true,
-                // itemDesignations: true,
-                // itemUnits: true,
-                // itemAmounts: true,
-                // itemPrices: true,
-                // itemVatCodes: true,
             },
         })
 
@@ -71,11 +66,6 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
-                    // itemDesignations,
-                    // itemUnits,
-                    // itemAmounts,
-                    // itemPrices,
-                    // itemVatCodes,
                 }) => ({
                     id: uuid,
                     user: {
@@ -93,18 +83,6 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
-                    // items: itemDesignations?.split('\\').map((designation, index) => ({
-                    //     designation,
-                    //     unit: itemUnits.split('\\').at(index),
-                    //     amount: itemAmounts.split('\\').at(index),
-                    //     price: itemPrices.split('\\').at(index),
-                    //     vatCode: itemVatCodes.split('\\').at(index),
-                    // })),
-                    // itemDesignations,
-                    // itemUnits,
-                    // itemAmounts,
-                    // itemPrices,
-                    // itemVatCodes,
                 })
             )
         )
@@ -119,12 +97,6 @@ createService(
     async (req, res) => {
         try {
             const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items } = req.body
-
-            // const itemDesignations = items.map(({ designation }) => designation.replaceAll('\n', '\\')).join('|')
-            // const itemUnits = items.map(({ unit }) => unit.value).join('|')
-            // const itemAmounts = items.map(({ amount }) => amount).join('|')
-            // const itemPrices = items.map(({ price }) => price).join('|')
-            // const itemVatCodes = items.map(({ vatCode }) => vatCode).join('|')
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
@@ -161,12 +133,7 @@ createService(
                     customClientAddress,
                     invoiceDate,
                     courseYear,
-                    items: items.map((item) => ({ ...item, vatCode: item.vatCode.value })),
-                    // itemDesignations,
-                    // itemUnits,
-                    // itemAmounts,
-                    // itemPrices,
-                    // itemVatCodes,
+                    items,
                 },
             })
 
@@ -183,16 +150,12 @@ createService(
 
 createService(
     'put',
-    '/',
+    '/:id',
     async (req, res) => {
+        const { id } = req.params
+
         try {
             const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items } = req.body
-
-            const itemDesignations = items.map(({ designation }) => designation).join('\\')
-            const itemUnits = items.map(({ unit }) => unit.value).join('\\')
-            const itemAmounts = items.map(({ amount }) => amount).join('\\')
-            const itemPrices = items.map(({ price }) => price).join('\\')
-            const itemVatCodes = items.map(({ vatCode }) => vatCode).join('\\')
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
@@ -219,9 +182,11 @@ createService(
             })
 
             // TODO handle foreign keys from uuid to id
-            const { uuid } = await prisma.former22_manual_invoice.create({
+            const { uuid } = await prisma.former22_manual_invoice.update({
+                where: {
+                    uuid: id,
+                },
                 data: {
-                    uuid: uuidv4(),
                     creatorUserId,
                     organizationId,
                     invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
@@ -229,11 +194,7 @@ createService(
                     customClientAddress,
                     invoiceDate,
                     courseYear,
-                    itemDesignations,
-                    itemUnits,
-                    itemAmounts,
-                    itemPrices,
-                    itemVatCodes,
+                    items,
                 },
             })
 
