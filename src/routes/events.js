@@ -85,16 +85,25 @@ createService(
                     ({ courseId, userId }) => courseId === course.uuid && userId === user.uuid
                 )
 
-                const year = Intl.DateTimeFormat('fr-CH', { year: 'numeric' }).format(session.start_date)
-                const date = Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(
-                    planned.start_date
+                const year = Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', year: 'numeric' }).format(
+                    session.start_date
                 )
-                const startTime = Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' }).format(
-                    planned.start_date
-                )
-                const endTime = Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' }).format(
-                    planned.end_date
-                )
+                const date = Intl.DateTimeFormat('fr-CH', {
+                    timeZone: 'Europe/Zurich',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                }).format(planned.start_date)
+                const startTime = Intl.DateTimeFormat('fr-CH', {
+                    timeZone: 'Europe/Zurich',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }).format(planned.start_date)
+                const endTime = Intl.DateTimeFormat('fr-CH', {
+                    timeZone: 'Europe/Zurich',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }).format(planned.end_date)
 
                 return {
                     id,
