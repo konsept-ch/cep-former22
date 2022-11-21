@@ -55,11 +55,7 @@ createService(
                 ({
                     uuid,
                     claro_user: { uuid: userUuid, first_name: firstName, last_name: lastName },
-                    claro__organization: {
-                        uuid: organizationUuid,
-                        name: organizationName,
-                        former22_organization: { clientNumber },
-                    },
+                    claro__organization: { uuid: organizationUuid, name: organizationName, former22_organization },
                     invoiceNumberForCurrentYear,
                     customClientEmail,
                     customClientAddress,
@@ -76,7 +72,7 @@ createService(
                     },
                     organizationUuid,
                     organizationName,
-                    clientNumber,
+                    clientNumber: former22_organization?.clientNumber,
                     invoiceNumberForCurrentYear,
                     customClientEmail,
                     customClientAddress,
