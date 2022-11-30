@@ -166,6 +166,16 @@ createService(
                         first_name: true,
                         last_name: true,
                         phone: true,
+                        claro_workspace_claro_user_workspace_idToclaro_workspace: {
+                            select: {
+                                id: true,
+                                uuid: true,
+                                slug: true,
+                                entity_name: true,
+                                code: true,
+                                claro_resource_node: true,
+                            },
+                        },
                         user_organization: {
                             where: {
                                 is_main: true,
@@ -363,27 +373,31 @@ createService(
                 })
 
                 // TODO: upload to personal workspace
-                const workspace = await prisma.claro_workspace.findMany({
-                    where: {
-                        is_personal: true,
-                        creator_id: currentInscription.claro_user.id,
-                    },
-                    select: {
-                        id: true,
-                        uuid: true,
-                        slug: true,
-                        entity_name: true,
-                        code: true,
-                        claro_resource_node: true,
-                    },
-                })
+                // const workspace = await prisma.claro_workspace.findMany({
+                //     where: {
+                //         is_personal: true,
+                //         creator_id: currentInscription.claro_user.id,
+                //     },
+                //     select: {
+                //         id: true,
+                //         uuid: true,
+                //         slug: true,
+                //         entity_name: true,
+                //         code: true,
+                //         claro_resource_node: true,
+                //     },
+                // })
 
-                const rootResource = workspace[0]?.claro_resource_node
+                const workspace = currentInscription.claro_user.claro_workspace_claro_user_workspace_idToclaro_workspace
+                const rootResource = workspace?.claro_resource_node
 
-                const resources = await callApi({
-                    req,
-                    path: `resource/${rootResource[0]?.uuid}`,
-                })
+                const resources =
+                    rootResource != null
+                        ? await callApi({
+                              req,
+                              path: `resource/${rootResource[0]?.uuid}`,
+                          })
+                        : null
 
                 const createResource = async ({ uuid }) => {
                     const fileResource = await callApi({
@@ -458,11 +472,11 @@ createService(
                                     enabled: false,
                                 },
                                 workspace: {
-                                    id: workspace[0]?.uuid,
-                                    autoId: workspace[0]?.id,
-                                    slug: workspace[0]?.slug,
-                                    name: workspace[0]?.entity_name,
-                                    code: workspace[0]?.code,
+                                    id: workspace?.uuid,
+                                    autoId: workspace?.id,
+                                    slug: workspace?.slug,
+                                    name: workspace?.entity_name,
+                                    code: workspace?.code,
                                 },
                                 rights: [
                                     {
@@ -497,7 +511,7 @@ createService(
                                     },
                                     {
                                         // id: 8785,
-                                        name: `ROLE_WS_COLLABORATOR_${workspace[0]?.uuid}`,
+                                        name: `ROLE_WS_COLLABORATOR_${workspace?.uuid}`,
                                         translationKey: 'collaborator',
                                         permissions: {
                                             open: true,
@@ -509,14 +523,14 @@ createService(
                                             create: [],
                                         },
                                         workspace: {
-                                            id: workspace[0]?.uuid,
-                                            name: workspace[0]?.entity_name,
-                                            code: workspace[0]?.code,
+                                            id: workspace?.uuid,
+                                            name: workspace?.entity_name,
+                                            code: workspace?.code,
                                         },
                                     },
                                     {
                                         // id: 8786,
-                                        name: `ROLE_WS_MANAGER_${workspace[0]?.uuid}`,
+                                        name: `ROLE_WS_MANAGER_${workspace?.uuid}`,
                                         translationKey: 'manager',
                                         permissions: {
                                             open: true,
@@ -550,9 +564,9 @@ createService(
                                             ],
                                         },
                                         workspace: {
-                                            id: workspace[0]?.uuid,
-                                            name: workspace[0]?.entity_name,
-                                            code: workspace[0]?.code,
+                                            id: workspace?.uuid,
+                                            name: workspace?.entity_name,
+                                            code: workspace?.code,
                                         },
                                     },
                                 ],
@@ -641,11 +655,11 @@ createService(
                                         enabled: false,
                                     },
                                     workspace: {
-                                        id: workspace[0]?.uuid,
-                                        autoId: workspace[0]?.id,
-                                        slug: workspace[0]?.slug,
-                                        name: workspace[0]?.entity_name,
-                                        code: workspace[0]?.code,
+                                        id: workspace?.uuid,
+                                        autoId: workspace?.id,
+                                        slug: workspace?.slug,
+                                        name: workspace?.entity_name,
+                                        code: workspace?.code,
                                     },
                                     rights: [
                                         {
@@ -680,7 +694,7 @@ createService(
                                         },
                                         {
                                             // id: 6159,
-                                            name: `ROLE_WS_COLLABORATOR_${workspace[0]?.uuid}`,
+                                            name: `ROLE_WS_COLLABORATOR_${workspace?.uuid}`,
                                             translationKey: 'collaborator',
                                             permissions: {
                                                 open: true,
@@ -692,14 +706,14 @@ createService(
                                                 create: [],
                                             },
                                             workspace: {
-                                                id: workspace[0]?.uuid,
-                                                name: workspace[0]?.entity_name,
-                                                code: workspace[0]?.code,
+                                                id: workspace?.uuid,
+                                                name: workspace?.entity_name,
+                                                code: workspace?.code,
                                             },
                                         },
                                         {
                                             // id: 8545,
-                                            name: `ROLE_WS_MANAGER_${workspace[0]?.uuid}`,
+                                            name: `ROLE_WS_MANAGER_${workspace?.uuid}`,
                                             translationKey: 'manager',
                                             permissions: {
                                                 open: true,
@@ -733,9 +747,9 @@ createService(
                                                 ],
                                             },
                                             workspace: {
-                                                id: workspace[0]?.uuid,
-                                                name: workspace[0]?.entity_name,
-                                                code: workspace[0]?.code,
+                                                id: workspace?.uuid,
+                                                name: workspace?.entity_name,
+                                                code: workspace?.code,
                                             },
                                         },
                                     ],
@@ -748,6 +762,8 @@ createService(
                         await createResource({ uuid: newAttestationsFolder?.resourceNode?.id })
                     }
                 }
+            } else {
+                // TODO throw error?
             }
 
             const mainOrganization = user.user_organization[0]?.claro__organization
