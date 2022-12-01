@@ -4,7 +4,6 @@ import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import fs from 'fs'
 import path from 'path'
-import libre from 'libreoffice-convert'
 
 import { prisma } from '..'
 import { createService, LOG_TYPES, contractTemplateFilesDest, contractFilesDest } from '../utils'
@@ -23,7 +22,7 @@ createService(
                 },
             })
 
-            res.download(`${contractFilesDest}/${contract.uuid}.pdf`)
+            res.download(`${contractFilesDest}/${contract.uuid}.docx`)
 
             return {
                 entityName: 'Contract',
@@ -235,10 +234,7 @@ createService(
                 // compression: 'DEFLATE',
             })
 
-            const filename = `${contract.uuid}.pdf`
-            const pdfBuf = await libre.convertAsync(docxBuf, 'pdf', undefined)
-
-            fs.writeFileSync(`${contractFilesDest}/${filename}`, pdfBuf)
+            fs.writeFileSync(`${contractFilesDest}/${contract.uuid}.docx`, docxBuf)
 
             res.json(true)
 
