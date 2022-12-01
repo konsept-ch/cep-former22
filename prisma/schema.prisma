@@ -3412,6 +3412,7 @@ model claro_user {
   claro_workspace_recent                                                                                                      claro_workspace_recent[]
   claro_workspace_registration_queue                                                                                          claro_workspace_registration_queue[]
   claro_workspace_requirements                                                                                                claro_workspace_requirements[]
+  former22_manual_invoice_claro_userToformer22_manual_invoice_selectedUserId                                                  former22_manual_invoice[]                        @relation("claro_userToformer22_manual_invoice_selectedUserId")
   former22_manual_invoice                                                                                                     former22_manual_invoice[]
   hevinci_ability_progress                                                                                                    hevinci_ability_progress[]
   hevinci_competency_progress                                                                                                 hevinci_competency_progress[]
@@ -5572,29 +5573,32 @@ model former22_attestation {
 }
 
 model former22_manual_invoice {
-  id                          Int                 @id @default(autoincrement())
-  uuid                        String?             @unique(map: "uuid") @db.VarChar(255)
-  organizationId              Int
-  creatorUserId               Int
-  invoiceStatus               String?             @db.Text
-  invoiceNumberForCurrentYear Int
-  customClientEmail           String?             @db.Text
-  customClientAddress         String?             @db.Text
-  invoiceDate                 DateTime?           @db.DateTime(0)
-  courseYear                  Int
-  itemDesignations            String?             @db.Text
-  itemUnits                   String?             @db.Text
-  itemAmounts                 String?             @db.Text
-  itemPrices                  String?             @db.Text
-  itemVatCodes                String?             @db.Text
-  createdAt                   DateTime            @default(now()) @db.DateTime(0)
-  updatedAt                   DateTime            @default(now()) @db.DateTime(0)
-  items                       Json?
-  claro_user                  claro_user          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
-  claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
+  id                                                            Int                 @id @default(autoincrement())
+  uuid                                                          String?             @unique(map: "uuid") @db.VarChar(255)
+  organizationId                                                Int
+  creatorUserId                                                 Int
+  invoiceStatus                                                 String?             @db.Text
+  invoiceNumberForCurrentYear                                   Int
+  customClientEmail                                             String?             @db.Text
+  customClientAddress                                           String?             @db.Text
+  invoiceDate                                                   DateTime?           @db.DateTime(0)
+  courseYear                                                    Int
+  itemDesignations                                              String?             @db.Text
+  itemUnits                                                     String?             @db.Text
+  itemAmounts                                                   String?             @db.Text
+  itemPrices                                                    String?             @db.Text
+  itemVatCodes                                                  String?             @db.Text
+  createdAt                                                     DateTime            @default(now()) @db.DateTime(0)
+  updatedAt                                                     DateTime            @default(now()) @db.DateTime(0)
+  items                                                         Json?
+  selectedUserId                                                Int?
+  claro_user_claro_userToformer22_manual_invoice_selectedUserId claro_user?         @relation("claro_userToformer22_manual_invoice_selectedUserId", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
+  claro_user                                                    claro_user          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
+  claro__organization                                           claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
 
   @@index([creatorUserId], map: "creator_user_index")
   @@index([organizationId], map: "organization_index")
+  @@index([selectedUserId], map: "invoice_selected_user_index")
 }
 
 model doctrine_clarolinebookingbundle_versions {
