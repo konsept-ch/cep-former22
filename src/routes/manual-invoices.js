@@ -166,7 +166,8 @@ createService(
         const { id } = req.params
 
         try {
-            const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items } = req.body
+            const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items, selectedUserUuid } =
+                req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
@@ -192,6 +193,12 @@ createService(
                 },
             })
 
+            const { id: selectedUserId } = await prisma.claro_user.findUnique({
+                where: {
+                    uuid: selectedUserUuid,
+                },
+            })
+
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.update({
                 where: {
@@ -206,6 +213,7 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
+                    selectedUserId,
                 },
             })
 
