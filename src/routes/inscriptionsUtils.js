@@ -318,6 +318,12 @@ export const fetchInscriptionsWithStatuses = async (
                                               professionFacetsValues,
                                           }),
                                       },
+                                      validationType:
+                                          inscription.status === 2
+                                              ? 'Validée'
+                                              : inscription.status === 3
+                                              ? 'Validée sur quota'
+                                              : '',
                                   }
                               } catch (error) {
                                   console.error(error)
