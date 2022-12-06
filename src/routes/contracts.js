@@ -204,23 +204,30 @@ createService(
                     []
                 ),
                 SEANCE_DATE: subscriptions.map((subscription) =>
-                    Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(
-                        subscription.claro_cursusbundle_session_event.claro_planned_object.start_date
-                    )
+                    Intl.DateTimeFormat('fr-CH', {
+                        timeZone: 'Europe/Zurich',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                    }).format(subscription.claro_cursusbundle_session_event.claro_planned_object.start_date)
                 ),
                 SEANCE_LIEU: subscriptions.map(
                     (subscription) =>
                         subscription.claro_cursusbundle_session_event.claro_planned_object?.claro__location?.name || ''
                 ),
                 SEANCE_HEURE_DEBUT: subscriptions.map((subscription) =>
-                    Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' }).format(
-                        subscription.claro_cursusbundle_session_event.claro_planned_object.start_date
-                    )
+                    Intl.DateTimeFormat('fr-CH', {
+                        timeZone: 'Europe/Zurich',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    }).format(subscription.claro_cursusbundle_session_event.claro_planned_object.start_date)
                 ),
                 SEANCE_HEURE_FIN: subscriptions.map((subscription) =>
-                    Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' }).format(
-                        subscription.claro_cursusbundle_session_event.claro_planned_object.end_date
-                    )
+                    Intl.DateTimeFormat('fr-CH', {
+                        timeZone: 'Europe/Zurich',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    }).format(subscription.claro_cursusbundle_session_event.claro_planned_object.end_date)
                 ),
                 SEANCE_HONORAIRE: subscriptions.map((subscription) =>
                     (events.get(subscription.claro_cursusbundle_session_event.uuid) || 0).toFixed(2)
