@@ -147,7 +147,7 @@ export const fetchInscriptionsWithStatuses = async (
                 quota_days: true,
                 used_by_quotas: true,
                 claro_cursusbundle_course: {
-                    select: { uuid: true, course_name: true },
+                    select: { uuid: true, course_name: true, price: true, session_days: true },
                 },
                 claro_cursusbundle_course_session_user: !shouldFetchCancellations && {
                     where: shouldFetchTutors
@@ -296,6 +296,8 @@ export const fetchInscriptionsWithStatuses = async (
                                           quotaDays: quota_days,
                                           isUsedForQuota: used_by_quotas,
                                           courseName: courseData.course_name,
+                                          coursePrice: courseData.price,
+                                          courseDuration: courseData.session_days,
                                           startYear: new Date(start_date).getFullYear(),
                                       },
                                       user: {
