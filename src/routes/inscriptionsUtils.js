@@ -174,6 +174,11 @@ export const fetchInscriptionsWithStatuses = async (
                                         claro__organization: {
                                             include: {
                                                 claro_cursusbundle_quota: true,
+                                                former22_organization: {
+                                                    select: {
+                                                        clientNumber: true,
+                                                    },
+                                                },
                                             },
                                         },
                                     },
@@ -324,6 +329,8 @@ export const fetchInscriptionsWithStatuses = async (
                                               : inscription.status === 3
                                               ? 'Validée sur quota'
                                               : '',
+                                      organizationClientNumber:
+                                          userMainOrganization?.former22_organization?.clientNumber,
                                   }
                               } catch (error) {
                                   console.error(error)
@@ -369,6 +376,11 @@ export const fetchInscriptionsWithStatuses = async (
                                             claro__organization: {
                                                 include: {
                                                     claro_cursusbundle_quota: true,
+                                                    former22_organization: {
+                                                        select: {
+                                                            clientNumber: true,
+                                                        },
+                                                    },
                                                 },
                                             },
                                         },
