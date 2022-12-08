@@ -26,6 +26,7 @@ createService(
                     uuid: true,
                     userId: true,
                     courseId: true,
+                    year: true,
                 },
             })
 
@@ -80,14 +81,17 @@ createService(
                 const session = event.claro_cursusbundle_course_session
                 const course = session.claro_cursusbundle_course
 
-                const extendEvent = events.find(({ eventId }) => eventId === event.uuid)
-                const contract = contracts.find(
-                    ({ courseId, userId }) => courseId === course.uuid && userId === user.uuid
-                )
-
                 const year = Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', year: 'numeric' }).format(
                     session.start_date
                 )
+                const intYear = Number(year)
+
+                const extendEvent = events.find(({ eventId }) => eventId === event.uuid)
+                const contract = contracts.find(
+                    ({ courseId, userId, year: _year }) =>
+                        courseId === course.uuid && userId === user.uuid && _year === intYear
+                )
+
                 const date = Intl.DateTimeFormat('fr-CH', {
                     timeZone: 'Europe/Zurich',
                     year: 'numeric',
