@@ -44,7 +44,7 @@ createService(
     '/',
     async (req, res) => {
         try {
-            const { userId, courseId, templateId } = req.body
+            const { userId, courseId, templateId, year } = req.body
 
             const template = await prisma.former22_contract_template.findUnique({
                 where: {
@@ -56,6 +56,7 @@ createService(
                 where: {
                     userId,
                     courseId,
+                    year,
                 },
             })
 
@@ -77,6 +78,7 @@ createService(
                         userId,
                         courseId,
                         templateId: template.id,
+                        year,
                     },
                 })
             }
@@ -88,6 +90,9 @@ createService(
                     },
                     claro_cursusbundle_session_event: {
                         claro_cursusbundle_course_session: {
+                            start_date: {
+                                gte: new Date(`${year}-01-01 00:00:00`),
+                            },
                             claro_cursusbundle_course: {
                                 uuid: courseId,
                             },
