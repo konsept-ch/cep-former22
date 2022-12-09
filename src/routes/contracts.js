@@ -92,6 +92,7 @@ createService(
                         claro_cursusbundle_course_session: {
                             start_date: {
                                 gte: new Date(`${year}-01-01 00:00:00`),
+                                lt: new Date(`${year + 1}-01-01 00:00:00`),
                             },
                             claro_cursusbundle_course: {
                                 uuid: courseId,
