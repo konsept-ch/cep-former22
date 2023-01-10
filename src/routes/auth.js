@@ -54,7 +54,7 @@ createService(
             where: { email },
             select: { code: true },
         })
-        const doesCodeMatch = authPair.code === code
+        const doesCodeMatch = authPair?.code === code
 
         if (doesCodeMatch) {
             const apitokenResponse = await callApi({ req, path: 'apitoken', headers: { [CLAROLINE_TOKEN]: token } })

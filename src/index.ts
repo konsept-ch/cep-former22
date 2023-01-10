@@ -27,6 +27,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
+import { delay } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -84,6 +85,59 @@ generateEndpoints()
 app.use('/peoplesoft', peoplesoftRouter)
 
 app.use('/auth', authRouter)
+
+app.use(async (req, res, next) => {
+    await delay(200)
+
+    const email = (req.headers['x-login-email-address'] as string).trim()
+    const code = (req.headers['x-login-email-code'] as string).trim()
+    const token = (req.headers['x-login-token'] as string).trim()
+
+    const authPair = await prisma.former22_auth_codes.findUnique({
+        where: { email },
+        select: {
+            code: true,
+        },
+    })
+
+    const userApiToken = await prisma.claro_api_token.findMany({
+        where: { claro_user: { mail: email } },
+        select: {
+            token: true,
+            is_locked: true,
+            claro_user: {
+                select: {
+                    claro_user_role: {
+                        select: {
+                            claro_role: {
+                                select: {
+                                    translation_key: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    })
+
+    const doesCodeMatch = authPair?.code === code
+    const doesMatchingAdminUnlockedTokenExist =
+        userApiToken.find(
+            (apiToken) =>
+                apiToken.token === token &&
+                !apiToken.is_locked &&
+                apiToken.claro_user?.claro_user_role.find((role) => role.claro_role.translation_key === 'admin')
+        ) != null
+
+    if (doesCodeMatch && doesMatchingAdminUnlockedTokenExist) {
+        next()
+    } else {
+        res.status(401).send({ error: 'Unauthorized or wrong credentials' })
+        // throw new Error('Incorrect token and code for this email')
+    }
+})
+
 app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
 app.use('/mail', mailRouter)
