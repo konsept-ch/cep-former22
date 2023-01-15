@@ -8,10 +8,12 @@ module.exports = {
             args: 'run ts-node',
             env: {
                 TZ: 'UTC',
+                DEBUG: 'server:*',
                 NODE_ENV: 'development',
             },
             env_production: {
                 TZ: 'UTC',
+                DEBUG: 'server:*',
                 NODE_ENV: 'production',
             },
         },

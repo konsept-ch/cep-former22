@@ -27,7 +27,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
-import { delay, startsWithAnyOf } from './utils'
+import { delay, hasAllProperties, startsWithAnyOf } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -86,8 +86,11 @@ app.use('/peoplesoft', peoplesoftRouter)
 
 app.use('/auth', authRouter)
 
-app.use(async (req, res, next) => {
-    if (startsWithAnyOf(req.path, ['/auth', '/peoplesoft', '/api-docs'])) {
+app.use('*', async (req, res, next) => {
+    if (
+        startsWithAnyOf(req.path, ['/auth', '/peoplesoft', '/api-docs']) ||
+        !hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])
+    ) {
         return next()
     }
 
