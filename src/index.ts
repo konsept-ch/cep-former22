@@ -28,7 +28,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
-import { delay, hasAllProperties, startsWithAnyOf } from './utils'
+import { hasAllProperties, startsWithAnyOf } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -88,15 +88,29 @@ app.use('/peoplesoft', peoplesoftRouter)
 
 app.use('/auth', authRouter)
 
+app.get('/', (_req, res) => {
+    const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
+        path: `/peoplesoft${path}`,
+        method: stack[0].method,
+    }))
+
+    const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
+
+    res.send(
+        `<ul><li>${SWAGGER_LINK}</li>${peoplesoftRoutes
+            .map(({ path, method }) => `<li><a href="${path}">${path} (${method})</a></li>`)
+            .join('')}</ul>`
+    )
+})
+
 app.use('*', async (req, res, next) => {
-    if (
-        startsWithAnyOf(req.path, ['/auth', '/peoplesoft', '/api-docs']) ||
-        !hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])
-    ) {
+    if (startsWithAnyOf(req.path, ['/auth', '/peoplesoft', '/api-docs'])) {
         return next()
     }
 
-    await delay(200)
+    if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
+        res.status(401).send({ error: 'Unauthorized or wrong credentials' })
+    }
 
     const email = (req.headers['x-login-email-address'] as string).trim()
     const code = (req.headers['x-login-email-code'] as string).trim()
@@ -162,18 +176,3 @@ app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
 app.use('/reception', receptionRouter)
 app.use('/contracts', contractsRouter)
-
-app.get('/', (_req, res) => {
-    const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
-        path: `/peoplesoft${path}`,
-        method: stack[0].method,
-    }))
-
-    const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
-
-    res.send(
-        `<ul><li>${SWAGGER_LINK}</li>${peoplesoftRoutes
-            .map(({ path, method }) => `<li><a href="${path}">${path} (${method})</a></li>`)
-            .join('')}</ul>`
-    )
-})

@@ -14,8 +14,6 @@ createService(
     'post',
     '/sendCode',
     async (req, res) => {
-        await delay(200)
-
         const email = req.body.email?.trim()
 
         const code = nanoid() //=> "123456"
