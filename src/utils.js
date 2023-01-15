@@ -198,3 +198,5 @@ export const getSessionAddress = ({ sessions, wantedSessionId }) => {
 }
 
 export const addHours = ({ numOfHours, oldDate }) => new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
+
+export const startsWithAnyOf = (haystack, needles) => needles.some((needle) => haystack.startsWith(needle))
