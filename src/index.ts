@@ -7,6 +7,7 @@ import swaggerJsdoc from 'swagger-jsdoc'
 import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
 import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
 
 import { generateEndpoints } from './expressEndpoints' // deprecated, use routes instead
 
@@ -34,6 +35,7 @@ export const prisma = new PrismaClient()
 
 export const app = express()
 
+app.use(helmet())
 app.use(cors())
 app.use(logger('dev'))
 app.use(express.json({ limit: '50mb' }))

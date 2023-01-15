@@ -2,7 +2,7 @@
 /* eslint-disable prefer-template */
 
 import debugImport from 'debug'
-import http from 'http'
+import https from 'https'
 
 import { app } from '../src/index'
 
@@ -12,7 +12,7 @@ const debug = debugImport('server:server')
  * Create HTTP server.
  */
 
-const server = http.createServer(app)
+const server = https.createServer(app)
 
 /**
  * Normalize a port into a number, string, or false.

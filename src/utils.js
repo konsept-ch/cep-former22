@@ -129,6 +129,7 @@ export const createService = (
                     isFullTimeVisible: true,
                 })}. Time stamp: ${Date.now()}`
             )
+            winstonLogger.error(error.stack)
 
             if (logHelper) {
                 await prisma.former22_log.update({
@@ -141,7 +142,7 @@ export const createService = (
                 })
             }
 
-            res.status(500).send({ message: error.message, stack: error.stack })
+            res.status(500).send({ message: 'Server error' })
         }
     })
 }
