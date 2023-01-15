@@ -87,6 +87,10 @@ app.use('/peoplesoft', peoplesoftRouter)
 app.use('/auth', authRouter)
 
 app.use(async (req, res, next) => {
+    if (req.path.startsWith('/auth')) {
+        return next()
+    }
+
     await delay(200)
 
     const email = (req.headers['x-login-email-address'] as string).trim()
