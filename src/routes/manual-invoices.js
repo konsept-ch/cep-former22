@@ -38,7 +38,7 @@ createService(
                 invoiceDate: true,
                 courseYear: true,
                 items: true,
-                claro_user_claro_userToformer22_manual_invoice_selectedUserId: {
+                claro_user_former22_manual_invoice_selectedUserIdToclaro_user: {
                     select: {
                         uuid: true,
                     },
@@ -126,11 +126,14 @@ createService(
                 },
             })
 
-            const { id: selectedUserId } = await prisma.claro_user.findUnique({
-                where: {
-                    uuid: selectedUserUuid,
-                },
-            })
+            const { id: selectedUserId } =
+                selectedUserUuid != null
+                    ? await prisma.claro_user.findUnique({
+                          where: {
+                              uuid: selectedUserUuid,
+                          },
+                      })
+                    : undefined
 
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.create({
