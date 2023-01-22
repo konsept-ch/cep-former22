@@ -4,15 +4,16 @@ import { DateTime } from 'luxon'
 import { app, prisma } from '.'
 import { callApi } from './callApi'
 import { winstonLogger } from './winston'
+import { NextFunction, Request, Response, Router } from 'express'
 
 export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
 export const contractTemplateFilesDest = '/data/uploads/contract-templates'
 export const contractFilesDest = '/data/uploads/contracts'
 
 // for testing/development purposes only
-export const delay = (ms) => new Promise((res) => setTimeout(res, ms))
+export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
-export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }) => {
+export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }: any) => {
     const date = dateObject ?? (dateString ? new Date(dateString) : new Date())
     const getDay = () => (date.getDate() < 10 ? `0${date.getDate()}` : date.getDate())
     const getMonth = () => {
@@ -36,7 +37,7 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
     return [getDate(), getTime()].filter(Boolean).join(', ')
 }
 
-export const formatTime = ({ dateString }) =>
+export const formatTime = ({ dateString }: { dateString: string }) =>
     DateTime.fromISO(dateString, { zone: 'UTC' })
         .setZone('Europe/Zurich')
         .setLocale('fr')
@@ -63,24 +64,24 @@ export const LOG_TYPES = {
 
 // TODO: named params
 export const createService = (
-    method,
-    url,
-    handlerFunction,
-    logHelper,
-    router = app,
-    middlewareFunction = (req, res, next) => {
+    method: keyof Router,
+    url: string,
+    handlerFunction: any,
+    logHelper: any,
+    router: Router = app,
+    middlewareFunction = (req: Request, res: Response, next: NextFunction) => {
         next()
     }
 ) => {
-    router[method](url, middlewareFunction, async (req, res) => {
+    ;(router as any)[method](url, middlewareFunction, async (req: Request, res: Response) => {
         let logId
         try {
             if (logHelper) {
-                const userDetails = await callApi({
+                const userDetails = (await callApi({
                     req,
                     path: 'user/find',
                     params: `filters[email]=${req.headers['x-login-email-address']}`,
-                })
+                })) as { name: string; email: string }
 
                 const log = await prisma.former22_log.create({
                     data: {
@@ -117,7 +118,7 @@ export const createService = (
                     },
                 })
             }
-        } catch (error) {
+        } catch (error: any) {
             // eslint-disable-next-line no-console
             console.error(error)
             winstonLogger.error(
@@ -148,19 +149,21 @@ export const createService = (
 }
 
 export const getLogDescriptions = {
-    formation: ({ isUpdatedDetails }) => (isUpdatedDetails ? `Updated course details` : 'Updated description'),
-    inscription: ({ originalStatus, newStatus }) => `Changed status from "${originalStatus}" to "${newStatus}"`,
-    user: ({ shouldReceiveSms, fullName }) =>
+    formation: ({ isUpdatedDetails }: { isUpdatedDetails: boolean }) =>
+        isUpdatedDetails ? `Updated course details` : 'Updated description',
+    inscription: ({ originalStatus, newStatus }: { originalStatus: string; newStatus: string }) =>
+        `Changed status from "${originalStatus}" to "${newStatus}"`,
+    user: ({ shouldReceiveSms, fullName }: { shouldReceiveSms: boolean; fullName: string }) =>
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
-export const fetchSessionsLessons = async ({ req, sessionId }) => {
+export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; sessionId?: string }) => {
     if (typeof sessionId !== 'undefined') {
         const lessons = await callApi({ req, path: `cursus_session/${sessionId}/events` })
 
         return lessons
     } else {
-        const sessions = await callApi({ req, path: 'cursus_session' })
+        const sessions = (await callApi({ req, path: 'cursus_session' })) as { id: string }[]
 
         if (typeof sessions !== 'undefined') {
             const lessonsToFetch = sessions.map((session) =>
@@ -171,7 +174,7 @@ export const fetchSessionsLessons = async ({ req, sessionId }) => {
                 })()
             )
 
-            const fetchedLessons = await Promise.allSettled(lessonsToFetch)
+            const fetchedLessons = (await Promise.allSettled(lessonsToFetch)) as { value: any }[]
 
             return fetchedLessons.flatMap(({ value }) => value)
         } else {
@@ -180,7 +183,7 @@ export const fetchSessionsLessons = async ({ req, sessionId }) => {
     }
 }
 
-export const getSessionAddress = ({ sessions, wantedSessionId }) => {
+export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any[]; wantedSessionId: string }) => {
     const currentSessionData = sessions.find(({ id }) => wantedSessionId === id)
     const sessionLocation = currentSessionData.location
     const sessionAddress = sessionLocation?.address
@@ -198,7 +201,10 @@ export const getSessionAddress = ({ sessions, wantedSessionId }) => {
     return location
 }
 
-export const addHours = ({ numOfHours, oldDate }) => new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
+export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate: Date }) =>
+    new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
 
-export const startsWithAnyOf = (haystack, needles) => needles.some((needle) => haystack.startsWith(needle))
-export const hasAllProperties = (object, properties) => properties.every((property) => Object.hasOwn(object, property))
+export const startsWithAnyOf = (haystack: string, needles: string[]) =>
+    needles.some((needle) => haystack.startsWith(needle))
+export const hasAllProperties = (object: object, properties: string[]) =>
+    properties.every((property) => Object.hasOwn(object, property))

@@ -17,13 +17,13 @@ export const callApi = async ({
     predicate = () => true,
 }: {
     req: Request
-    body: any
-    isFormData: boolean
+    body?: any
+    isFormData?: boolean
     path: string
-    params: any
-    headers: any
-    method: string
-    predicate: (value: any, index: number) => unknown
+    params?: any
+    headers?: any
+    method?: string
+    predicate?: (value: any, index: number) => unknown
 }) => {
     const url = `${new URL(path, clarolineApiUrl)}?${new URLSearchParams(params)}`
 

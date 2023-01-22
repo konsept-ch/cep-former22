@@ -1,15 +1,27 @@
 import { Router } from 'express'
+import type { Request, Response } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
 import { createService } from '../utils'
+import { invoiceStatusesFromPrisma } from '../constants'
 
 export const manualInvoicesRouter = Router()
 
 createService(
     'get',
+    '/statuses',
+    async (_req: Request, res: Response) => {
+        res.json(invoiceStatusesFromPrisma)
+    },
+    null,
+    manualInvoicesRouter
+)
+
+createService(
+    'get',
     '/',
-    async (req, res) => {
+    async (_req: Request, res: Response) => {
         const invoices = await prisma.former22_manual_invoice.findMany({
             select: {
                 uuid: true,
@@ -43,6 +55,7 @@ createService(
                         uuid: true,
                     },
                 },
+                status: true,
             },
         })
 
@@ -67,7 +80,8 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
-                    claro_user_claro_userToformer22_manual_invoice_selectedUserId,
+                    claro_user_former22_manual_invoice_selectedUserIdToclaro_user,
+                    status,
                 }) => ({
                     id: uuid,
                     user: {
@@ -85,7 +99,8 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
-                    selectedUserUuid: claro_user_claro_userToformer22_manual_invoice_selectedUserId?.uuid,
+                    selectedUserUuid: claro_user_former22_manual_invoice_selectedUserIdToclaro_user?.uuid,
+                    status: invoiceStatusesFromPrisma[status],
                 })
             )
         )
@@ -97,14 +112,14 @@ createService(
 createService(
     'post',
     '/',
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items, selectedUserUuid } =
                 req.body
 
             const { 'x-login-email-address': cfEmail } = req.headers
 
-            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear } = {}] =
+            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear = undefined } = {}] =
                 await prisma.former22_manual_invoice.findMany({
                     where: {
                         courseYear,
@@ -114,26 +129,28 @@ createService(
                     },
                 })
 
-            const { id: organizationId } = await prisma.claro__organization.findUnique({
-                where: {
-                    uuid: client.uuid,
-                },
-            })
+            const { id: organizationId } =
+                (await prisma.claro__organization.findUnique({
+                    where: {
+                        uuid: client.uuid,
+                    },
+                })) ?? {}
 
-            const { id: creatorUserId } = await prisma.claro_user.findUnique({
-                where: {
-                    mail: cfEmail,
-                },
-            })
+            const { id: creatorUserId } =
+                (await prisma.claro_user.findUnique({
+                    where: {
+                        mail: typeof cfEmail === 'string' ? cfEmail : cfEmail?.join(),
+                    },
+                })) ?? {}
 
             const { id: selectedUserId } =
-                selectedUserUuid != null
+                (selectedUserUuid != null
                     ? await prisma.claro_user.findUnique({
                           where: {
                               uuid: selectedUserUuid,
                           },
                       })
-                    : undefined
+                    : undefined) ?? {}
 
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.create({
@@ -148,7 +165,7 @@ createService(
                     courseYear,
                     items,
                     selectedUserId,
-                },
+                } as any,
             })
 
             res.json(uuid)
@@ -165,7 +182,7 @@ createService(
 createService(
     'put',
     '/:id',
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         const { id } = req.params
 
         try {
@@ -174,7 +191,7 @@ createService(
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
-            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear } = {}] =
+            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear = 0 } = {}] =
                 await prisma.former22_manual_invoice.findMany({
                     where: {
                         courseYear,
@@ -184,23 +201,26 @@ createService(
                     },
                 })
 
-            const { id: organizationId } = await prisma.claro__organization.findUnique({
-                where: {
-                    uuid: client.uuid,
-                },
-            })
+            const { id: organizationId } =
+                (await prisma.claro__organization.findUnique({
+                    where: {
+                        uuid: client.uuid,
+                    },
+                })) ?? {}
 
-            const { id: creatorUserId } = await prisma.claro_user.findUnique({
-                where: {
-                    mail: cfEmail,
-                },
-            })
+            const { id: creatorUserId } =
+                (await prisma.claro_user.findUnique({
+                    where: {
+                        mail: typeof cfEmail === 'string' ? cfEmail : cfEmail?.join(),
+                    },
+                })) ?? {}
 
-            const { id: selectedUserId } = await prisma.claro_user.findUnique({
-                where: {
-                    uuid: selectedUserUuid,
-                },
-            })
+            const { id: selectedUserId } =
+                (await prisma.claro_user.findUnique({
+                    where: {
+                        uuid: selectedUserUuid,
+                    },
+                })) ?? {}
 
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.update({
