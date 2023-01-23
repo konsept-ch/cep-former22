@@ -156,8 +156,18 @@ createService(
             const { uuid } = await prisma.former22_manual_invoice.create({
                 data: {
                     uuid: uuidv4(),
-                    creatorUserId,
-                    organizationId,
+                    // creatorUserId,
+                    // organizationId,
+                    claro_user: {
+                        connect: {
+                            id: creatorUserId,
+                        },
+                    },
+                    claro__organization: {
+                        connect: {
+                            id: organizationId,
+                        },
+                    },
                     invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
                     customClientEmail,
                     customClientAddress,
@@ -165,6 +175,7 @@ createService(
                     courseYear,
                     items,
                     selectedUserId,
+                    status: 'A_traiter',
                 } as any,
             })
 
