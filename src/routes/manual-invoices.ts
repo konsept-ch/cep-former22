@@ -56,6 +56,7 @@ createService(
                     },
                 },
                 status: true,
+                concerns: true,
             },
         })
 
@@ -82,6 +83,7 @@ createService(
                     items,
                     claro_user_former22_manual_invoice_selectedUserIdToclaro_user,
                     status,
+                    concerns,
                 }) => ({
                     id: uuid,
                     user: {
@@ -101,6 +103,7 @@ createService(
                     items,
                     selectedUserUuid: claro_user_former22_manual_invoice_selectedUserIdToclaro_user?.uuid,
                     status: invoiceStatusesFromPrisma[status],
+                    concerns,
                 })
             )
         )
@@ -123,6 +126,7 @@ createService(
                 items,
                 selectedUserUuid,
                 status,
+                concerns,
             } = req.body
 
             const { 'x-login-email-address': cfEmail } = req.headers
@@ -171,6 +175,7 @@ createService(
                     courseYear,
                     items,
                     status: status?.value,
+                    concerns,
                     claro_user: {
                         connect: {
                             id: creatorUserId,
@@ -219,6 +224,7 @@ createService(
                 items,
                 selectedUserUuid,
                 status,
+                concerns,
             } = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
@@ -269,6 +275,7 @@ createService(
                     courseYear,
                     items,
                     status: status?.value,
+                    concerns,
                     creatorUserId,
                     // claro_user: {
                     //     connect: {
