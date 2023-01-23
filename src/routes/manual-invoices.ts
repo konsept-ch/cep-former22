@@ -75,16 +75,11 @@ createService(
                     uuid,
                     claro_user: { uuid: userUuid, first_name: firstName, last_name: lastName },
                     claro__organization: { uuid: organizationUuid, name: organizationName, former22_organization },
-                    invoiceNumberForCurrentYear,
-                    customClientEmail,
-                    customClientAddress,
-                    invoiceDate,
-                    courseYear,
-                    items,
                     claro_user_former22_manual_invoice_selectedUserIdToclaro_user,
                     status,
-                    concerns,
+                    ...rest
                 }) => ({
+                    ...rest,
                     id: uuid,
                     user: {
                         uuid: userUuid,
@@ -92,18 +87,11 @@ createService(
                         lastName,
                         cfNumber: usersAdditionalData.find(({ userId }) => userId === userUuid)?.cfNumber,
                     },
-                    organizationUuid,
-                    organizationName,
                     clientNumber: former22_organization?.clientNumber,
-                    invoiceNumberForCurrentYear,
-                    customClientEmail,
-                    customClientAddress,
-                    invoiceDate,
-                    courseYear,
-                    items,
                     selectedUserUuid: claro_user_former22_manual_invoice_selectedUserIdToclaro_user?.uuid,
                     status: invoiceStatusesFromPrisma[status],
-                    concerns,
+                    organizationUuid,
+                    organizationName,
                 })
             )
         )
@@ -277,23 +265,8 @@ createService(
                     status: status?.value,
                     concerns,
                     creatorUserId,
-                    // claro_user: {
-                    //     connect: {
-                    //         id: creatorUserId,
-                    //     },
-                    // },
                     organizationId,
-                    // claro__organization: {
-                    //     connect: {
-                    //         id: organizationId,
-                    //     },
-                    // },
                     selectedUserId,
-                    // claro_user_former22_manual_invoice_selectedUserIdToclaro_user: {
-                    //     connect: {
-                    //         id: selectedUserId,
-                    //     },
-                    // },
                 },
             })
 
