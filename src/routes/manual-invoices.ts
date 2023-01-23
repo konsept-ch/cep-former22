@@ -114,8 +114,16 @@ createService(
     '/',
     async (req: Request, res: Response) => {
         try {
-            const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items, selectedUserUuid } =
-                req.body
+            const {
+                client,
+                customClientEmail,
+                customClientAddress,
+                invoiceDate,
+                courseYear,
+                items,
+                selectedUserUuid,
+                status,
+            } = req.body
 
             const { 'x-login-email-address': cfEmail } = req.headers
 
@@ -162,7 +170,7 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
-                    status: 'A_traiter',
+                    status: status?.value,
                     claro_user: {
                         connect: {
                             id: creatorUserId,
@@ -202,8 +210,16 @@ createService(
         const { id } = req.params
 
         try {
-            const { client, customClientEmail, customClientAddress, invoiceDate, courseYear, items, selectedUserUuid } =
-                req.body
+            const {
+                client,
+                customClientEmail,
+                customClientAddress,
+                invoiceDate,
+                courseYear,
+                items,
+                selectedUserUuid,
+                status,
+            } = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
@@ -252,7 +268,7 @@ createService(
                     invoiceDate,
                     courseYear,
                     items,
-                    status: 'A_traiter',
+                    status: status?.value,
                     creatorUserId,
                     // claro_user: {
                     //     connect: {
