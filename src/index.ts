@@ -28,7 +28,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
-import { hasAllProperties, startsWithAnyOf } from './utils'
+import { hasAllProperties } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -86,8 +86,6 @@ generateEndpoints()
 
 app.use('/peoplesoft', peoplesoftRouter)
 
-app.use('/auth', authRouter)
-
 app.get('/', (_req, res) => {
     const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
         path: `/peoplesoft${path}`,
@@ -103,13 +101,16 @@ app.get('/', (_req, res) => {
     )
 })
 
-app.use('*', async (req, res, next) => {
-    if (startsWithAnyOf(req.path, ['/auth', '/peoplesoft', '/api-docs'])) {
-        return next()
-    }
+// unprotected paths:
+app.use('/reception', receptionRouter)
+app.use('/auth', authRouter)
+app.use('/mail', mailRouter)
 
+// auth guard
+app.use('*', async (req, res, next) => {
     if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
         res.status(401).send({ error: 'Unauthorized or wrong credentials' })
+        return
     }
 
     const email = (req.headers['x-login-email-address'] as string).trim()
@@ -157,13 +158,14 @@ app.use('*', async (req, res, next) => {
         next()
     } else {
         res.status(401).send({ error: 'Unauthorized or wrong credentials' })
+        return
         // throw new Error('Incorrect token and code for this email')
     }
 })
 
+// protected paths:
 app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
-app.use('/mail', mailRouter)
 app.use('/attestations', attestationsRouter)
 app.use('/contract-templates', contractTemplatesRouter)
 app.use('/events', eventsRouter)
@@ -174,5 +176,4 @@ app.use('/organizations', organizationsRouter)
 app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
-app.use('/reception', receptionRouter)
 app.use('/contracts', contractsRouter)

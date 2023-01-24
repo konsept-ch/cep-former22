@@ -204,7 +204,5 @@ export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any
 export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate: Date }) =>
     new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
 
-export const startsWithAnyOf = (haystack: string, needles: string[]) =>
-    needles.some((needle) => haystack.startsWith(needle))
 export const hasAllProperties = (object: object, properties: string[]) =>
     properties.every((property) => Object.hasOwn(object, property))
