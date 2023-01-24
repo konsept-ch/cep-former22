@@ -101,12 +101,10 @@ app.get('/', (_req, res) => {
     )
 })
 
-// unprotected paths:
 app.use('/reception', receptionRouter)
 app.use('/auth', authRouter)
 app.use('/mail', mailRouter)
 
-// auth guard
 app.use('*', async (req, res, next) => {
     if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
         res.status(401).send({ error: 'Unauthorized or wrong credentials' })
@@ -163,7 +161,6 @@ app.use('*', async (req, res, next) => {
     }
 })
 
-// protected paths:
 app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
 app.use('/attestations', attestationsRouter)
