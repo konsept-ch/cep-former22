@@ -5686,6 +5686,7 @@ model former22_contract {
   userId                     String                     @db.VarChar(36)
   courseId                   String                     @db.VarChar(36)
   templateId                 Int
+  year                       Int
   former22_contract_template former22_contract_template @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contract_template")
 
   @@index([templateId], map: "fk_contract_template")
