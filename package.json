@@ -12,9 +12,9 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "postinstall": "prisma generate && db-migrate up",
-    "start": "pm2 start ecosystem.config.cjs && pm2 logs",
-    "start-prod": "pm2 start ecosystem.config.cjs --env production && pm2 logs",
+    "postinstall": "prisma generate",
+    "start": "db-migrate up && pm2 start ecosystem.config.cjs && pm2 logs",
+    "start-prod": "db-migrate up && pm2 start ecosystem.config.cjs --env production && pm2 logs",
     "ts-node": "node -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
