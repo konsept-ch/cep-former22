@@ -12,7 +12,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && db-migrate up",
     "start": "pm2 start ecosystem.config.cjs && pm2 logs",
     "start-prod": "pm2 start ecosystem.config.cjs --env production && pm2 logs",
     "ts-node": "node -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
