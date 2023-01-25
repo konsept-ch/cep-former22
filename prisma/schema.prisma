@@ -5692,9 +5692,22 @@ model former22_contract {
   @@index([templateId], map: "fk_contract_template")
 }
 
+model migrations {
+  id     Int      @id @default(autoincrement())
+  name   String   @db.VarChar(255)
+  run_on DateTime @db.DateTime(0)
+}
+
+model migrations_state {
+  key    String   @id @unique(map: "key") @db.VarChar(255)
+  value  String   @db.Text
+  run_on DateTime @db.DateTime(0)
+}
+
 enum former22_manual_invoice_status {
   En_pr_paration    @map("En préparation")
   A_traiter         @map("A traiter")
+  Export_e          @map("Exportée")
   Non_transmissible @map("Non transmissible")
   Annul_e           @map("Annulée")
   Envoy_e           @map("Envoyée")

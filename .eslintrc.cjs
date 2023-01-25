@@ -13,6 +13,7 @@ module.exports = {
         node: true,
         es2022: true,
     },
+    ignorePatterns: ['**/migrations/*.js'],
     rules: {
         eqeqeq: ['error', 'smart'],
         yoda: ['error', 'never', { exceptRange: true }],
