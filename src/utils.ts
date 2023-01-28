@@ -206,3 +206,44 @@ export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate:
 
 export const hasAllProperties = (object: object, properties: string[]) =>
     properties.every((property) => Object.hasOwn(object, property))
+
+export const checkAuth = async ({ email, code, token }: { email: string; code: string; token: string }) => {
+    const authPair = await prisma.former22_auth_codes.findUnique({
+        where: { email },
+        select: {
+            code: true,
+        },
+    })
+
+    const userApiToken = await prisma.claro_api_token.findMany({
+        where: { claro_user: { mail: email } },
+        select: {
+            token: true,
+            is_locked: true,
+            claro_user: {
+                select: {
+                    claro_user_role: {
+                        select: {
+                            claro_role: {
+                                select: {
+                                    translation_key: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    })
+
+    const doesCodeMatch = authPair?.code === code
+    const doesMatchingAdminUnlockedTokenExist =
+        userApiToken.find(
+            (apiToken) =>
+                apiToken.token === token &&
+                !apiToken.is_locked &&
+                apiToken.claro_user?.claro_user_role.find((role) => role.claro_role.translation_key === 'admin')
+        ) != null
+
+    return doesCodeMatch && doesMatchingAdminUnlockedTokenExist
+}
