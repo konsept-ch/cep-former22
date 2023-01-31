@@ -27,8 +27,8 @@ createService(
 
         await sendEmail({
             to: email,
-            subject: 'Auth code',
-            html_body: `<h2>Auth code</h2><p>${code}</p>`,
+            subject: "Code temporaire d'authentification",
+            html_body: `<h2>Code temporaire d'authentification</h2><p>${code}</p>`,
         })
 
         res.json({ isCodeSendingSuccessful: true })

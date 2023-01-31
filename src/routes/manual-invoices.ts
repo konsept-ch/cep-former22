@@ -189,7 +189,7 @@ createService(
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error(error)
-            res.status(500).send({ error: 'Error' })
+            res.status(500).send({ error: 'Erreur de création de facture' })
         }
     },
     null,
@@ -274,7 +274,7 @@ createService(
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error(error)
-            res.status(500).send({ error: 'Error' })
+            res.status(500).send({ error: 'Erreur de modification de facture' })
         }
     },
     null,

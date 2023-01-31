@@ -46,17 +46,14 @@ export const callApi = async ({
 
     try {
         if (method.toLowerCase() !== 'delete') {
-            const responseJson: unknown = await response.json()
+            const responseJson = await response.json()
 
-            interface DataResponse {
-                data: unknown[]
-            }
-
-            const hasData = (resp: unknown): resp is DataResponse => {
-                return typeof resp === 'object' && resp !== null && 'data' in resp
-            }
-
-            return hasData(responseJson) ? responseJson?.data?.filter(predicate) : responseJson
+            return typeof responseJson === 'object' &&
+                responseJson !== null &&
+                'data' in responseJson &&
+                Array.isArray(responseJson.data)
+                ? responseJson?.data?.filter(predicate)
+                : responseJson
         } else {
             const responseText = await response.text()
 

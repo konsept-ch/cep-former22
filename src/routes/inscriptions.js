@@ -27,6 +27,12 @@ libre.convertAsync = util.promisify(libre.convert)
 
 export const inscriptionsRouter = Router()
 
+const getDurationText = ({ days, hours }) =>
+    [
+        ...(days !== 0 ? [`${days} ${days < 2 ? 'jour' : 'jours'}`] : []),
+        ...(hours !== 0 ? [`${hours} ${hours < 2 ? 'heure' : 'heures'}`] : []),
+    ].join(' + ')
+
 createService(
     'get',
     '/',
@@ -308,12 +314,6 @@ createService(
                         goals: true,
                     },
                 })
-
-                const getDurationText = ({ days, hours }) =>
-                    [
-                        ...(days !== 0 ? [`${days} ${days < 2 ? 'jour' : 'jours'}`] : []),
-                        ...(hours !== 0 ? [`${hours} ${hours < 2 ? 'heure' : 'heures'}`] : []),
-                    ].join(' + ')
 
                 const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
 

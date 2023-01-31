@@ -24,7 +24,7 @@ createService(
             },
         })
 
-        res.json(attestations ?? "Les attestations n'ont pas été trouvés")
+        res.json(attestations ?? "Les attestations n'ont pas été trouvées")
     },
     null,
     attestationsRouter
@@ -51,7 +51,7 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.json('Erreur')
+            res.json("Erreur de création d'attestation")
         }
     },
     { entityType: LOG_TYPES.ATTESTATION },
@@ -90,7 +90,7 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.json('Erreur')
+            res.status(500).json("Erreur de modification d'attestation")
         }
     },
     { entityType: LOG_TYPES.ATTESTATION },
@@ -142,7 +142,7 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.status(500).json({ error: 'Error' })
+            res.status(500).json({ error: "Erreur de suppréssion d'attestation" })
 
             return {}
         }

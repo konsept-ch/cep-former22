@@ -92,7 +92,7 @@ app.get('/', (_req, res) => {
         method: stack[0].method,
     }))
 
-    const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
+    const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Former22 API documentation)</a>`
 
     res.send(
         `<ul><li>${SWAGGER_LINK}</li>${peoplesoftRoutes
@@ -107,7 +107,7 @@ app.use('/mail', mailRouter)
 
 app.use('*', async (req, res, next) => {
     if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
-        res.status(401).send({ error: 'Unauthorized or wrong credentials' })
+        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
         return
     }
 
@@ -119,7 +119,7 @@ app.use('*', async (req, res, next) => {
     if (isAuthenticated) {
         next()
     } else {
-        res.status(401).send({ error: 'Unauthorized or wrong credentials' })
+        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
         return
         // throw new Error('Incorrect token and code for this email')
     }

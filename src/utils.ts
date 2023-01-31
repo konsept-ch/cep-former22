@@ -143,7 +143,7 @@ export const createService = (
                 })
             }
 
-            res.status(500).send({ message: 'Server error' })
+            res.status(500).send({ message: 'Erreur de serveur' })
         }
     })
 }
