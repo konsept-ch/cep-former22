@@ -231,6 +231,23 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
                             },
                         },
                     },
+                    claro_user_group: {
+                        select: {
+                            claro_group: {
+                                select: {
+                                    claro_group_role: {
+                                        select: {
+                                            claro_role: {
+                                                select: {
+                                                    translation_key: true,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
         },
@@ -242,7 +259,10 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
             (apiToken) =>
                 apiToken.token === token &&
                 !apiToken.is_locked &&
-                apiToken.claro_user?.claro_user_role.find((role) => role.claro_role.translation_key === 'admin')
+                (apiToken.claro_user?.claro_user_role.some((role) => role.claro_role.translation_key === 'admin') ||
+                    apiToken.claro_user?.claro_user_group.some((group) =>
+                        group.claro_group.claro_group_role.some((role) => role.claro_role.translation_key === 'admin')
+                    ))
         ) != null
 
     return doesCodeMatch && doesMatchingAdminUnlockedTokenExist
