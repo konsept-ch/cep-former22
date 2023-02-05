@@ -16,7 +16,8 @@ import { sendSms } from '../sendSms'
 import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
 import {
     fetchInscriptionsWithStatuses,
-    FINAL_STATUSES,
+    finalStatuses,
+    lockGroups,
     parsePhoneForSms,
     STATUSES,
     transformFlagsToStatus,
@@ -221,8 +222,12 @@ createService(
                 registrationType: currentInscription.registration_type,
             })
 
-        if (FINAL_STATUSES.includes(currentInscriptionStatus)) {
-            res.json('Ce statut ne peut pas être modifié')
+        const arePrevAndNextStatusesPartOfSameLockGroup = lockGroups.some(
+            (lockGroup) => lockGroup.includes(currentInscriptionStatus) && lockGroup.includes(newStatus)
+        )
+
+        if (finalStatuses.includes(currentInscriptionStatus) && !arePrevAndNextStatusesPartOfSameLockGroup) {
+            res.status(500).json('Ce statut ne peut pas être modifié')
 
             return {
                 entityName: 'Inscription',

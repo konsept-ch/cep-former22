@@ -130,7 +130,7 @@ components:
           description: L'UUID de l'inscription, généré automatiquement lors de sa création par Claroline, e.g. 01c292b5-43a4-4c59-9619-33a8309cdbf0
         status:
           type: string
-          description: Le statut de l'inscription, géré dans Claroline et dans Former22 ('En attente', 'À traiter par RH', 'Réfusée par RH', 'Entrée Web', 'Acceptée par CEP', 'Refusée par CEP', 'Invitée', 'Proposée', 'Participation', 'Participation Partielle', 'Non-participation', 'Annulée', 'Écartée')
+          description: Le statut de l'inscription, géré dans Claroline et dans Former22 ('En attente', 'À traiter par RH', 'Réfusée par RH', 'Entrée Web', 'Acceptée par CEP', 'Refusée par CEP', 'Invitée', 'Proposée', 'Participation', 'Participation Partielle', 'Non-participation', 'Annulation à traiter', 'Annulée facturable', 'Annulée non-facturable', 'Écartée')
         statusUpdatedAt:
           type: string
           description: La date (en ISO) de la dernière modification du statut, e.g. 2022-05-31T02:03:05.000Z

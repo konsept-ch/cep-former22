@@ -15,17 +15,32 @@ export const STATUSES = {
     PARTICIPATION: 'Participation',
     PARTICIPATION_PARTIELLE: 'Participation Partielle',
     NON_PARTICIPATION: 'Non-participation',
-    ANNULEE: 'Annulée',
+    ANNULEE: 'Annulation à traiter',
+    ANNULEE_FACTURABLE: 'Annulée facturable',
+    ANNULEE_NON_FACTURABLE: 'Annulée non-facturable',
     ECARTEE: 'Écartée',
 }
 
-export const FINAL_STATUSES = [
+export const finalStatuses = [
     STATUSES.A_TRAITER_PAR_RH,
     STATUSES.REFUSEE_PAR_RH,
     STATUSES.EN_ATTENTE,
     STATUSES.REFUSEE_PAR_CEP,
     STATUSES.ANNULEE,
+    STATUSES.ANNULEE_FACTURABLE,
+    STATUSES.ANNULEE_NON_FACTURABLE,
     STATUSES.ECARTEE,
+]
+
+export const lockGroups = [
+    [
+        STATUSES.PARTICIPATION,
+        STATUSES.PARTICIPATION_PARTIELLE,
+        STATUSES.NON_PARTICIPATION,
+        STATUSES.ANNULEE,
+        STATUSES.ANNULEE_FACTURABLE,
+        STATUSES.ANNULEE_NON_FACTURABLE,
+    ],
 ]
 
 export const REGISTRATION_TYPES = {
