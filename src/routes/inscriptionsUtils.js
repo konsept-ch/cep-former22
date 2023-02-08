@@ -232,12 +232,17 @@ export const fetchInscriptionsWithStatuses = async (
         })
 
         const professionFacetsValues = await getProfessionFacetsValues()
-        const coursesAdditionalData = await prisma.former22_course.findMany({
-            select: {
-                courseId: true,
-                coordinator: true,
-            },
-        })
+        const coursesAdditionalData = (
+            await prisma.former22_course.findMany({
+                select: {
+                    courseId: true,
+                    coordinator: true,
+                    codeCategory: true,
+                    theme: true,
+                    targetAudience: true,
+                },
+            })
+        ).reduce((map, course) => map.set(course.courseId, course), new Map())
         const inscriptionsAdditionalData = await prisma.former22_inscription.findMany({
             include: { former22_attestation: true },
         })
@@ -273,9 +278,8 @@ export const fetchInscriptionsWithStatuses = async (
                                           ({ userId }) => userId === inscription.claro_user.uuid
                                       ) ?? {}
 
-                                  const coordinator = coursesAdditionalData.find(
-                                      ({ courseId }) => courseId === courseData.uuid
-                                  )?.coordinator
+                                  const { coordinator, codeCategory, theme, targetAudience } =
+                                      coursesAdditionalData.get(courseData.uuid) ?? {}
 
                                   const userMainOrganization = getMainOrganization(
                                       inscription.claro_user.user_organization
@@ -289,6 +293,9 @@ export const fetchInscriptionsWithStatuses = async (
                                       type: inscription.registration_type,
                                       deletedInscriptionUuid: inscription.inscription_uuid,
                                       coordinator,
+                                      codeCategory,
+                                      theme,
+                                      targetAudience,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
                                       status: deriveInscriptionStatus({
                                           savedStatus: (shouldFetchCancellations
@@ -358,9 +365,10 @@ export const fetchInscriptionsWithStatuses = async (
                         : [
                               {
                                   id: uuidv4(),
-                                  coordinator: coursesAdditionalData.find(
-                                      ({ courseId }) => courseId === courseData.uuid
-                                  )?.coordinator,
+                                  coordinator: coursesAdditionalData.get(courseData.uuid)?.coordinator,
+                                  codeCategory: coursesAdditionalData.get(courseData.uuid)?.codeCategory,
+                                  theme: coursesAdditionalData.get(courseData.uuid)?.theme,
+                                  targetAudience: coursesAdditionalData.get(courseData.uuid)?.targetAudience,
                                   session: {
                                       id: sessionUuid,
                                       name: course_name,
@@ -415,13 +423,17 @@ export const fetchInscriptionsWithStatuses = async (
 
                         const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
 
+                        const { coordinator, codeCategory, theme, targetAudience } =
+                            coursesAdditionalData.get(inscription.claro_cursusbundle_course.uuid) ?? {}
+
                         return {
                             id: inscription.uuid,
                             inscriptionDate: inscription.registration_date,
                             type: inscription.registration_type,
-                            coordinator: coursesAdditionalData.find(
-                                ({ courseId }) => courseId === inscription.claro_cursusbundle_course.uuid
-                            )?.coordinator,
+                            coordinator,
+                            codeCategory,
+                            theme,
+                            targetAudience,
                             status: STATUSES.EN_ATTENTE,
                             isPending: true,
                             session: {
