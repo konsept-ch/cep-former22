@@ -60,6 +60,7 @@ export const LOG_TYPES = {
     ATTESTATION: 'Attestation',
     CONTRACT: 'Contrat',
     CONTRACT_TEMPLATE: 'ContratTemplate',
+    EVALUATION_TEMPLATE: 'EvaluationTemplate',
 }
 
 // TODO: named params
