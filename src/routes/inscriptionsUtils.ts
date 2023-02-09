@@ -96,9 +96,8 @@ export const deriveInscriptionStatus = ({
 
 export const getMainOrganization = (organizations: any[]) => {
     if (organizations != null) {
-        const { claro__organization: mainOrganization } = organizations.find(
-            ({ is_main }: { is_main: boolean }) => is_main
-        )
+        const { claro__organization: mainOrganization } =
+            organizations.find(({ is_main }: { is_main: boolean }) => is_main) ?? {}
 
         return mainOrganization
     } else {
