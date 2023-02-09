@@ -159,12 +159,13 @@ const formatOrganizationsHierarchy = ({
     organizations: any[]
     allOrganizations: any[]
 }) => {
-    const { claro__organization: mainOrganization } = organizations.find(({ is_main }: { is_main: boolean }) => is_main)
+    const { claro__organization: mainOrganization } =
+        organizations.find(({ is_main }: { is_main: boolean }) => is_main) ?? {}
 
     const getHierarchy = ({ organization, hierarchy = [] }: any): string => {
-        const hierarchyLatest = [...hierarchy, organization.name]
+        const hierarchyLatest = [...hierarchy, organization?.name]
 
-        const { parent_id: parentId } = organization
+        const { parent_id: parentId } = organization ?? {}
 
         if (parentId) {
             const parent = allOrganizations?.find(({ id }: any) => id === parentId)
@@ -179,7 +180,8 @@ const formatOrganizationsHierarchy = ({
 }
 
 const getOrganizationCode = (organizations: any[]) => {
-    const { claro__organization: mainOrganization } = organizations.find(({ is_main }: { is_main: boolean }) => is_main)
+    const { claro__organization: mainOrganization } =
+        organizations.find(({ is_main }: { is_main: boolean }) => is_main) ?? {}
 
     return mainOrganization?.code
 }
