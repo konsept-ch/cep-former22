@@ -19,6 +19,31 @@ createService(
 )
 
 createService(
+    'put',
+    '/statuses',
+    async (req: Request, res: Response) => {
+        const { uuids, status } = req.body
+
+        await prisma.former22_manual_invoice.updateMany({
+            where: {
+                uuid: {
+                    in: uuids,
+                },
+            },
+            data: {
+                status,
+            },
+        })
+
+        res.json({
+            message: 'Le status a été correctement mis à jour',
+        })
+    },
+    null,
+    manualInvoicesRouter
+)
+
+createService(
     'get',
     '/',
     async (_req: Request, res: Response) => {
