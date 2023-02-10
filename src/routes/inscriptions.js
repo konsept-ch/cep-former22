@@ -20,6 +20,7 @@ import {
     lockGroups,
     parsePhoneForSms,
     STATUSES,
+    statusesForAnnulation,
     transformFlagsToStatus,
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
@@ -238,8 +239,6 @@ createService(
                 }),
             }
         }
-
-        const statusesForAnnulation = [STATUSES.ANNULEE, STATUSES.REFUSEE_PAR_CEP, STATUSES.ECARTEE]
 
         if (typeof currentInscription !== 'undefined') {
             if (emailTemplateId) {

@@ -46,6 +46,14 @@ export const lockGroups = [
     ],
 ] as const
 
+export const statusesForAnnulation = [
+    STATUSES.ANNULEE,
+    STATUSES.ANNULEE_FACTURABLE,
+    STATUSES.ANNULEE_NON_FACTURABLE,
+    STATUSES.REFUSEE_PAR_CEP,
+    STATUSES.ECARTEE,
+] as const
+
 export const REGISTRATION_TYPES = {
     CANCELLATION: 'cancellation',
     LEARNER: 'learner',
@@ -66,7 +74,7 @@ export const transformFlagsToStatus = ({
     isHrValidationEnabled: boolean
 }) => {
     if (registrationType === REGISTRATION_TYPES.CANCELLATION) {
-        return STATUSES.ANNULEE
+        return STATUSES.ANNULEE_NON_FACTURABLE
     } else if (!validated) {
         return STATUSES.REFUSEE_PAR_RH
     } else if (isHrValidationEnabled) {
@@ -324,6 +332,21 @@ export const fetchInscriptionsWithStatuses = async (
 
                                   const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
+                                  const derivedStatus = deriveInscriptionStatus({
+                                      savedStatus: (shouldFetchCancellations
+                                          ? inscriptionStatusForIdWhenCancellation
+                                          : inscriptionStatusForId
+                                      )?.inscriptionStatus as StatusesValues,
+                                      transformedStatus: transformFlagsToStatus({
+                                          validated: (inscription as any).validated,
+                                          registrationType: shouldFetchCancellations
+                                              ? REGISTRATION_TYPES.CANCELLATION
+                                              : (inscription as any).registration_type,
+                                          hrValidationStatus: (inscription as any).status,
+                                          isHrValidationEnabled,
+                                      }),
+                                  })
+
                                   return {
                                       id: inscription.uuid,
                                       inscriptionDate: inscription.registration_date,
@@ -334,20 +357,11 @@ export const fetchInscriptionsWithStatuses = async (
                                       theme,
                                       targetAudience,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
-                                      status: deriveInscriptionStatus({
-                                          savedStatus: (shouldFetchCancellations
-                                              ? inscriptionStatusForIdWhenCancellation
-                                              : inscriptionStatusForId
-                                          )?.inscriptionStatus as StatusesValues,
-                                          transformedStatus: transformFlagsToStatus({
-                                              validated: (inscription as any).validated,
-                                              registrationType: shouldFetchCancellations
-                                                  ? REGISTRATION_TYPES.CANCELLATION
-                                                  : (inscription as any).registration_type,
-                                              hrValidationStatus: (inscription as any).status,
-                                              isHrValidationEnabled,
-                                          }),
-                                      }),
+                                      status: shouldFetchCancellations
+                                          ? statusesForAnnulation.includes(derivedStatus as any)
+                                              ? derivedStatus
+                                              : STATUSES.ANNULEE_NON_FACTURABLE
+                                          : derivedStatus,
                                       session: {
                                           id: sessionUuid,
                                           name: course_name,
