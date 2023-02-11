@@ -72,6 +72,9 @@ createService(
                 invoiceNumberForCurrentYear: true,
                 customClientEmail: true,
                 customClientAddress: true,
+                customClientTitle: true,
+                customClientFirstname: true,
+                customClientLastname: true,
                 invoiceDate: true,
                 courseYear: true,
                 items: true,
@@ -92,8 +95,6 @@ createService(
             },
         })
 
-        // console.log(invoices)
-
         res.json(
             invoices.map(
                 ({
@@ -101,6 +102,9 @@ createService(
                     claro_user: { uuid: userUuid, first_name: firstName, last_name: lastName },
                     claro__organization: { uuid: organizationUuid, name: organizationName, former22_organization },
                     claro_user_former22_manual_invoice_selectedUserIdToclaro_user,
+                    customClientTitle,
+                    customClientFirstname,
+                    customClientLastname,
                     status,
                     ...rest
                 }) => ({
@@ -117,6 +121,9 @@ createService(
                     status: invoiceStatusesFromPrisma[status],
                     organizationUuid,
                     organizationName,
+                    customClientTitle,
+                    customClientFirstname,
+                    customClientLastname,
                 })
             )
         )
@@ -128,12 +135,16 @@ createService(
 createService(
     'post',
     '/',
+
     async (req: Request, res: Response) => {
         try {
             const {
                 client,
                 customClientEmail,
                 customClientAddress,
+                customClientTitle,
+                customClientFirstname,
+                customClientLastname,
                 invoiceDate,
                 courseYear,
                 items,
@@ -184,6 +195,9 @@ createService(
                     invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
                     customClientEmail,
                     customClientAddress,
+                    customClientTitle,
+                    customClientFirstname,
+                    customClientLastname,
                     invoiceDate,
                     courseYear,
                     items,
@@ -232,6 +246,9 @@ createService(
                 client,
                 customClientEmail,
                 customClientAddress,
+                customClientTitle,
+                customClientFirstname,
+                customClientLastname,
                 invoiceDate,
                 courseYear,
                 items,
@@ -284,6 +301,9 @@ createService(
                     invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
                     customClientEmail,
                     customClientAddress,
+                    customClientTitle,
+                    customClientFirstname,
+                    customClientLastname,
                     invoiceDate,
                     courseYear,
                     items,

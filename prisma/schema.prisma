@@ -5592,6 +5592,9 @@ model former22_manual_invoice {
   selectedUserId                                                Int?
   concerns                                                      String?                        @db.Text
   status                                                        former22_manual_invoice_status
+  customClientTitle                                             String?                        @db.Text
+  customClientFirstname                                         String?                        @db.Text
+  customClientLastname                                          String?                        @db.Text
   claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                    @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
   claro_user                                                    claro_user                     @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
   claro__organization                                           claro__organization            @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
@@ -5709,6 +5712,14 @@ model migrations_state {
   key    String   @id @unique(map: "key") @db.VarChar(255)
   value  String   @db.Text
   run_on DateTime @db.DateTime(0)
+}
+
+model former22_evaluation_template {
+  id          Int     @id @default(autoincrement())
+  uuid        String  @unique(map: "uuid") @db.VarChar(36)
+  title       String? @default("Nouveau modèle d'évaluation") @db.VarChar(255)
+  description String? @db.Text
+  struct      Json?
 }
 
 enum former22_manual_invoice_status {
