@@ -146,7 +146,7 @@ createService(
     'post',
     '/',
     async (req: Request, res: Response) => {
-        createInvoice({ ...req.body, cfEmail: req.headers['x-login-email-address'], res })
+        createInvoice({ invoiceData: req.body, cfEmail: req.headers['x-login-email-address'], res })
     },
     null,
     manualInvoicesRouter

@@ -24,6 +24,8 @@ import {
     transformFlagsToStatus,
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
+import { createInvoice } from './manualInvoicesUtils'
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 
 libre.convertAsync = util.promisify(libre.convert)
 
@@ -783,13 +785,46 @@ createService(
             let isInvoiceCreated = false
 
             if (newStatus === STATUSES.NON_PARTICIPATION || conditionForInvoiceCreation) {
-                await prisma.former22_invoice.create({
-                    data: {
-                        invoiceId: uuidv4(),
-                        inscriptionId: currentInscription.id,
-                        inscriptionStatus: newStatus,
-                        createdAt: new Date(),
+                // await prisma.former22_invoice.create({
+                //     data: {
+                //         invoiceId: uuidv4(),
+                //         inscriptionId: currentInscription.id,
+                //         inscriptionStatus: newStatus,
+                //         createdAt: new Date(),
+                //     },
+                // })
+
+                createInvoice({
+                    invoiceData: {
+                        // TODO replace empty strings with corresponding values
+                        client: '',
+                        customClientEmail: '',
+                        customClientAddress: '',
+                        customClientTitle: '',
+                        customClientFirstname: '',
+                        customClientLastname: '',
+                        invoiceDate: '',
+                        courseYear: '',
+                        selectedUserUuid: '',
+                        items: [
+                            {
+                                designation: '', // nom de la session
+                                unit: 'part.', // TODO: ask CEP what should unit be
+                                price: '', // Prix TTC (coût affiché sur le site Claroline
+                                amount: 1,
+                                vatCode: 'EXONERE',
+                            },
+                        ],
+                        status: invoiceStatusesFromPrisma.A_traiter,
+                        invoiceType: invoiceTypesFromPrisma.Directe,
+                        reason: invoiceReasonsFromPrisma.Non_participation,
+                        concerns: '', // always empty here, can be modified from the interface
+                        // TODO probably keep the inscription ids as a foreign key for direct and grouped
+                        // inscriptionId: currentInscription.id,
+                        // inscriptionStatus: newStatus,
                     },
+                    cfEmail: req.headers['x-login-email-address'],
+                    res,
                 })
 
                 isInvoiceCreated = true
