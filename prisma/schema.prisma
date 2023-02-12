@@ -5572,32 +5572,29 @@ model former22_attestation {
 }
 
 model former22_manual_invoice {
-  id                                                            Int                            @id @default(autoincrement())
-  uuid                                                          String?                        @unique(map: "uuid") @db.VarChar(255)
+  id                                                            Int                                 @id @default(autoincrement())
+  uuid                                                          String?                             @unique(map: "uuid") @db.VarChar(255)
   organizationId                                                Int
   creatorUserId                                                 Int
   invoiceNumberForCurrentYear                                   Int
-  customClientEmail                                             String?                        @db.Text
-  customClientAddress                                           String?                        @db.Text
-  invoiceDate                                                   DateTime?                      @db.DateTime(0)
+  customClientEmail                                             String?                             @db.Text
+  customClientAddress                                           String?                             @db.Text
+  invoiceDate                                                   DateTime?                           @db.DateTime(0)
   courseYear                                                    Int
-  itemDesignations                                              String?                        @db.Text
-  itemUnits                                                     String?                        @db.Text
-  itemAmounts                                                   String?                        @db.Text
-  itemPrices                                                    String?                        @db.Text
-  itemVatCodes                                                  String?                        @db.Text
-  createdAt                                                     DateTime                       @default(now()) @db.DateTime(0)
-  updatedAt                                                     DateTime                       @default(now()) @db.DateTime(0)
+  createdAt                                                     DateTime                            @default(now()) @db.DateTime(0)
+  updatedAt                                                     DateTime                            @default(now()) @db.DateTime(0)
   items                                                         Json?
   selectedUserId                                                Int?
-  concerns                                                      String?                        @db.Text
+  concerns                                                      String?                             @db.Text
   status                                                        former22_manual_invoice_status
-  customClientTitle                                             String?                        @db.Text
-  customClientFirstname                                         String?                        @db.Text
-  customClientLastname                                          String?                        @db.Text
-  claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                    @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
-  claro_user                                                    claro_user                     @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
-  claro__organization                                           claro__organization            @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
+  customClientTitle                                             String?                             @db.Text
+  customClientFirstname                                         String?                             @db.Text
+  customClientLastname                                          String?                             @db.Text
+  invoiceType                                                   former22_manual_invoice_invoiceType
+  reason                                                        former22_manual_invoice_reason
+  claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                         @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
+  claro_user                                                    claro_user                          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
+  claro__organization                                           claro__organization                 @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
 
   @@index([creatorUserId], map: "creator_user_index")
   @@index([organizationId], map: "organization_index")
@@ -5714,14 +5711,6 @@ model migrations_state {
   run_on DateTime @db.DateTime(0)
 }
 
-model former22_evaluation_template {
-  id          Int     @id @default(autoincrement())
-  uuid        String  @unique(map: "uuid") @db.VarChar(36)
-  title       String? @default("Nouveau modèle d'évaluation") @db.VarChar(255)
-  description String? @db.Text
-  struct      Json?
-}
-
 enum former22_manual_invoice_status {
   En_pr_paration    @map("En préparation")
   A_traiter         @map("A traiter")
@@ -5729,4 +5718,17 @@ enum former22_manual_invoice_status {
   Non_transmissible @map("Non transmissible")
   Annul_e           @map("Annulée")
   Envoy_e           @map("Envoyée")
+}
+
+enum former22_manual_invoice_invoiceType {
+  Manuelle
+  Directe
+  Group_e  @map("Groupée")
+}
+
+enum former22_manual_invoice_reason {
+  Participation
+  P_nalit_          @map("Pénalité")
+  Annulation
+  Non_participation @map("Non-participation")
 }
