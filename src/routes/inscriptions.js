@@ -24,6 +24,8 @@ import {
     transformFlagsToStatus,
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
+import { createInvoice } from './manualInvoicesUtils'
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 
 libre.convertAsync = util.promisify(libre.convert)
 
@@ -129,6 +131,7 @@ createService(
                     select: {
                         uuid: true,
                         course_name: true,
+                        price: true,
                         claro_cursusbundle_course: {
                             select: {
                                 uuid: true,
@@ -200,6 +203,7 @@ createService(
         const session = currentInscription.claro_cursusbundle_course_session
         const {
             course_name: sessionName,
+            price: sessionPrice,
             claro_cursusbundle_course: {
                 uuid: courseUuid,
                 course_name: courseName,
@@ -783,13 +787,58 @@ createService(
             let isInvoiceCreated = false
 
             if (newStatus === STATUSES.NON_PARTICIPATION || conditionForInvoiceCreation) {
-                await prisma.former22_invoice.create({
-                    data: {
-                        invoiceId: uuidv4(),
-                        inscriptionId: currentInscription.id,
-                        inscriptionStatus: newStatus,
-                        createdAt: new Date(),
+                const {
+                    uuid,
+                    name,
+                    code,
+                    addressTitle,
+                    postalAddressStreet,
+                    postalAddressCode,
+                    postalAddressCountry,
+                    // postalAddressCountryCode,
+                    postalAddressDepartment,
+                    // postalAddressDepartmentCode,
+                    postalAddressLocality,
+                } = mainOrganization ?? {}
+
+                createInvoice({
+                    invoiceData: {
+                        status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                        invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
+                        reason: { value: 'Non_participation', label: invoiceReasonsFromPrisma.Non_participation },
+                        client: {
+                            value: code,
+                            label: name,
+                            uuid,
+                        },
+                        customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
+                            postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
+                        }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
+                            postalAddressCode ? `${postalAddressCode} ` : ''
+                        }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
+                        customClientEmail: mainOrganization.email,
+                        selectedUserUuid: '',
+                        customClientTitle: '',
+                        customClientFirstname: '',
+                        customClientLastname: '',
+                        courseYear: new Date().getFullYear(),
+                        invoiceDate: new Date().toISOString(),
+                        concerns: '',
+                        items: [
+                            {
+                                designation: sessionName, // nom de la session
+                                unit: { value: 'part.', label: 'part.' }, // TODO: ask CEP what should unit be
+                                price: sessionPrice, // Prix TTC (coût affiché sur le site Claroline)
+                                amount: '1',
+                                vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                            },
+                        ],
+                        // TODO probably keep the inscription ids as a foreign key for direct and grouped
+                        // inscriptionId: currentInscription.id,
+                        // inscriptionStatus: newStatus,
                     },
+                    cfEmail: req.headers['x-login-email-address'],
+                    res,
                 })
 
                 isInvoiceCreated = true

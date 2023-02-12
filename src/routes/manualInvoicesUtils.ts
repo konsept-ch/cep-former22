@@ -5,24 +5,7 @@ import type { Response } from 'express'
 import { prisma } from '..'
 import { invoiceReasonsKeys, invoiceStatusesKeys, invoiceTypesKeys } from '../constants'
 
-export const createInvoice = async ({
-    client,
-    customClientEmail,
-    customClientAddress,
-    customClientTitle,
-    customClientFirstname,
-    customClientLastname,
-    invoiceDate,
-    courseYear,
-    items,
-    selectedUserUuid,
-    status,
-    concerns,
-    invoiceType,
-    reason,
-    cfEmail,
-    res,
-}: {
+type InvoiceData = {
     client: { uuid: string }
     customClientEmail: string
     customClientAddress: string
@@ -31,12 +14,35 @@ export const createInvoice = async ({
     customClientLastname: string
     invoiceDate: string
     courseYear: number
-    items: string
+    items: Record<string, string | number>
     selectedUserUuid: string
     concerns: string
     status: { value: invoiceStatusesKeys }
     invoiceType: { value: invoiceTypesKeys }
     reason: { value: invoiceReasonsKeys }
+}
+
+export const createInvoice = async ({
+    invoiceData: {
+        client,
+        customClientEmail,
+        customClientAddress,
+        customClientTitle,
+        customClientFirstname,
+        customClientLastname,
+        invoiceDate,
+        courseYear,
+        items,
+        selectedUserUuid,
+        status,
+        concerns,
+        invoiceType,
+        reason,
+    },
+    cfEmail,
+    res,
+}: {
+    invoiceData: InvoiceData
     cfEmail?: string | string[]
     res: Response
 }) => {
