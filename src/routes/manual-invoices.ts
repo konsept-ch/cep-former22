@@ -4,15 +4,19 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
 import { createService } from '../utils'
-import { invoiceStatusesFromPrisma } from '../constants'
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 
 export const manualInvoicesRouter = Router()
 
 createService(
     'get',
-    '/statuses',
+    '/enums',
     async (_req: Request, res: Response) => {
-        res.json(invoiceStatusesFromPrisma)
+        res.json({
+            invoiceStatuses: invoiceStatusesFromPrisma,
+            invoiceReasons: invoiceReasonsFromPrisma,
+            invoiceTypes: invoiceTypesFromPrisma,
+        })
     },
     null,
     manualInvoicesRouter
@@ -85,6 +89,8 @@ createService(
                 },
                 status: true,
                 concerns: true,
+                invoiceType: true,
+                reason: true,
             },
         })
 
@@ -106,6 +112,8 @@ createService(
                     customClientFirstname,
                     customClientLastname,
                     status,
+                    invoiceType,
+                    reason,
                     ...rest
                 }) => ({
                     ...rest,
@@ -119,6 +127,8 @@ createService(
                     clientNumber: former22_organization?.clientNumber,
                     selectedUserUuid: claro_user_former22_manual_invoice_selectedUserIdToclaro_user?.uuid,
                     status: invoiceStatusesFromPrisma[status],
+                    invoiceType: invoiceTypesFromPrisma[invoiceType],
+                    reason: invoiceReasonsFromPrisma[reason],
                     organizationUuid,
                     organizationName,
                     customClientTitle,
@@ -151,6 +161,8 @@ createService(
                 selectedUserUuid,
                 status,
                 concerns,
+                invoiceType,
+                reason,
             } = req.body
 
             const { 'x-login-email-address': cfEmail } = req.headers
@@ -200,9 +212,11 @@ createService(
                     customClientLastname,
                     invoiceDate,
                     courseYear,
+                    concerns,
                     items,
                     status: status?.value,
-                    concerns,
+                    invoiceType: invoiceType?.value,
+                    reason: reason?.value,
                     claro_user: {
                         connect: {
                             id: creatorUserId,
@@ -255,6 +269,8 @@ createService(
                 selectedUserUuid,
                 status,
                 concerns,
+                invoiceType,
+                reason,
             } = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
@@ -306,9 +322,11 @@ createService(
                     customClientLastname,
                     invoiceDate,
                     courseYear,
+                    concerns,
                     items,
                     status: status?.value,
-                    concerns,
+                    invoiceType: invoiceType?.value,
+                    reason: reason?.value,
                     creatorUserId,
                     organizationId,
                     selectedUserId,
