@@ -780,13 +780,33 @@ createService(
                 where: { organizationUuid: mainOrganization?.uuid },
             })
 
-            const conditionForInvoiceCreation =
+            let config = null
+
+            if (newStatus === STATUSES.NON_PARTICIPATION) {
+                config = {
+                    reason: 'Non_participation',
+                    price: `${sessionPrice}`,
+                }
+            }
+
+            if (newStatus === STATUSES.ANNULEE_FACTURABLE) {
+                config = {
+                    reason: 'Annulation',
+                    price: '50',
+                }
+            }
+
+            if (
                 organization?.billingMode === 'Directe' &&
                 [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
+            ) {
+                config = {
+                    reason: 'Participation',
+                    price: `${sessionPrice}`,
+                }
+            }
 
-            let isInvoiceCreated = false
-
-            if (newStatus === STATUSES.NON_PARTICIPATION || conditionForInvoiceCreation) {
+            if (config !== null) {
                 const {
                     uuid,
                     name,
@@ -805,7 +825,7 @@ createService(
                     invoiceData: {
                         status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
                         invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
-                        reason: { value: 'Non_participation', label: invoiceReasonsFromPrisma.Non_participation },
+                        reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
                         client: {
                             value: code,
                             label: name,
@@ -828,7 +848,7 @@ createService(
                             {
                                 designation: sessionName, // nom de la session
                                 unit: { value: 'part.', label: 'part.' }, // TODO: ask CEP what should unit be
-                                price: sessionPrice, // Prix TTC (coût affiché sur le site Claroline)
+                                price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
                                 vatCode: { value: 'EXONERE', label: 'EXONERE' },
                             },
@@ -840,11 +860,9 @@ createService(
                     cfEmail: req.headers['x-login-email-address'],
                     res,
                 })
-
-                isInvoiceCreated = true
             }
 
-            res.json({ isInvoiceCreated })
+            res.json({ isInvoiceCreated: config !== null })
 
             return {
                 entityName: 'Inscription',
