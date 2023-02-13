@@ -821,7 +821,7 @@ createService(
                     postalAddressLocality,
                 } = mainOrganization ?? {}
 
-                createInvoice({
+                await createInvoice({
                     invoiceData: {
                         status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
                         invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
@@ -858,7 +858,6 @@ createService(
                         // inscriptionStatus: newStatus,
                     },
                     cfEmail: req.headers['x-login-email-address'],
-                    res,
                 })
             }
 
