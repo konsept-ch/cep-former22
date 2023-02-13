@@ -153,6 +153,30 @@ createService(
 )
 
 createService(
+    'post',
+    '/grouped',
+    async (req: Request, res: Response) => {
+        const { type } = req.body
+
+        // TODO generate for all inscriptions whose organisation mode is semestrial or annual.
+        // One invoice per organisation.
+        // One item per inscription.
+
+        if (type === 'semestrial') {
+            // createInvoice({ invoiceData: req.body, cfEmail: req.headers['x-login-email-address'], res })
+            res.json('semestrial')
+        } else if (type === 'annual') {
+            // createInvoice({ invoiceData: req.body, cfEmail: req.headers['x-login-email-address'], res })
+            res.json('annual')
+        } else {
+            res.status(400).json('You need to pass a type, it should be annual or semestrial')
+        }
+    },
+    null,
+    manualInvoicesRouter
+)
+
+createService(
     'put',
     '/:id',
     async (req: Request, res: Response) => {
