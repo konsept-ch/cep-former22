@@ -312,8 +312,6 @@ createService(
                 selectedUserUuid,
                 status,
                 concerns,
-                invoiceType,
-                reason,
             } = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
@@ -368,8 +366,6 @@ createService(
                     concerns,
                     items,
                     status: status?.value,
-                    invoiceType: invoiceType?.value,
-                    reason: reason?.value,
                     creatorUserId,
                     organizationId,
                     selectedUserId,

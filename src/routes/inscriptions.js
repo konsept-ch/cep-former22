@@ -846,7 +846,7 @@ createService(
                         concerns: '',
                         items: [
                             {
-                                designation: sessionName, // nom de la session
+                                designation: `${user.first_name} ${user.last_name} - ${sessionName}`, // nom de la session
                                 unit: { value: 'part.', label: 'part.' }, // TODO: ask CEP what should unit be
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
