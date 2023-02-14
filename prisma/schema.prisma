@@ -5452,23 +5452,23 @@ model former22_user {
 }
 
 model former22_organization {
-  id                          Int                  @id @default(autoincrement())
-  organizationUuid            String               @unique(map: "organizationUuid") @db.VarChar(36)
-  billingMode                 String?              @db.Text
-  dailyRate                   Float?               @db.Float
+  id                          Int                 @id @default(autoincrement())
+  organizationUuid            String              @unique(map: "organizationUuid") @db.VarChar(36)
+  billingMode                 String?             @db.Text
+  dailyRate                   Float?              @db.Float
   flyersCount                 Int?
-  phone                       String?              @db.Text
-  addressTitle                String?              @db.Text
-  postalAddressCountry        String?              @db.Text
-  postalAddressCountryCode    String?              @db.Text
-  postalAddressCode           String?              @db.Text
-  postalAddressStreet         String?              @db.Text
-  postalAddressDepartment     String?              @db.Text
-  postalAddressDepartmentCode String?              @db.Text
-  postalAddressLocality       String?              @db.Text
-  organizationId              Int?                 @unique(map: "organizationId")
+  phone                       String?             @db.Text
+  addressTitle                String?             @db.Text
+  postalAddressCountry        String?             @db.Text
+  postalAddressCountryCode    String?             @db.Text
+  postalAddressCode           String?             @db.Text
+  postalAddressStreet         String?             @db.Text
+  postalAddressDepartment     String?             @db.Text
+  postalAddressDepartmentCode String?             @db.Text
+  postalAddressLocality       String?             @db.Text
+  organizationId              Int                 @unique(map: "organizationId")
   clientNumber                Int?
-  claro__organization         claro__organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
+  claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
 
   @@index([organizationId], map: "organization_index")
 }

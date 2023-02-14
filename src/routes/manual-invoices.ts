@@ -146,7 +146,147 @@ createService(
     'post',
     '/',
     async (req: Request, res: Response) => {
-        createInvoice({ invoiceData: req.body, cfEmail: req.headers['x-login-email-address'], res })
+        try {
+            res.json(await createInvoice({ invoiceData: req.body, cfEmail: req.headers['x-login-email-address'] }))
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(error)
+            res.status(500).send({ error: 'Erreur de création de facture' })
+        }
+    },
+    null,
+    manualInvoicesRouter
+)
+
+createService(
+    'post',
+    '/grouped',
+    async (req: Request, res: Response) => {
+        // TODO generate for all inscriptions whose organisation mode is semestrial or annual.
+        // One invoice per organisation.
+        // One item per inscription.
+        const typeToBillingMode = {
+            semestrial: 'Groupée - Semestrielle',
+            annual: 'Groupée - Annuelle',
+        } as const
+        type typeToBillingModeKeys = keyof typeof typeToBillingMode
+        // type typeToBillingModeValues = (typeof typeToBillingMode)[typeToBillingModeKeys]
+
+        const { type }: { type: typeToBillingModeKeys } = req.body
+
+        const billingMode = typeToBillingMode[type]
+        if (!billingMode) {
+            res.status(400).json('You need to pass a type, it should be annual or semestrial')
+        }
+
+        // Get all organizations by billing mode
+        const organizations = await prisma.former22_organization.findMany({
+            select: {
+                billingMode: true,
+                organizationId: true,
+                organizationUuid: true,
+                addressTitle: true,
+                postalAddressCountry: true,
+                postalAddressCountryCode: true,
+                postalAddressCode: true,
+                postalAddressStreet: true,
+                postalAddressDepartment: true,
+                postalAddressDepartmentCode: true,
+                postalAddressLocality: true,
+            },
+            where: {
+                billingMode,
+            },
+        })
+
+        const now = new Date()
+
+        let invoiceCount = 0
+
+        // create all invoices by organizations
+        for (const {
+            organizationId,
+            organizationUuid,
+            addressTitle,
+            postalAddressStreet,
+            postalAddressCode,
+            postalAddressCountry,
+            postalAddressDepartment,
+            postalAddressLocality,
+        } of organizations) {
+            const { name, email, code } =
+                (await prisma.claro__organization.findUnique({
+                    select: {
+                        name: true,
+                        email: true,
+                        code: true,
+                    },
+                    where: { id: organizationId },
+                })) ?? {}
+
+            const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
+                select: {
+                    claro_cursusbundle_course_session: {
+                        select: {
+                            course_name: true,
+                            price: true,
+                        },
+                    },
+                },
+                where: {
+                    claro_user: {
+                        user_organization: {
+                            some: {
+                                oganization_id: organizationId,
+                            },
+                        },
+                    },
+                },
+            })
+
+            if (sessionUsers.length === 0) continue
+
+            createInvoice({
+                invoiceData: {
+                    client: {
+                        value: code ?? '',
+                        label: name ?? '',
+                        uuid: organizationUuid,
+                    },
+                    customClientEmail: email ?? '',
+                    customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
+                        postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
+                    }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
+                        postalAddressCode ? `${postalAddressCode} ` : ''
+                    }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
+                    customClientTitle: '',
+                    customClientFirstname: '',
+                    customClientLastname: '',
+                    courseYear: now.getFullYear(),
+                    invoiceDate: now.toISOString(),
+                    selectedUserUuid: '',
+                    concerns: '',
+                    status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                    invoiceType: { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
+                    reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
+                    items: sessionUsers.map((sessionUser) => ({
+                        designation: sessionUser.claro_cursusbundle_course_session.course_name,
+                        unit: { value: 'part.', label: 'part.' },
+                        price: `${sessionUser.claro_cursusbundle_course_session.price ?? ''}`,
+                        amount: '1',
+                        vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                    })),
+                },
+                cfEmail: req.headers['x-login-email-address'],
+            })
+
+            /* eslint-disable-next-line no-plusplus */
+            ++invoiceCount
+        }
+
+        res.json({
+            message: `${invoiceCount} factures groupées ont été générées.`,
+        })
     },
     null,
     manualInvoicesRouter
