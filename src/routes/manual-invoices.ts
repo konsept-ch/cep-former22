@@ -162,15 +162,18 @@ createService(
     'post',
     '/grouped',
     async (req: Request, res: Response) => {
-        const { type } = req.body
-
         // TODO generate for all inscriptions whose organisation mode is semestrial or annual.
         // One invoice per organisation.
         // One item per inscription.
         const typeToBillingMode = {
             semestrial: 'Groupée - Semestrielle',
             annual: 'Groupée - Annuelle',
-        }
+        } as const
+        type typeToBillingModeKeys = keyof typeof typeToBillingMode
+        // type typeToBillingModeValues = (typeof typeToBillingMode)[typeToBillingModeKeys]
+
+        const { type }: { type: typeToBillingModeKeys } = req.body
+
         const billingMode = typeToBillingMode[type]
         if (!billingMode) {
             res.status(400).json('You need to pass a type, it should be annual or semestrial')
@@ -211,14 +214,16 @@ createService(
             postalAddressDepartment,
             postalAddressLocality,
         } of organizations) {
-            const { name, email, code } = await prisma.claro__organization.findUnique({
-                select: {
-                    name: true,
-                    email: true,
-                    code: true,
-                },
-                where: { id: organizationId },
-            })
+            const { name, email, code } =
+                (await prisma.claro__organization.findUnique({
+                    select: {
+                        name: true,
+                        email: true,
+                        code: true,
+                    },
+                    where: { id: organizationId },
+                })) ?? {}
+
             const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
                 select: {
                     claro_cursusbundle_course_session: {
@@ -232,7 +237,7 @@ createService(
                     claro_user: {
                         user_organization: {
                             some: {
-                                organization_id: organizationId,
+                                oganization_id: organizationId,
                             },
                         },
                     },
@@ -244,11 +249,11 @@ createService(
             createInvoice({
                 invoiceData: {
                     client: {
-                        value: code,
-                        label: name,
+                        value: code ?? '',
+                        label: name ?? '',
                         uuid: organizationUuid,
                     },
-                    customClientEmail: email,
+                    customClientEmail: email ?? '',
                     customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
                         postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
                     }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
@@ -267,7 +272,7 @@ createService(
                     items: sessionUsers.map((sessionUser) => ({
                         designation: sessionUser.claro_cursusbundle_course_session.course_name,
                         unit: { value: 'part.', label: 'part.' },
-                        price: sessionUser.claro_cursusbundle_course_session.price,
+                        price: `${sessionUser.claro_cursusbundle_course_session.price ?? ''}`,
                         amount: '1',
                         vatCode: { value: 'EXONERE', label: 'EXONERE' },
                     })),

@@ -1,10 +1,17 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
-import { invoiceReasonsKeys, invoiceStatusesKeys, invoiceTypesKeys } from '../constants'
+import {
+    invoiceReasonsKeys,
+    invoiceReasonsValues,
+    invoiceStatusesKeys,
+    invoiceStatusesValues,
+    invoiceTypesKeys,
+    invoiceTypesValues,
+} from '../constants'
 
 type InvoiceData = {
-    client: { uuid: string }
+    client: { uuid: string; value: string; label: string }
     customClientEmail: string
     customClientAddress: string
     customClientTitle: string
@@ -12,12 +19,12 @@ type InvoiceData = {
     customClientLastname: string
     invoiceDate: string
     courseYear: number
-    items: Record<string, string | number>
+    items: Record<string, string | { value: string; label: string }>[]
     selectedUserUuid: string
     concerns: string
-    status: { value: invoiceStatusesKeys }
-    invoiceType: { value: invoiceTypesKeys }
-    reason: { value: invoiceReasonsKeys }
+    status: { value: invoiceStatusesKeys; label: invoiceStatusesValues }
+    invoiceType: { value: invoiceTypesKeys; label: invoiceTypesValues }
+    reason: { value: invoiceReasonsKeys; label: invoiceReasonsValues }
 }
 
 export const createInvoice = async ({
