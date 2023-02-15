@@ -784,6 +784,8 @@ createService(
 
             if (newStatus === STATUSES.NON_PARTICIPATION) {
                 config = {
+                    concerns: 'Absence non annoncée',
+                    unit: { value: 'part.', label: 'part.' },
                     reason: 'Non_participation',
                     price: `${sessionPrice}`,
                 }
@@ -791,6 +793,8 @@ createService(
 
             if (newStatus === STATUSES.ANNULEE_FACTURABLE) {
                 config = {
+                    concerns: 'Annulation/report hors-délai',
+                    unit: { value: 'forfait(s)', label: 'forfait(s)' },
                     reason: 'Annulation',
                     price: '50',
                 }
@@ -801,6 +805,7 @@ createService(
                 [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
             ) {
                 config = {
+                    unit: { value: 'part.', label: 'part.' },
                     reason: 'Participation',
                     price: `${sessionPrice}`,
                 }
@@ -843,11 +848,11 @@ createService(
                         customClientLastname: '',
                         courseYear: new Date().getFullYear(),
                         invoiceDate: new Date().toISOString(),
-                        concerns: '',
+                        concerns: config.concerns,
                         items: [
                             {
-                                designation: sessionName, // nom de la session
-                                unit: { value: 'part.', label: 'part.' }, // TODO: ask CEP what should unit be
+                                designation: `${user.first_name} ${user.last_name} - ${sessionName}`,
+                                unit: config.unit,
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
                                 vatCode: { value: 'EXONERE', label: 'EXONERE' },
