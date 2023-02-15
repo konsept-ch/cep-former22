@@ -784,7 +784,7 @@ createService(
 
             if (newStatus === STATUSES.NON_PARTICIPATION) {
                 config = {
-                    concerns: 'absence non annoncée',
+                    concerns: 'Absence non annoncée',
                     unit: { value: 'part.', label: 'part.' },
                     reason: 'Non_participation',
                     price: `${sessionPrice}`,
@@ -851,8 +851,8 @@ createService(
                         concerns: config.concerns,
                         items: [
                             {
-                                designation: `${user.first_name} ${user.last_name} - ${sessionName}`, // nom de la session
-                                unit: config.unit, // TODO: ask CEP what should unit be
+                                designation: `${user.first_name} ${user.last_name} - ${sessionName}`,
+                                unit: config.unit,
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
                                 vatCode: { value: 'EXONERE', label: 'EXONERE' },
