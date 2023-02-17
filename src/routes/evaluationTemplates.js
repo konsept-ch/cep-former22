@@ -33,6 +33,7 @@ createService(
             const { uuid, title } = await prisma.former22_evaluation_template.create({
                 data: {
                     uuid: uuidv4(), // can the DB generate this? Should it?
+                    struct: [],
                 },
             })
 
@@ -72,7 +73,7 @@ createService(
                 },
             })
 
-            res.json('Le evaluation a été modifié')
+            res.json("L'évaluation a été modifié")
 
             return {
                 entityName: title,
