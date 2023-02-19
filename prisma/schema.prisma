@@ -5592,6 +5592,7 @@ model former22_manual_invoice {
   customClientLastname                                          String?                             @db.Text
   invoiceType                                                   former22_manual_invoice_invoiceType
   reason                                                        former22_manual_invoice_reason
+  former22_invoice_item                                         former22_invoice_item[]
   claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                         @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
   claro_user                                                    claro_user                          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
   claro__organization                                           claro__organization                 @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
@@ -5709,6 +5710,22 @@ model migrations_state {
   key    String   @id @unique(map: "key") @db.VarChar(255)
   value  String   @db.Text
   run_on DateTime @db.DateTime(0)
+}
+
+model former22_invoice_item {
+  id                      Int                     @id @default(autoincrement())
+  uuid                    String                  @db.VarChar(255)
+  invoiceId               Int
+  designation             String?                 @db.Text
+  unit                    String?                 @db.Text
+  amount                  String?                 @db.Text
+  price                   String?                 @db.Text
+  vatCode                 String?                 @db.Text
+  createdAt               DateTime                @default(now()) @db.DateTime(0)
+  updatedAt               DateTime                @default(now()) @db.DateTime(0)
+  former22_manual_invoice former22_manual_invoice @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
+
+  @@index([invoiceId], map: "invoice_index")
 }
 
 enum former22_manual_invoice_invoiceType {
