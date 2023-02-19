@@ -5711,15 +5711,6 @@ model migrations_state {
   run_on DateTime @db.DateTime(0)
 }
 
-enum former22_manual_invoice_status {
-  En_pr_paration    @map("En préparation")
-  A_traiter         @map("A traiter")
-  Export_e          @map("Exportée")
-  Non_transmissible @map("Non transmissible")
-  Annul_e           @map("Annulée")
-  Envoy_e           @map("Envoyée")
-}
-
 enum former22_manual_invoice_invoiceType {
   Manuelle
   Directe
@@ -5731,4 +5722,14 @@ enum former22_manual_invoice_reason {
   P_nalit_          @map("Pénalité")
   Annulation
   Non_participation @map("Non-participation")
+}
+
+enum former22_manual_invoice_status {
+  En_pr_paration    @map("En préparation")
+  A_traiter         @map("A traiter")
+  Export_e          @map("Exportée")
+  Annul_e           @map("Annulée")
+  Envoy_e           @map("Envoyée")
+  Non_transmissible @map("Non transmissible")
+  Quotas
 }

@@ -5,9 +5,10 @@ export const invoiceStatusesFromPrisma = {
     En_pr_paration: 'En préparation',
     A_traiter: 'A traiter',
     Export_e: 'Exportée',
-    Non_transmissible: 'Non transmissible',
     Annul_e: 'Annulée',
     Envoy_e: 'Envoyée',
+    Non_transmissible: 'Non transmissible',
+    Quotas: 'Quotas',
 } as const
 export type invoiceStatusesKeys = keyof typeof invoiceStatusesFromPrisma
 export type invoiceStatusesValues = (typeof invoiceStatusesFromPrisma)[invoiceStatusesKeys]
