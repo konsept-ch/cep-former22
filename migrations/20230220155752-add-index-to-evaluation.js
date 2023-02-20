@@ -19,7 +19,7 @@ exports.setup = function (options, seedLink) {
 }
 
 exports.up = function (db) {
-    var filePath = path.join(__dirname, 'sqls', '20230220145145-create-table-evaluation-up.sql')
+    var filePath = path.join(__dirname, 'sqls', '20230220155752-add-index-to-evaluation-up.sql')
     return new Promise(function (resolve, reject) {
         fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
             if (err) return reject(err)
@@ -28,12 +28,12 @@ exports.up = function (db) {
             resolve(data)
         })
     }).then(function (data) {
-        db.runSql(data)
+        return db.runSql(data)
     })
 }
 
 exports.down = function (db) {
-    var filePath = path.join(__dirname, 'sqls', '20230220145145-create-table-evaluation-down.sql')
+    var filePath = path.join(__dirname, 'sqls', '20230220155752-add-index-to-evaluation-down.sql')
     return new Promise(function (resolve, reject) {
         fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
             if (err) return reject(err)
@@ -42,7 +42,7 @@ exports.down = function (db) {
             resolve(data)
         })
     }).then(function (data) {
-        db.runSql(data)
+        return db.runSql(data)
     })
 }
 

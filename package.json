@@ -21,6 +21,7 @@
     "logs": "pm2 logs",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",
+    "migrate:down": "db-migrate down",
     "prettier:check": "prettier . --ignore-unknown --check",
     "prettier:fix": "prettier . --ignore-unknown --write",
     "eslint:check": "eslint --ext .js,.jsx,.ts,.tsx . --report-unused-disable-directives",

@@ -1080,6 +1080,7 @@ model claro_cursusbundle_course_session {
   claro_cursusbundle_course_session_validators                             claro_cursusbundle_course_session_validators[]
   claro_cursusbundle_session_event                                         claro_cursusbundle_session_event[]
   claro_cursusbundle_session_event_set                                     claro_cursusbundle_session_event_set[]
+  former22_evaluation                                                      former22_evaluation[]
 
   @@index([course_id], map: "IDX_C5F56FDE591CC992")
   @@index([creator_id], map: "IDX_C5F56FDE61220EA6")
@@ -2459,20 +2460,14 @@ model claro_plugin {
 
 model claro_public_file {
   id                    Int                     @id @default(autoincrement())
-  user_id               Int?
   file_size             Int?
   filename              String                  @db.VarChar(255)
   hash_name             String                  @db.VarChar(255)
-  directory_name        String                  @db.VarChar(255)
-  creation_date         DateTime                @db.DateTime(0)
   mime_type             String?                 @db.VarChar(255)
-  source_type           String?                 @db.VarChar(255)
+  uuid                  String                  @unique(map: "UNIQ_7C1E45A0D17F50A6") @db.VarChar(36)
   claro_forum_subject   claro_forum_subject[]
-  claro_user            claro_user?             @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_7C1E45A0A76ED395")
   claro_public_file_use claro_public_file_use[]
   claro_transfer_import claro_transfer_import[]
-
-  @@index([user_id], map: "IDX_7C1E45A0A76ED395")
 }
 
 model claro_public_file_use {
@@ -3380,7 +3375,6 @@ model claro_user {
   claro_object_lock                                                                                                           claro_object_lock[]
   claro_ordered_tool                                                                                                          claro_ordered_tool[]
   claro_planned_object                                                                                                        claro_planned_object[]
-  claro_public_file                                                                                                           claro_public_file[]
   claro_resource_comment                                                                                                      claro_resource_comment[]
   claro_resource_favourite                                                                                                    claro_resource_favourite[]
   claro_resource_node                                                                                                         claro_resource_node[]
@@ -3679,7 +3673,6 @@ model claro_workspace {
   entity_name                                                                             String                                                 @db.VarChar(255)
   code                                                                                    String                                                 @unique(map: "UNIQ_D902854577153098") @db.VarChar(255)
   slug                                                                                    String                                                 @unique(map: "UNIQ_D9028545989D9B62") @db.VarChar(128)
-  lang                                                                                    String?                                                @db.VarChar(255)
   isModel                                                                                 Boolean
   self_registration                                                                       Boolean
   registration_validation                                                                 Boolean
@@ -3700,6 +3693,7 @@ model claro_workspace {
   createdAt                                                                               DateTime?                                              @db.DateTime(0)
   updatedAt                                                                               DateTime?                                              @db.DateTime(0)
   hidden                                                                                  Boolean                                                @default(false)
+  successCondition                                                                        String?                                                @db.LongText
   claro__open_badge_badge_class                                                           claro__open_badge_badge_class[]
   claro__open_badge_rule                                                                  claro__open_badge_rule[]
   claro_cursusbundle_course_claro_cursusbundle_course_workspace_idToclaro_workspace       claro_cursusbundle_course[]                            @relation("claro_cursusbundle_course_workspace_idToclaro_workspace")
@@ -4664,7 +4658,6 @@ model innova_step {
   description                    String?                          @db.LongText
   numbering                      String?                          @db.VarChar(255)
   showResourceHeader             Boolean
-  evaluated                      Boolean
   slug                           String                           @db.VarChar(128)
   uuid                           String                           @unique(map: "UNIQ_86F48567D17F50A6") @db.VarChar(36)
   poster                         String?                          @db.VarChar(255)
@@ -5353,13 +5346,13 @@ model user_location {
 model user_organization {
   id                  Int                 @id @default(autoincrement())
   user_id             Int
-  oganization_id      Int
+  organization_id     Int
   is_main             Boolean
   claro_user          claro_user          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_41221F7EA76ED395")
-  claro__organization claro__organization @relation(fields: [oganization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_41221F7EF35E13B7")
+  claro__organization claro__organization @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_41221F7EF35E13B7")
 
   @@index([user_id], map: "IDX_41221F7EA76ED395")
-  @@index([oganization_id], map: "IDX_41221F7EF35E13B7")
+  @@index([organization_id], map: "IDX_41221F7EF35E13B7")
 }
 
 model workspace_organization {
@@ -5452,23 +5445,23 @@ model former22_user {
 }
 
 model former22_organization {
-  id                          Int                  @id @default(autoincrement())
-  organizationUuid            String               @unique(map: "organizationUuid") @db.VarChar(36)
-  billingMode                 String?              @db.Text
-  dailyRate                   Float?               @db.Float
+  id                          Int                 @id @default(autoincrement())
+  organizationUuid            String              @unique(map: "organizationUuid") @db.VarChar(36)
+  billingMode                 String?             @db.Text
+  dailyRate                   Float?              @db.Float
   flyersCount                 Int?
-  phone                       String?              @db.Text
-  addressTitle                String?              @db.Text
-  postalAddressCountry        String?              @db.Text
-  postalAddressCountryCode    String?              @db.Text
-  postalAddressCode           String?              @db.Text
-  postalAddressStreet         String?              @db.Text
-  postalAddressDepartment     String?              @db.Text
-  postalAddressDepartmentCode String?              @db.Text
-  postalAddressLocality       String?              @db.Text
-  organizationId              Int?                 @unique(map: "organizationId")
+  phone                       String?             @db.Text
+  addressTitle                String?             @db.Text
+  postalAddressCountry        String?             @db.Text
+  postalAddressCountryCode    String?             @db.Text
+  postalAddressCode           String?             @db.Text
+  postalAddressStreet         String?             @db.Text
+  postalAddressDepartment     String?             @db.Text
+  postalAddressDepartmentCode String?             @db.Text
+  postalAddressLocality       String?             @db.Text
+  organizationId              Int                 @unique(map: "organizationId")
   clientNumber                Int?
-  claro__organization         claro__organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
+  claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
 
   @@index([organizationId], map: "organization_index")
 }
@@ -5572,29 +5565,29 @@ model former22_attestation {
 }
 
 model former22_manual_invoice {
-  id                                                            Int                            @id @default(autoincrement())
-  uuid                                                          String?                        @unique(map: "uuid") @db.VarChar(255)
+  id                                                            Int                                 @id @default(autoincrement())
+  uuid                                                          String?                             @unique(map: "uuid") @db.VarChar(255)
   organizationId                                                Int
   creatorUserId                                                 Int
   invoiceNumberForCurrentYear                                   Int
-  customClientEmail                                             String?                        @db.Text
-  customClientAddress                                           String?                        @db.Text
-  invoiceDate                                                   DateTime?                      @db.DateTime(0)
+  customClientEmail                                             String?                             @db.Text
+  customClientAddress                                           String?                             @db.Text
+  invoiceDate                                                   DateTime?                           @db.DateTime(0)
   courseYear                                                    Int
-  itemDesignations                                              String?                        @db.Text
-  itemUnits                                                     String?                        @db.Text
-  itemAmounts                                                   String?                        @db.Text
-  itemPrices                                                    String?                        @db.Text
-  itemVatCodes                                                  String?                        @db.Text
-  createdAt                                                     DateTime                       @default(now()) @db.DateTime(0)
-  updatedAt                                                     DateTime                       @default(now()) @db.DateTime(0)
+  createdAt                                                     DateTime                            @default(now()) @db.DateTime(0)
+  updatedAt                                                     DateTime                            @default(now()) @db.DateTime(0)
   items                                                         Json?
   selectedUserId                                                Int?
-  concerns                                                      String?                        @db.Text
+  concerns                                                      String?                             @db.Text
   status                                                        former22_manual_invoice_status
-  claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                    @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
-  claro_user                                                    claro_user                     @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
-  claro__organization                                           claro__organization            @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
+  customClientTitle                                             String?                             @db.Text
+  customClientFirstname                                         String?                             @db.Text
+  customClientLastname                                          String?                             @db.Text
+  invoiceType                                                   former22_manual_invoice_invoiceType
+  reason                                                        former22_manual_invoice_reason
+  claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                         @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
+  claro_user                                                    claro_user                          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
+  claro__organization                                           claro__organization                 @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
 
   @@index([creatorUserId], map: "creator_user_index")
   @@index([organizationId], map: "organization_index")
@@ -5712,11 +5705,24 @@ model migrations_state {
 }
 
 model former22_evaluation_template {
-  id          Int     @id @default(autoincrement())
-  uuid        String  @unique(map: "uuid") @db.VarChar(36)
-  title       String? @default("Nouveau modèle d'évaluation") @db.VarChar(255)
-  description String? @db.Text
-  struct      Json?
+  id                  Int                   @id @default(autoincrement())
+  uuid                String                @unique(map: "uuid") @db.VarChar(36)
+  title               String?               @default("Nouveau modèle d'évaluation") @db.VarChar(255)
+  description         String?               @db.Text
+  struct              Json?
+  former22_evaluation former22_evaluation[]
+}
+
+model former22_evaluation {
+  id                                Int                               @id @default(autoincrement())
+  uuid                              String                            @unique(map: "uuid") @db.VarChar(36)
+  sessionId                         Int
+  templateId                        Int
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_claro_cursusbundle_course_session")
+  former22_evaluation_template      former22_evaluation_template      @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_former22_evaluation_template")
+
+  @@index([sessionId], map: "session_index")
+  @@index([templateId], map: "template_index")
 }
 
 enum former22_manual_invoice_status {
@@ -5726,4 +5732,17 @@ enum former22_manual_invoice_status {
   Non_transmissible @map("Non transmissible")
   Annul_e           @map("Annulée")
   Envoy_e           @map("Envoyée")
+}
+
+enum former22_manual_invoice_invoiceType {
+  Manuelle
+  Directe
+  Group_e  @map("Groupée")
+}
+
+enum former22_manual_invoice_reason {
+  Participation
+  P_nalit_          @map("Pénalité")
+  Annulation
+  Non_participation @map("Non-participation")
 }
