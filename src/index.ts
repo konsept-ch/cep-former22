@@ -16,6 +16,7 @@ import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { attestationsRouter } from './routes/attestations'
+import { evaluationsRouter } from './routes/evaluations'
 import { contractTemplatesRouter } from './routes/contractTemplates'
 import { evaluationTemplatesRouter } from './routes/evaluationTemplates'
 import { eventsRouter } from './routes/events'
@@ -105,6 +106,7 @@ app.get('/', (_req, res) => {
 app.use('/reception', receptionRouter)
 app.use('/auth', authRouter)
 app.use('/mail', mailRouter)
+app.use('/evaluations', evaluationsRouter)
 
 app.use('*', async (req, res, next) => {
     if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
