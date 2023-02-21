@@ -5381,6 +5381,7 @@ model former22_template {
   emailBody               String?  @db.Text
   statuses                String?  @db.Text
   isUsedForSessionInvites Boolean?
+  usedByEvaluation        Boolean? @default(false)
 }
 
 model former22_inscription {

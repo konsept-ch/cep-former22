@@ -70,6 +70,7 @@ createService(
                 emailBody: req.body.emailBody,
                 statuses: serializeStatuses(req.body.statuses),
                 isUsedForSessionInvites: req.body.isUsedForSessionInvites,
+                usedByEvaluation: req.body.usedByEvaluation,
             },
         })
 
