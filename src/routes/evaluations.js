@@ -1,5 +1,6 @@
 import { Router } from 'express'
 
+import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
 import { createService } from '../utils'
 
@@ -47,6 +48,48 @@ createService(
                     }
                 })
             )
+        } catch (error) {
+            console.error(error)
+            return -1
+        }
+    },
+    null,
+    evaluationsRouter
+)
+
+createService(
+    'post',
+    '/',
+    async (req, res) => {
+        try {
+            const session = await prisma.claro_cursusbundle_course_session.findUnique({
+                select: {
+                    id: true,
+                },
+                where: {
+                    uuid: req.body.sessionId,
+                },
+            })
+            const template = await prisma.former22_evaluation_template.findUnique({
+                select: {
+                    id: true,
+                },
+                where: {
+                    uuid: req.body.templateId,
+                },
+            })
+
+            await prisma.former22_evaluation.create({
+                data: {
+                    uuid: uuidv4(),
+                    sessionId: session.id,
+                    templateId: template.id,
+                },
+            })
+
+            res.json({
+                message: "L'évaluation à été généré avec succès",
+            })
         } catch (error) {
             console.error(error)
             return -1
