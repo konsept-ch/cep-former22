@@ -71,26 +71,6 @@ createService(
 
 createService(
     'get',
-    '/minimal',
-    async (req, res) => {
-        const sessions = await prisma.claro_cursusbundle_course_session.findMany({
-            select: {
-                uuid: true,
-                course_name: true,
-            },
-            where: {
-                hidden: false,
-            },
-        })
-
-        res.json(sessions ?? 'Aucunes session trouvées')
-    },
-    null,
-    sessionsRouter
-)
-
-createService(
-    'get',
     '/:sessionId/users',
     async (req, res) => {
         const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
