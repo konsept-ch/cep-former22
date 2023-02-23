@@ -48,7 +48,7 @@ const replacePlaceholders = ({
         [draftVariables.SESSION_RÉSUMÉ_DATES]: lessons,
         [draftVariables.PARTICIPANT_CIVILITÉ]: civility,
         [draftVariables.INSCRIPTION_DATE]: inscriptionDate,
-        [draftVariables.EVALUATION_LIEN]: evaluationLink,
+        [draftVariables.EVALUATION_LIEN]: `<a href="${evaluationLink}" target="_blank">${evaluationLink}</a>`,
     }
 
     let enrichedEmailContent = emailBody
@@ -83,7 +83,7 @@ export const serializeStatuses = (statusesArray) => statusesArray.map(({ value }
 export const deserializeStatuses = (statusesString) =>
     statusesString.split(', ').map((status) => ({ value: status, label: status }))
 
-export const getTemplatePreviews = async ({ req, templateId, sessionId, inscriptionId, evaluationId }) => {
+export const getTemplatePreviews = async ({ req, templateId, sessionId, inscriptionId, evaluationLink }) => {
     const template = await prisma.former22_template.findUnique({
         where: { templateId },
     })
@@ -124,7 +124,7 @@ export const getTemplatePreviews = async ({ req, templateId, sessionId, inscript
         lessons: formatSessionLessons({ sessionLessons }),
         inscriptionDate: formatDate({ dateObject: currentInscription.inscriptionDate, isDateVisible: true }),
         civility: userCivility,
-        evaluationLink: evaluationId,
+        evaluationLink,
         template,
     })
 }

@@ -166,6 +166,8 @@ createService(
             },
         })
 
+        const evaluationLink = new URL(`/evaluations/${evaluation.uuid}`, 'https://localhost:3000').href
+
         // ##############################################
         // SEND MAILS
         const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
@@ -183,27 +185,28 @@ createService(
                 },
                 claro_user: {
                     uuid: {
-                        in: req.params.users,
+                        in: req.body.users,
                     },
                 },
             },
         })
 
         await Promise.allSettled(
-            sessionUsers.map((sessionUser) => async () => {
+            sessionUsers.map(async (sessionUser) => {
                 const { emailContent, emailSubject } = await getTemplatePreviews({
                     req,
-                    templateId: req.params.email,
-                    sessionId: req.params.session,
+                    templateId: req.body.email,
+                    sessionId: req.body.session,
                     inscriptionId: sessionUser.uuid,
-                    evaluationId: evaluation.uuid,
+                    evaluationLink,
                 })
 
-                return await sendEmail({
+                const { emailResponse } = await sendEmail({
                     to: sessionUser.claro_user.mail,
                     subject: emailSubject,
                     html_body: emailContent,
                 })
+                return { emailResponse }
             })
         )
         // ##############################################
