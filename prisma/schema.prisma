@@ -5726,6 +5726,13 @@ model former22_evaluation {
   @@index([templateId], map: "template_index")
 }
 
+model former22_evaluation_result {
+  id           Int    @id @default(autoincrement())
+  uuid         String @unique(map: "uuid") @db.VarChar(36)
+  evaluationId Int
+  result       Json?
+}
+
 enum former22_manual_invoice_status {
   En_pr_paration    @map("En préparation")
   A_traiter         @map("A traiter")

@@ -212,7 +212,36 @@ createService(
         // ##############################################
 
         res.json({
-            message: "L'évaluation à été généré avec succès",
+            message: "L'évaluation à été généré avec succès.",
+        })
+    },
+    null,
+    evaluationsRouter
+)
+
+createService(
+    'post',
+    '/results',
+    async (req, res) => {
+        const evaluation = await prisma.former22_evaluation.findUnique({
+            select: {
+                id: true,
+            },
+            where: {
+                uuid: req.body.evaluation,
+            },
+        })
+
+        await prisma.former22_evaluation_result.create({
+            data: {
+                uuid: uuidv4(),
+                evaluationId: evaluation.id,
+                result: req.body.result,
+            },
+        })
+
+        res.json({
+            message: 'Votre évaluation a bien été envoyée.',
         })
     },
     null,
