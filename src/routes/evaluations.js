@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
-import { createService } from '../utils'
+import { authMiddleware, createService } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { sendEmail } from '../sendEmail'
 
@@ -57,7 +57,8 @@ createService(
         )
     },
     null,
-    evaluationsRouter
+    evaluationsRouter,
+    authMiddleware
 )
 
 createService(
@@ -78,7 +79,8 @@ createService(
         res.json(sessions ?? 'Aucunes session trouvées')
     },
     null,
-    evaluationsRouter
+    evaluationsRouter,
+    authMiddleware
 )
 
 createService(
@@ -214,7 +216,8 @@ createService(
         })
     },
     null,
-    evaluationsRouter
+    evaluationsRouter,
+    authMiddleware
 )
 
 createService(
@@ -243,5 +246,6 @@ createService(
         })
     },
     null,
-    evaluationsRouter
+    evaluationsRouter,
+    authMiddleware
 )

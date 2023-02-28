@@ -268,3 +268,23 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
 
     return doesCodeMatch && doesMatchingAdminUnlockedTokenExist
 }
+
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
+        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
+        return
+    }
+
+    const email = (req.headers['x-login-email-address'] as string).trim()
+    const code = (req.headers['x-login-email-code'] as string).trim()
+    const token = (req.headers['x-login-token'] as string).trim()
+    const isAuthenticated = await checkAuth({ email, code, token })
+
+    if (isAuthenticated) {
+        next()
+    } else {
+        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
+        return
+        // throw new Error('Incorrect token and code for this email')
+    }
+}
