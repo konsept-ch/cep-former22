@@ -1080,7 +1080,7 @@ model claro_cursusbundle_course_session {
   claro_cursusbundle_course_session_validators                             claro_cursusbundle_course_session_validators[]
   claro_cursusbundle_session_event                                         claro_cursusbundle_session_event[]
   claro_cursusbundle_session_event_set                                     claro_cursusbundle_session_event_set[]
-  former22_evaluation                                                      former22_evaluation[]
+  former22_evaluation                                                      former22_evaluation?
 
   @@index([course_id], map: "IDX_C5F56FDE591CC992")
   @@index([creator_id], map: "IDX_C5F56FDE61220EA6")
@@ -5717,20 +5717,24 @@ model former22_evaluation_template {
 model former22_evaluation {
   id                                Int                               @id @default(autoincrement())
   uuid                              String                            @unique(map: "uuid") @db.VarChar(36)
-  sessionId                         Int
+  sessionId                         Int                               @unique(map: "sessionId")
   templateId                        Int
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_claro_cursusbundle_course_session")
   former22_evaluation_template      former22_evaluation_template      @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_former22_evaluation_template")
+  former22_evaluation_result        former22_evaluation_result[]
 
-  @@index([sessionId], map: "session_index")
   @@index([templateId], map: "template_index")
+  @@index([sessionId], map: "session_index")
 }
 
 model former22_evaluation_result {
-  id           Int    @id @default(autoincrement())
-  uuid         String @unique(map: "uuid") @db.VarChar(36)
-  evaluationId Int
-  result       Json?
+  id                  Int                 @id @default(autoincrement())
+  uuid                String              @unique(map: "uuid") @db.VarChar(36)
+  evaluationId        Int
+  result              Json?
+  former22_evaluation former22_evaluation @relation(fields: [evaluationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_result_evaluation")
+
+  @@index([evaluationId], map: "evaluation_index")
 }
 
 enum former22_manual_invoice_status {

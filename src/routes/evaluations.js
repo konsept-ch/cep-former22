@@ -15,6 +15,11 @@ createService(
         const evaluations = await prisma.former22_evaluation.findMany({
             select: {
                 uuid: true,
+                former22_evaluation_template: {
+                    select: {
+                        uuid: true,
+                    },
+                },
                 claro_cursusbundle_course_session: {
                     select: {
                         uuid: true,
@@ -32,7 +37,7 @@ createService(
         })
 
         res.json(
-            evaluations.map(({ uuid, claro_cursusbundle_course_session: session }) => {
+            evaluations.map(({ uuid, former22_evaluation_template, claro_cursusbundle_course_session: session }) => {
                 const course = session.claro_cursusbundle_course
 
                 const year = Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', year: 'numeric' }).format(
@@ -43,6 +48,7 @@ createService(
                     uuid,
                     courseUuid: course.uuid,
                     sessionUuid: session.uuid,
+                    templateUuid: former22_evaluation_template.uuid,
                     year,
                     sessionName: session.course_name,
                     courseName: course.course_name,
@@ -64,9 +70,7 @@ createService(
                 course_name: true,
             },
             where: {
-                former22_evaluation: {
-                    none: {},
-                },
+                former22_evaluation: null,
                 hidden: false,
             },
         })
@@ -137,18 +141,6 @@ createService(
             },
         })
 
-        if (
-            await prisma.former22_evaluation.findFirst({
-                select: {
-                    id: true,
-                },
-                where: {
-                    sessionId: session.id,
-                },
-            })
-        )
-            throw "L'évaluation existe déjà pour cette session"
-
         const template = await prisma.former22_evaluation_template.findUnique({
             select: {
                 id: true,
@@ -158,11 +150,17 @@ createService(
             },
         })
 
-        const evaluation = await prisma.former22_evaluation.create({
-            data: {
+        const evaluation = await prisma.former22_evaluation.upsert({
+            create: {
                 uuid: uuidv4(),
                 sessionId: session.id,
                 templateId: template.id,
+            },
+            update: {
+                templateId: template.id,
+            },
+            where: {
+                sessionId: session.id,
             },
         })
 
