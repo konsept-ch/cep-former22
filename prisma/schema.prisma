@@ -1142,6 +1142,7 @@ model claro_cursusbundle_course_session_user {
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120F613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120FA76ED395")
   former22_invoice                  former22_invoice[]
+  former22_invoice_item             former22_invoice_item[]
 
   @@unique([session_id, user_id], map: "training_session_unique_user")
   @@index([session_id], map: "IDX_80B4120F613FECDF")
@@ -5713,19 +5714,22 @@ model migrations_state {
 }
 
 model former22_invoice_item {
-  id                      Int                     @id @default(autoincrement())
-  uuid                    String                  @db.VarChar(255)
-  invoiceId               Int
-  designation             String?                 @db.Text
-  unit                    String?                 @db.Text
-  amount                  String?                 @db.Text
-  price                   String?                 @db.Text
-  vatCode                 String?                 @db.Text
-  createdAt               DateTime                @default(now()) @db.DateTime(0)
-  updatedAt               DateTime                @default(now()) @db.DateTime(0)
-  former22_manual_invoice former22_manual_invoice @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
+  id                                     Int                                     @id @default(autoincrement())
+  uuid                                   String                                  @db.VarChar(255)
+  invoiceId                              Int
+  designation                            String?                                 @db.Text
+  unit                                   String?                                 @db.Text
+  amount                                 String?                                 @db.Text
+  price                                  String?                                 @db.Text
+  vatCode                                String?                                 @db.Text
+  createdAt                              DateTime                                @default(now()) @db.DateTime(0)
+  updatedAt                              DateTime                                @default(now()) @db.DateTime(0)
+  inscriptionId                          Int?
+  claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user? @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
+  former22_manual_invoice                former22_manual_invoice                 @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
 
   @@index([invoiceId], map: "invoice_index")
+  @@index([inscriptionId], map: "inscription_index")
 }
 
 enum former22_manual_invoice_invoiceType {

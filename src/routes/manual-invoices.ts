@@ -81,7 +81,23 @@ createService(
                 customClientLastname: true,
                 invoiceDate: true,
                 courseYear: true,
-                items: true,
+                former22_invoice_item: {
+                    include: {
+                        claro_cursusbundle_course_session_user: {
+                            select: {
+                                status: true,
+                                claro_cursusbundle_course_session: {
+                                    select: {
+                                        code: true,
+                                    },
+                                },
+                                claro_user: {
+                                    select: { first_name: true, last_name: true },
+                                },
+                            },
+                        },
+                    },
+                },
                 claro_user_former22_manual_invoice_selectedUserIdToclaro_user: {
                     select: {
                         uuid: true,
@@ -114,6 +130,7 @@ createService(
                     status,
                     invoiceType,
                     reason,
+                    former22_invoice_item,
                     ...rest
                 }) => ({
                     ...rest,
@@ -129,6 +146,7 @@ createService(
                     status: invoiceStatusesFromPrisma[status],
                     invoiceType: invoiceTypesFromPrisma[invoiceType],
                     reason: invoiceReasonsFromPrisma[reason],
+                    items: former22_invoice_item,
                     organizationUuid,
                     organizationName,
                     customClientTitle,
@@ -226,6 +244,7 @@ createService(
 
             const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
                 select: {
+                    id: true,
                     claro_cursusbundle_course_session: {
                         select: {
                             course_name: true,
@@ -275,13 +294,13 @@ createService(
                         price: `${sessionUser.claro_cursusbundle_course_session.price ?? ''}`,
                         amount: '1',
                         vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                        inscriptionId: sessionUser.id,
                     })),
                 },
                 cfEmail: req.headers['x-login-email-address'],
             })
 
-            /* eslint-disable-next-line no-plusplus */
-            ++invoiceCount
+            invoiceCount += 1
         }
 
         res.json({

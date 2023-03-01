@@ -856,6 +856,7 @@ createService(
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
                                 vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                                inscriptionId: currentInscription.id,
                             },
                         ],
                         // TODO probably keep the inscription ids as a foreign key for direct and grouped

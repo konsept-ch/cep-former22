@@ -19,7 +19,14 @@ type InvoiceData = {
     customClientLastname: string
     invoiceDate: string
     courseYear: number
-    items: Record<string, string | { value: string; label: string }>[]
+    items: {
+        designation: string
+        unit: { value: string; label: string }
+        amount: string
+        price: string
+        vatCode: { value: string; label: string }
+        inscriptionId?: number
+    }[]
     selectedUserUuid: string
     concerns: string
     status: { value: invoiceStatusesKeys; label: invoiceStatusesValues }
@@ -95,7 +102,26 @@ export const createInvoice = async ({
             invoiceDate,
             courseYear,
             concerns,
-            items,
+            former22_invoice_item: {
+                create: items.map(
+                    ({
+                        designation,
+                        unit: { value: unit },
+                        amount,
+                        price,
+                        vatCode: { value: vatCode },
+                        inscriptionId,
+                    }) => ({
+                        uuid: uuidv4(),
+                        designation,
+                        unit,
+                        amount,
+                        price,
+                        vatCode,
+                        inscriptionId,
+                    })
+                ),
+            },
             status: status?.value,
             invoiceType: invoiceType?.value,
             reason: reason?.value,
