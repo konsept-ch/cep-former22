@@ -120,20 +120,14 @@ createService(
 
 createService(
     'get',
-    '/:uuid/results',
+    '/:uuid/export',
     async (req, res) => {
         const evaluation = await prisma.former22_evaluation.findUnique({
             select: {
-                uuid: true,
+                id: true,
                 former22_evaluation_template: {
                     select: {
                         struct: true,
-                    },
-                },
-                claro_cursusbundle_course_session: {
-                    select: {
-                        course_name: true,
-                        start_date: true,
                     },
                 },
             },
@@ -142,11 +136,20 @@ createService(
             },
         })
 
+        const results = await prisma.former22_evaluation_result.findMany({
+            select: {
+                result: true,
+            },
+            where: {
+                former22_evaluation: {
+                    id: evaluation.id,
+                },
+            },
+        })
+
         res.json({
-            uuid: evaluation.uuid,
-            struct: evaluation.former22_evaluation_template.struct,
-            sessionName: evaluation.claro_cursusbundle_course_session.course_name,
-            date: evaluation.claro_cursusbundle_course_session.start_date,
+            evaluation,
+            results,
         })
     },
     null,
