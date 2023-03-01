@@ -2,7 +2,7 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 
 import { prisma } from '..'
-import { createService } from '../utils'
+import { createService, mapStatusToValidationType, ValidationTypesKeys } from '../utils'
 import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 import { createInvoice } from './manualInvoicesUtils'
 
@@ -82,7 +82,12 @@ createService(
                 invoiceDate: true,
                 courseYear: true,
                 former22_invoice_item: {
-                    include: {
+                    select: {
+                        designation: true,
+                        unit: true,
+                        amount: true,
+                        price: true,
+                        vatCode: true,
                         claro_cursusbundle_course_session_user: {
                             select: {
                                 status: true,
@@ -146,7 +151,18 @@ createService(
                     status: invoiceStatusesFromPrisma[status],
                     invoiceType: invoiceTypesFromPrisma[invoiceType],
                     reason: invoiceReasonsFromPrisma[reason],
-                    items: former22_invoice_item,
+                    items: former22_invoice_item.map(({ claro_cursusbundle_course_session_user, ...itemsRest }) => ({
+                        ...itemsRest,
+                        validationType:
+                            mapStatusToValidationType[
+                                `${claro_cursusbundle_course_session_user?.status}` as ValidationTypesKeys
+                            ],
+                        sessionCode: claro_cursusbundle_course_session_user?.claro_cursusbundle_course_session.code,
+                        participantName:
+                            claro_cursusbundle_course_session_user != null
+                                ? `${claro_cursusbundle_course_session_user?.claro_user.last_name} ${claro_cursusbundle_course_session_user?.claro_user.first_name}`
+                                : undefined,
+                    })),
                     organizationUuid,
                     organizationName,
                     customClientTitle,

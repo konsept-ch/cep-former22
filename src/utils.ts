@@ -267,3 +267,11 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
 
     return doesCodeMatch && doesMatchingAdminUnlockedTokenExist
 }
+
+export const mapStatusToValidationType = {
+    '0': 'En attente',
+    '1': 'Refusée par RH',
+    '2': 'Validée par RH',
+    '3': 'Validée sur quota par RH',
+} as const
+export type ValidationTypesKeys = keyof typeof mapStatusToValidationType
