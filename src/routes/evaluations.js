@@ -5,6 +5,7 @@ import { prisma } from '..'
 import { authMiddleware, createService } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { sendEmail } from '../sendEmail'
+import { PDFDocument, rgb, StandardFonts, breakTextIntoLines } from 'pdf-lib'
 
 export const evaluationsRouter = Router()
 
@@ -122,7 +123,10 @@ createService(
     'get',
     '/:uuid/export',
     async (req, res) => {
-        const evaluation = await prisma.former22_evaluation.findUnique({
+        const {
+            id,
+            former22_evaluation_template: { struct },
+        } = await prisma.former22_evaluation.findUnique({
             select: {
                 id: true,
                 former22_evaluation_template: {
@@ -142,15 +146,169 @@ createService(
             },
             where: {
                 former22_evaluation: {
-                    id: evaluation.id,
+                    id,
                 },
             },
         })
 
-        res.json({
-            evaluation,
-            results,
+        const notes = struct.filter((block) => block.type === 'notes')
+
+        const statistics = results.reduce((acc, result) => {
+            //eslint-disable-next-line no-plusplus
+            for (const key in result.result) if (acc[key]) ++acc[key][result.result[key]]
+            return acc
+        }, Object.fromEntries(notes.map((block) => [block.identifier, Object.fromEntries(block.notes.map((note) => [note, 0]))])))
+
+        // ##############################################
+        // GENERATE PDF
+        const doc = await PDFDocument.create({})
+        const font = await doc.embedFont(StandardFonts.Helvetica)
+
+        let page = doc.addPage()
+
+        const margin = { x: 50, y: 30 }
+        const maxWidth = page.getWidth() - (margin.x << 1)
+
+        const countLines = (text, size) =>
+            breakTextIntoLines(text, doc.defaultWordBreaks, maxWidth, (t) => font.widthOfTextAtSize(t, size)).length
+
+        const checkAddingPage = (dy) => {
+            if (page.getY() - dy > margin.y) return false
+            page = doc.addPage()
+            page.moveTo(margin.x, page.getHeight() - margin.y)
+            return true
+        }
+
+        const moveDown = (dy) => {
+            checkAddingPage(dy)
+            page.moveDown(dy)
+        }
+
+        const leftChart =
+            margin.x +
+            Math.max(
+                ...notes
+                    .reduce((acc, block) => [...acc, ...block.notes], [])
+                    .map((note) => font.widthOfTextAtSize(note, 12))
+            ) +
+            20
+
+        const cellWidth = (maxWidth - leftChart) / results.length
+
+        const drawText = (
+            text,
+            marginBottom = 0,
+            lineHeight = 18,
+            size = 12,
+            color = rgb(106 / 255, 97 / 255, 91 / 255)
+        ) => {
+            const dy0 = font.heightAtSize(size)
+            moveDown(dy0)
+            const dy1 = countLines(text, size) * font.heightAtSize(lineHeight) + marginBottom
+            if (checkAddingPage(dy1)) page.moveDown(dy0)
+            page.drawText(text, {
+                size,
+                lineHeight,
+                color,
+                maxWidth,
+            })
+            page.moveDown(dy1)
+        }
+
+        const blockRenders = {
+            title: (block) => {
+                const style = {
+                    h1: { size: 24, color: rgb(165 / 255, 159 / 255, 155 / 255) },
+                    h2: { size: 20, color: rgb(120 / 255, 165 / 255, 182 / 255) },
+                    h3: { size: 18, color: rgb(120 / 255, 165 / 255, 182 / 255) },
+                    h4: { size: 16, color: rgb(120 / 255, 159 / 255, 155 / 255) },
+                    h5: { size: 14, color: rgb(120 / 255, 165 / 255, 182 / 255) },
+                    h6: { size: 12, color: rgb(120 / 255, 165 / 255, 182 / 255) },
+                }[block.tag]
+                drawText(block.text, 0, style.size, style.size, style.color)
+            },
+            paragraph: (block) => {
+                drawText(block.text, 20)
+            },
+            notes: (block) => {
+                drawText(block.text)
+
+                const t = page.getY()
+
+                const h = font.heightAtSize(12)
+                const hh = h << 1
+
+                let b = t + h
+
+                checkAddingPage(t + h - block.notes.length * hh)
+
+                for (const note of block.notes) {
+                    drawText(note, 0, 12)
+
+                    b -= hh
+
+                    page.drawRectangle({
+                        x: leftChart,
+                        y: b,
+                        width: cellWidth * statistics[block.identifier][note],
+                        height: h,
+                        color: rgb(Math.random(), Math.random(), Math.random()),
+                    })
+                }
+
+                //eslint-disable-next-line no-plusplus
+                for (let i = 0, x = leftChart; i <= results.length; ++i, x += cellWidth) {
+                    page.drawLine({
+                        start: { x, y: t },
+                        end: { x, y: b },
+                        thickness: 1,
+                        color: rgb(106 / 255, 97 / 255, 91 / 255),
+                        opacity: 0.25,
+                    })
+                    const label = `${i}`
+                    page.drawText(label, {
+                        x: x - (font.widthOfTextAtSize(label, 12) >> 1),
+                        y: b - h - 5,
+                        size: 12,
+                        color: rgb(106 / 255, 97 / 255, 91 / 255),
+                    })
+                }
+
+                page.drawLine({
+                    start: { x: leftChart, y: b },
+                    end: { x: maxWidth, y: b },
+                    thickness: 1,
+                    color: rgb(106 / 255, 97 / 255, 91 / 255),
+                    opacity: 0.25,
+                })
+
+                moveDown(20)
+            },
+            remark: (block) => {
+                drawText(block.text, 20)
+            },
+        }
+
+        page.moveTo(margin.x, page.getHeight() - margin.y)
+
+        drawText(`Date de création: ${new Date().toLocaleString()}`)
+        page.drawLine({
+            start: { x: margin.x, y: page.getY() },
+            end: { x: margin.x + maxWidth, y: page.getY() },
+            thickness: 1,
+            color: rgb(120 / 255, 165 / 255, 182 / 255),
+            opacity: 1,
         })
+        page.moveDown(20)
+
+        for (const block of struct) {
+            blockRenders[block.type](block)
+        }
+
+        res.type('pdf')
+        res.set('Content-disposition', `filename=${req.params.uuid}`)
+        res.send(Buffer.from(await doc.save(), 'binary'))
+        // ##############################################
     },
     null,
     evaluationsRouter
