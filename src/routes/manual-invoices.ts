@@ -88,6 +88,7 @@ createService(
                         amount: true,
                         price: true,
                         vatCode: true,
+                        number: true,
                         claro_cursusbundle_course_session_user: {
                             select: {
                                 status: true,
@@ -313,6 +314,7 @@ createService(
                         amount: '1',
                         vatCode: { value: 'EXONERE', label: 'EXONERE' },
                         inscriptionId: sessionUser.id,
+                        number: '',
                     })),
                 },
                 cfEmail: req.headers['x-login-email-address'],
