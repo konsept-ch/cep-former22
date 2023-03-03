@@ -115,7 +115,7 @@ components:
           description: Le lieu de la session ('Lausanne', 'Hors-Lausanne')
         sessionZip:
           type: string
-          description: Le code postale du lieu de la session
+          description: Le code postal du lieu de la session
         inscriptions:
           type: array
           description: Toutes les inscriptions dans la session qui ont un e-mail qui contient "@lausanne.ch" et qui ont été modifiées depuis la date du filtre statusUpdatedSince
