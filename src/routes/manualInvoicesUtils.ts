@@ -29,6 +29,7 @@ type InvoiceData = {
     }[]
     selectedUserUuid: string
     concerns: string
+    codeCompta: string
     status: { value: invoiceStatusesKeys; label: invoiceStatusesValues }
     invoiceType: { value: invoiceTypesKeys; label: invoiceTypesValues }
     reason: { value: invoiceReasonsKeys; label: invoiceReasonsValues }
@@ -48,6 +49,7 @@ export const createInvoice = async ({
         selectedUserUuid,
         status,
         concerns,
+        codeCompta,
         invoiceType,
         reason,
     },
@@ -102,6 +104,7 @@ export const createInvoice = async ({
             invoiceDate,
             courseYear,
             concerns,
+            codeCompta,
             former22_invoice_item: {
                 create: items.map(
                     ({
