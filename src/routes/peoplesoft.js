@@ -168,7 +168,7 @@ createService(
                                     max_users: true,
                                     claro__location: {
                                         select: {
-                                            address_postal_code: true,
+                                            address_city: true,
                                         },
                                     },
                                     claro_cursusbundle_course_session_user: {
@@ -229,7 +229,6 @@ createService(
                         select: {
                             sessionId: true,
                             sessionFormat: true,
-                            sessionLocation: true,
                         },
                     })
 
@@ -312,7 +311,6 @@ createService(
                                             max_users: maxParticipants,
                                             claro__location,
                                             sessionFormat = null,
-                                            sessionLocation = null,
                                             inscriptions,
                                             ...restSessionData
                                         }) => ({
@@ -328,8 +326,7 @@ createService(
                                                 .sort(),
                                             maxParticipants,
                                             sessionFormat,
-                                            sessionLocation,
-                                            sessionZip: claro__location?.address_postal_code,
+                                            sessionLocation: claro__location?.address_city,
                                             inscriptions: inscriptions
                                                 .map(
                                                     ({
