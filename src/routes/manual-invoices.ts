@@ -5,6 +5,7 @@ import { prisma } from '..'
 import { createService, mapStatusToValidationType, ValidationTypesKeys } from '../utils'
 import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 import { createInvoice } from './manualInvoicesUtils'
+import { STATUSES } from './inscriptionsUtils'
 
 export const manualInvoicesRouter = Router()
 
@@ -233,6 +234,8 @@ createService(
             },
         })
 
+        const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
+
         const now = new Date()
 
         let invoiceCount = 0
@@ -258,28 +261,40 @@ createService(
                     where: { id: organizationId },
                 })) ?? {}
 
-            const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
-                select: {
-                    id: true,
-                    claro_cursusbundle_course_session: {
-                        select: {
-                            course_name: true,
-                            price: true,
-                        },
-                    },
-                },
-                where: {
-                    claro_user: {
-                        user_organization: {
-                            some: {
-                                oganization_id: organizationId,
+            const inscriptions = (
+                await prisma.claro_cursusbundle_course_session_user.findMany({
+                    select: {
+                        id: true,
+                        uuid: true,
+                        claro_cursusbundle_course_session: {
+                            select: {
+                                course_name: true,
+                                price: true,
                             },
                         },
                     },
-                },
-            })
+                    where: {
+                        claro_user: {
+                            user_organization: {
+                                some: {
+                                    oganization_id: organizationId,
+                                },
+                            },
+                        },
+                    },
+                })
+            ).filter(({ uuid }) =>
+                inscriptionsAdditionalData.some(
+                    ({ inscriptionId, inscriptionStatus }) =>
+                        inscriptionId === uuid &&
+                        (inscriptionStatus == null ||
+                            [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
+                                inscriptionStatus as any
+                            ))
+                )
+            )
 
-            if (sessionUsers.length === 0) continue
+            if (inscriptions.length === 0) continue
 
             createInvoice({
                 invoiceData: {
@@ -304,7 +319,7 @@ createService(
                     status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
                     invoiceType: { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
-                    items: sessionUsers.map((sessionUser) => ({
+                    items: inscriptions.map((sessionUser) => ({
                         designation: sessionUser.claro_cursusbundle_course_session.course_name,
                         unit: { value: 'part.', label: 'part.' },
                         price: `${sessionUser.claro_cursusbundle_course_session.price ?? ''}`,

@@ -782,6 +782,7 @@ createService(
 
             let config = null
 
+            // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
             if (newStatus === STATUSES.NON_PARTICIPATION) {
                 config = {
                     concerns: 'Absence non annoncée',
