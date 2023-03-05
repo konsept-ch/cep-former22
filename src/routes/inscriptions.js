@@ -782,6 +782,7 @@ createService(
 
             let config = null
 
+            // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
             if (newStatus === STATUSES.NON_PARTICIPATION) {
                 config = {
                     concerns: 'Absence non annoncée',
@@ -824,7 +825,7 @@ createService(
                     postalAddressDepartment,
                     // postalAddressDepartmentCode,
                     postalAddressLocality,
-                } = mainOrganization ?? {}
+                } = { ...mainOrganization, ...organization }
 
                 await createInvoice({
                     invoiceData: {
@@ -851,7 +852,7 @@ createService(
                         concerns: config.concerns,
                         items: [
                             {
-                                designation: `${user.first_name} ${user.last_name} - ${sessionName}`,
+                                designation: `${user.last_name} ${user.first_name} - ${sessionName}`,
                                 unit: config.unit,
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
@@ -859,9 +860,6 @@ createService(
                                 inscriptionId: currentInscription.id,
                             },
                         ],
-                        // TODO probably keep the inscription ids as a foreign key for direct and grouped
-                        // inscriptionId: currentInscription.id,
-                        // inscriptionStatus: newStatus,
                     },
                     cfEmail: req.headers['x-login-email-address'],
                 })
