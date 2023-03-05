@@ -231,6 +231,13 @@ createService(
                             },
                         },
                     },
+                    where: {
+                        claro_cursusbundle_course_session: {
+                            start_date: {
+                                gte: new Date('2023-01-01'),
+                            },
+                        },
+                    },
                 })
             ).filter(({ uuid }) =>
                 inscriptionsAdditionalData.some(
@@ -475,7 +482,7 @@ createService(
 
             if (inscriptions.length === 0) continue
 
-            createInvoice({
+            await createInvoice({
                 invoiceData: {
                     client: {
                         value: code ?? '',
