@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
-import { authMiddleware, createService } from '../utils'
+import { createService } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { sendEmail } from '../sendEmail'
 import { PDFDocument, rgb, StandardFonts, breakTextIntoLines } from 'pdf-lib'
@@ -58,8 +58,7 @@ createService(
         )
     },
     null,
-    evaluationsRouter,
-    authMiddleware
+    evaluationsRouter
 )
 
 createService(
@@ -80,8 +79,7 @@ createService(
         res.json(sessions ?? 'Aucunes session trouvées')
     },
     null,
-    evaluationsRouter,
-    authMiddleware
+    evaluationsRouter
 )
 
 createService(
@@ -412,8 +410,7 @@ createService(
         })
     },
     null,
-    evaluationsRouter,
-    authMiddleware
+    evaluationsRouter
 )
 
 createService(
@@ -442,6 +439,5 @@ createService(
         })
     },
     null,
-    evaluationsRouter,
-    authMiddleware
+    evaluationsRouter
 )

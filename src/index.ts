@@ -30,7 +30,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
-import { authMiddleware } from './utils'
+import { checkAuth, hasAllProperties } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -108,7 +108,25 @@ app.use('/auth', authRouter)
 app.use('/mail', mailRouter)
 app.use('/evaluations', evaluationsRouter)
 
-app.use('*', authMiddleware)
+app.use('*', async (req, res, next) => {
+    if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
+        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
+        return
+    }
+
+    const email = (req.headers['x-login-email-address'] as string).trim()
+    const code = (req.headers['x-login-email-code'] as string).trim()
+    const token = (req.headers['x-login-token'] as string).trim()
+    const isAuthenticated = await checkAuth({ email, code, token })
+
+    if (isAuthenticated) {
+        next()
+    } else {
+        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
+        return
+        // throw new Error('Incorrect token and code for this email')
+    }
+})
 
 app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)

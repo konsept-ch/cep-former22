@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
@@ -19,7 +20,9 @@ export const STATUSES = {
     ANNULEE_FACTURABLE: 'Annulée facturable',
     ANNULEE_NON_FACTURABLE: 'Annulée non-facturable',
     ECARTEE: 'Écartée',
-}
+} as const
+type StatusesKeys = keyof typeof STATUSES
+type StatusesValues = (typeof STATUSES)[StatusesKeys]
 
 export const finalStatuses = [
     STATUSES.A_TRAITER_PAR_RH,
@@ -30,7 +33,7 @@ export const finalStatuses = [
     STATUSES.ANNULEE_FACTURABLE,
     STATUSES.ANNULEE_NON_FACTURABLE,
     STATUSES.ECARTEE,
-]
+] as const
 
 export const lockGroups = [
     [
@@ -41,17 +44,38 @@ export const lockGroups = [
         STATUSES.ANNULEE_FACTURABLE,
         STATUSES.ANNULEE_NON_FACTURABLE,
     ],
-]
+] as const
+
+export const statusesForAnnulation = [
+    STATUSES.ANNULEE,
+    STATUSES.ANNULEE_FACTURABLE,
+    STATUSES.ANNULEE_NON_FACTURABLE,
+    STATUSES.NON_PARTICIPATION,
+    STATUSES.REFUSEE_PAR_CEP,
+    STATUSES.ECARTEE,
+] as const
 
 export const REGISTRATION_TYPES = {
     CANCELLATION: 'cancellation',
     LEARNER: 'learner',
     TUTOR: 'tutor',
-}
+} as const
+type RegistrationTypesKeys = keyof typeof REGISTRATION_TYPES
+type RegistrationTypesValues = (typeof REGISTRATION_TYPES)[RegistrationTypesKeys]
 
-export const transformFlagsToStatus = ({ validated, registrationType, hrValidationStatus, isHrValidationEnabled }) => {
+export const transformFlagsToStatus = ({
+    validated,
+    registrationType,
+    hrValidationStatus,
+    isHrValidationEnabled,
+}: {
+    validated: boolean
+    registrationType: RegistrationTypesValues
+    hrValidationStatus: 0 | 1 | 2 | 3
+    isHrValidationEnabled: boolean
+}) => {
     if (registrationType === REGISTRATION_TYPES.CANCELLATION) {
-        return STATUSES.ANNULEE
+        return STATUSES.ANNULEE_NON_FACTURABLE
     } else if (!validated) {
         return STATUSES.REFUSEE_PAR_RH
     } else if (isHrValidationEnabled) {
@@ -68,14 +92,21 @@ export const transformFlagsToStatus = ({ validated, registrationType, hrValidati
     }
 }
 
-export const deriveInscriptionStatus = ({ savedStatus, transformedStatus }) =>
+export const deriveInscriptionStatus = ({
+    savedStatus,
+    transformedStatus,
+}: {
+    savedStatus?: StatusesValues | null
+    transformedStatus: StatusesValues
+}) =>
     transformedStatus === STATUSES.A_TRAITER_PAR_RH || transformedStatus === STATUSES.REFUSEE_PAR_RH
         ? transformedStatus
         : savedStatus ?? transformedStatus
 
-export const getMainOrganization = (organizations) => {
+export const getMainOrganization = (organizations: any[]) => {
     if (organizations != null) {
-        const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+        const { claro__organization: mainOrganization } =
+            organizations.find(({ is_main }: { is_main: boolean }) => is_main) ?? {}
 
         return mainOrganization
     } else {
@@ -83,7 +114,7 @@ export const getMainOrganization = (organizations) => {
     }
 }
 
-export const parsePhoneForSms = ({ phone }) => {
+export const parsePhoneForSms = ({ phone }: { phone: string | null }) => {
     // explanation: remove (0) and then spaces and chars: -–./)(+ and then starting zeroes
     if (phone) {
         const cleanPhone = `${parseInt(
@@ -114,9 +145,15 @@ export const getProfessionFacetsValues = async () => {
     return professionFacetsValues
 }
 
-export const getUserProfession = ({ userId, professionFacetsValues }) => {
-    if (professionFacetsValues.some(({ user_id }) => user_id === userId)) {
-        const { field_value } = professionFacetsValues.find(({ user_id }) => user_id === userId)
+export const getUserProfession = ({
+    userId,
+    professionFacetsValues,
+}: {
+    userId: number
+    professionFacetsValues: any[]
+}) => {
+    if (professionFacetsValues.some(({ user_id }: { user_id: number }) => user_id === userId)) {
+        const { field_value } = professionFacetsValues.find(({ user_id }: { user_id: number }) => user_id === userId)
 
         return JSON.parse(field_value).join(', ')
     } else {
@@ -124,16 +161,23 @@ export const getUserProfession = ({ userId, professionFacetsValues }) => {
     }
 }
 
-const formatOrganizationsHierarchy = ({ organizations, allOrganizations }) => {
-    const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+const formatOrganizationsHierarchy = ({
+    organizations,
+    allOrganizations,
+}: {
+    organizations: any[]
+    allOrganizations: any[]
+}) => {
+    const { claro__organization: mainOrganization } =
+        organizations.find(({ is_main }: { is_main: boolean }) => is_main) ?? {}
 
-    const getHierarchy = ({ organization, hierarchy = [] }) => {
-        const hierarchyLatest = [...hierarchy, organization.name]
+    const getHierarchy = ({ organization, hierarchy = [] }: any): string => {
+        const hierarchyLatest = [...hierarchy, organization?.name]
 
-        const { parent_id: parentId } = organization
+        const { parent_id: parentId } = organization ?? {}
 
         if (parentId) {
-            const parent = allOrganizations?.find(({ id }) => id === parentId)
+            const parent = allOrganizations?.find(({ id }: any) => id === parentId)
 
             return getHierarchy({ organization: parent, hierarchy: hierarchyLatest })
         } else {
@@ -144,8 +188,9 @@ const formatOrganizationsHierarchy = ({ organizations, allOrganizations }) => {
     return getHierarchy({ organization: mainOrganization })
 }
 
-const getOrganizationCode = (organizations) => {
-    const { claro__organization: mainOrganization } = organizations.find(({ is_main }) => is_main)
+const getOrganizationCode = (organizations: any[]) => {
+    const { claro__organization: mainOrganization } =
+        organizations.find(({ is_main }: { is_main: boolean }) => is_main) ?? {}
 
     return mainOrganization?.code
 }
@@ -232,19 +277,24 @@ export const fetchInscriptionsWithStatuses = async (
         })
 
         const professionFacetsValues = await getProfessionFacetsValues()
-        const coursesAdditionalData = await prisma.former22_course.findMany({
-            select: {
-                courseId: true,
-                coordinator: true,
-            },
-        })
+        const coursesAdditionalData = (
+            await prisma.former22_course.findMany({
+                select: {
+                    courseId: true,
+                    coordinator: true,
+                    codeCategory: true,
+                    theme: true,
+                    targetAudience: true,
+                },
+            })
+        ).reduce((map, course) => map.set(course.courseId, course), new Map())
         const inscriptionsAdditionalData = await prisma.former22_inscription.findMany({
             include: { former22_attestation: true },
         })
         const usersAdditionalData = await prisma.former22_user.findMany()
         const allOrganizations = await prisma.claro__organization.findMany()
 
-        if (typeof sessions !== 'undefined' || typeof inscriptionCancellations !== 'undefined') {
+        if (typeof sessions !== 'undefined') {
             const fetchedInscriptions = sessions.flatMap(
                 ({
                     claro_cursusbundle_course_session_user: inscriptions,
@@ -264,46 +314,55 @@ export const fetchInscriptionsWithStatuses = async (
                                   )
                                   const inscriptionStatusForIdWhenCancellation = shouldFetchCancellations
                                       ? inscriptionsAdditionalData.find(
-                                            ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
+                                            ({ inscriptionId }) =>
+                                                inscriptionId === (inscription as any).inscription_uuid
                                         )
                                       : null
 
                                   const { shouldReceiveSms } =
                                       usersAdditionalData.find(
-                                          ({ userId }) => userId === inscription.claro_user.uuid
+                                          ({ userId }) => userId === (inscription as any).claro_user.uuid
                                       ) ?? {}
 
-                                  const coordinator = coursesAdditionalData.find(
-                                      ({ courseId }) => courseId === courseData.uuid
-                                  )?.coordinator
+                                  const { coordinator, codeCategory, theme, targetAudience } =
+                                      coursesAdditionalData.get(courseData.uuid) ?? {}
 
                                   const userMainOrganization = getMainOrganization(
-                                      inscription.claro_user.user_organization
+                                      (inscription as any).claro_user.user_organization
                                   )
 
                                   const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
+                                  const derivedStatus = deriveInscriptionStatus({
+                                      savedStatus: (shouldFetchCancellations
+                                          ? inscriptionStatusForIdWhenCancellation
+                                          : inscriptionStatusForId
+                                      )?.inscriptionStatus as StatusesValues,
+                                      transformedStatus: transformFlagsToStatus({
+                                          validated: (inscription as any).validated,
+                                          registrationType: shouldFetchCancellations
+                                              ? REGISTRATION_TYPES.CANCELLATION
+                                              : (inscription as any).registration_type,
+                                          hrValidationStatus: (inscription as any).status,
+                                          isHrValidationEnabled,
+                                      }),
+                                  })
+
                                   return {
                                       id: inscription.uuid,
                                       inscriptionDate: inscription.registration_date,
-                                      type: inscription.registration_type,
-                                      deletedInscriptionUuid: inscription.inscription_uuid,
+                                      type: (inscription as any).registration_type,
+                                      deletedInscriptionUuid: (inscription as any).inscription_uuid,
                                       coordinator,
+                                      codeCategory,
+                                      theme,
+                                      targetAudience,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
-                                      status: deriveInscriptionStatus({
-                                          savedStatus: (shouldFetchCancellations
-                                              ? inscriptionStatusForIdWhenCancellation
-                                              : inscriptionStatusForId
-                                          )?.inscriptionStatus,
-                                          transformedStatus: transformFlagsToStatus({
-                                              validated: inscription.validated,
-                                              registrationType: shouldFetchCancellations
-                                                  ? REGISTRATION_TYPES.CANCELLATION
-                                                  : inscription.registration_type,
-                                              hrValidationStatus: inscription.status,
-                                              isHrValidationEnabled,
-                                          }),
-                                      }),
+                                      status: shouldFetchCancellations
+                                          ? statusesForAnnulation.includes(derivedStatus as any)
+                                              ? derivedStatus
+                                              : STATUSES.ANNULEE_NON_FACTURABLE
+                                          : derivedStatus,
                                       session: {
                                           id: sessionUuid,
                                           name: course_name,
@@ -313,37 +372,39 @@ export const fetchInscriptionsWithStatuses = async (
                                           courseName: courseData.course_name,
                                           coursePrice: courseData.price,
                                           courseDuration: courseData.session_days,
-                                          startYear: new Date(start_date).getFullYear(),
+                                          startYear: new Date(start_date as unknown as string).getFullYear(),
                                       },
                                       user: {
-                                          firstName: inscription.claro_user.first_name,
-                                          lastName: inscription.claro_user.last_name,
-                                          email: inscription.claro_user.mail,
-                                          username: inscription.claro_user.username,
-                                          phone: inscription.claro_user.phone,
-                                          phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
-                                          userId: inscription.claro_user.uuid,
+                                          firstName: (inscription as any).claro_user.first_name,
+                                          lastName: (inscription as any).claro_user.last_name,
+                                          email: (inscription as any).claro_user.mail,
+                                          username: (inscription as any).claro_user.username,
+                                          phone: (inscription as any).claro_user.phone,
+                                          phoneForSms: parsePhoneForSms({
+                                              phone: (inscription as any).claro_user.phone,
+                                          }),
+                                          userId: (inscription as any).claro_user.uuid,
                                           shouldReceiveSms,
-                                          hierarchy: inscription.claro_user.user_organization
+                                          hierarchy: (inscription as any).claro_user.user_organization
                                               ? formatOrganizationsHierarchy({
-                                                    organizations: inscription.claro_user.user_organization,
+                                                    organizations: (inscription as any).claro_user.user_organization,
                                                     allOrganizations,
                                                 })
                                               : null,
                                           organization: userMainOrganization?.name,
                                           organizationId: userMainOrganization?.uuid,
-                                          organizationCode: inscription.claro_user.user_organization
-                                              ? getOrganizationCode(inscription.claro_user.user_organization)
+                                          organizationCode: (inscription as any).claro_user.user_organization
+                                              ? getOrganizationCode((inscription as any).claro_user.user_organization)
                                               : null,
                                           profession: getUserProfession({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               professionFacetsValues,
                                           }),
                                       },
                                       validationType:
-                                          inscription.status === 2
+                                          (inscription as any).status === 2
                                               ? 'Validée'
-                                              : inscription.status === 3
+                                              : (inscription as any).status === 3
                                               ? 'Validée sur quota'
                                               : '',
                                       organizationClientNumber:
@@ -358,9 +419,10 @@ export const fetchInscriptionsWithStatuses = async (
                         : [
                               {
                                   id: uuidv4(),
-                                  coordinator: coursesAdditionalData.find(
-                                      ({ courseId }) => courseId === courseData.uuid
-                                  )?.coordinator,
+                                  coordinator: coursesAdditionalData.get(courseData.uuid)?.coordinator,
+                                  codeCategory: coursesAdditionalData.get(courseData.uuid)?.codeCategory,
+                                  theme: coursesAdditionalData.get(courseData.uuid)?.theme,
+                                  targetAudience: coursesAdditionalData.get(courseData.uuid)?.targetAudience,
                                   session: {
                                       id: sessionUuid,
                                       name: course_name,
@@ -368,13 +430,13 @@ export const fetchInscriptionsWithStatuses = async (
                                       quotaDays: quota_days,
                                       isUsedForQuota: used_by_quotas,
                                       courseName: courseData.course_name,
-                                      startYear: new Date(start_date).getFullYear(),
+                                      startYear: new Date(start_date as unknown as string).getFullYear(),
                                   },
                               },
                           ]
             )
 
-            let fetchedPendingLearners = []
+            let fetchedPendingLearners: any[] = []
 
             if (!shouldFetchTutors && !shouldFetchCancellations) {
                 const allPendingInscriptionsOnCourseLevel = await prisma.claro_cursusbundle_course_course_user.findMany(
@@ -415,13 +477,17 @@ export const fetchInscriptionsWithStatuses = async (
 
                         const userMainOrganization = getMainOrganization(inscription.claro_user.user_organization)
 
+                        const { coordinator, codeCategory, theme, targetAudience } =
+                            coursesAdditionalData.get(inscription.claro_cursusbundle_course.uuid) ?? {}
+
                         return {
                             id: inscription.uuid,
                             inscriptionDate: inscription.registration_date,
                             type: inscription.registration_type,
-                            coordinator: coursesAdditionalData.find(
-                                ({ courseId }) => courseId === inscription.claro_cursusbundle_course.uuid
-                            )?.coordinator,
+                            coordinator,
+                            codeCategory,
+                            theme,
+                            targetAudience,
                             status: STATUSES.EN_ATTENTE,
                             isPending: true,
                             session: {
@@ -474,10 +540,21 @@ export const fetchInscriptionsWithStatuses = async (
     }
 }
 
-export const getNamesByType = ({ inscriptions, registrationType }) =>
+export const getNamesByType = ({
+    inscriptions,
+    registrationType,
+}: {
+    inscriptions: any[]
+    registrationType: RegistrationTypesValues
+}) =>
     inscriptions
-        .filter(({ registration_type }) => registration_type === registrationType)
-        .map(({ claro_user: { first_name, last_name } }) => ({
-            firstName: first_name,
-            lastName: last_name,
-        }))
+        .filter(
+            ({ registration_type }: { registration_type: RegistrationTypesValues }) =>
+                registration_type === registrationType
+        )
+        .map(
+            ({ claro_user: { first_name, last_name } }: { claro_user: { first_name: string; last_name: string } }) => ({
+                firstName: first_name,
+                lastName: last_name,
+            })
+        )
