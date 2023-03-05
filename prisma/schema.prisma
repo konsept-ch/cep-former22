@@ -2461,20 +2461,14 @@ model claro_plugin {
 
 model claro_public_file {
   id                    Int                     @id @default(autoincrement())
-  user_id               Int?
   file_size             Int?
   filename              String                  @db.VarChar(255)
   hash_name             String                  @db.VarChar(255)
-  directory_name        String                  @db.VarChar(255)
-  creation_date         DateTime                @db.DateTime(0)
   mime_type             String?                 @db.VarChar(255)
-  source_type           String?                 @db.VarChar(255)
+  uuid                  String                  @unique(map: "UNIQ_7C1E45A0D17F50A6") @db.VarChar(36)
   claro_forum_subject   claro_forum_subject[]
-  claro_user            claro_user?             @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_7C1E45A0A76ED395")
   claro_public_file_use claro_public_file_use[]
   claro_transfer_import claro_transfer_import[]
-
-  @@index([user_id], map: "IDX_7C1E45A0A76ED395")
 }
 
 model claro_public_file_use {
@@ -3382,7 +3376,6 @@ model claro_user {
   claro_object_lock                                                                                                           claro_object_lock[]
   claro_ordered_tool                                                                                                          claro_ordered_tool[]
   claro_planned_object                                                                                                        claro_planned_object[]
-  claro_public_file                                                                                                           claro_public_file[]
   claro_resource_comment                                                                                                      claro_resource_comment[]
   claro_resource_favourite                                                                                                    claro_resource_favourite[]
   claro_resource_node                                                                                                         claro_resource_node[]
@@ -3681,7 +3674,6 @@ model claro_workspace {
   entity_name                                                                             String                                                 @db.VarChar(255)
   code                                                                                    String                                                 @unique(map: "UNIQ_D902854577153098") @db.VarChar(255)
   slug                                                                                    String                                                 @unique(map: "UNIQ_D9028545989D9B62") @db.VarChar(128)
-  lang                                                                                    String?                                                @db.VarChar(255)
   isModel                                                                                 Boolean
   self_registration                                                                       Boolean
   registration_validation                                                                 Boolean
@@ -3702,6 +3694,7 @@ model claro_workspace {
   createdAt                                                                               DateTime?                                              @db.DateTime(0)
   updatedAt                                                                               DateTime?                                              @db.DateTime(0)
   hidden                                                                                  Boolean                                                @default(false)
+  successCondition                                                                        String?                                                @db.LongText
   claro__open_badge_badge_class                                                           claro__open_badge_badge_class[]
   claro__open_badge_rule                                                                  claro__open_badge_rule[]
   claro_cursusbundle_course_claro_cursusbundle_course_workspace_idToclaro_workspace       claro_cursusbundle_course[]                            @relation("claro_cursusbundle_course_workspace_idToclaro_workspace")
@@ -4666,7 +4659,6 @@ model innova_step {
   description                    String?                          @db.LongText
   numbering                      String?                          @db.VarChar(255)
   showResourceHeader             Boolean
-  evaluated                      Boolean
   slug                           String                           @db.VarChar(128)
   uuid                           String                           @unique(map: "UNIQ_86F48567D17F50A6") @db.VarChar(36)
   poster                         String?                          @db.VarChar(255)
@@ -5595,10 +5587,8 @@ model former22_manual_invoice {
   customClientLastname                                          String?                             @db.Text
   invoiceType                                                   former22_manual_invoice_invoiceType
   reason                                                        former22_manual_invoice_reason
-<<<<<<< HEAD
-=======
+  codeCompta                                                    String?                             @db.Text
   former22_invoice_item                                         former22_invoice_item[]
->>>>>>> main
   claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                         @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
   claro_user                                                    claro_user                          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
   claro__organization                                           claro__organization                 @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
@@ -5762,6 +5752,7 @@ model former22_invoice_item {
   createdAt                              DateTime                                @default(now()) @db.DateTime(0)
   updatedAt                              DateTime                                @default(now()) @db.DateTime(0)
   inscriptionId                          Int?
+  number                                 String?                                 @db.Text
   claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user? @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
   former22_manual_invoice                former22_manual_invoice                 @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
 
@@ -5790,17 +5781,4 @@ enum former22_manual_invoice_status {
   Envoy_e           @map("Envoyée")
   Non_transmissible @map("Non transmissible")
   Quotas
-}
-
-enum former22_manual_invoice_invoiceType {
-  Manuelle
-  Directe
-  Group_e  @map("Groupée")
-}
-
-enum former22_manual_invoice_reason {
-  Participation
-  P_nalit_          @map("Pénalité")
-  Annulation
-  Non_participation @map("Non-participation")
 }
