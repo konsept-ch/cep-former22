@@ -852,7 +852,7 @@ createService(
                         concerns: config.concerns,
                         items: [
                             {
-                                designation: `${user.first_name} ${user.last_name} - ${sessionName}`,
+                                designation: `${user.last_name} ${user.first_name} - ${sessionName}`,
                                 unit: config.unit,
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',

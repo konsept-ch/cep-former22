@@ -348,7 +348,7 @@ createService(
                             concerns: config.concerns,
                             items: [
                                 {
-                                    designation: `${first_name} ${last_name} - ${sessionName}`,
+                                    designation: `${last_name} ${first_name} - ${sessionName}`,
                                     unit: config.unit,
                                     price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                     amount: '1',
@@ -452,6 +452,12 @@ createService(
                                 price: true,
                             },
                         },
+                        claro_user: {
+                            select: {
+                                first_name: true,
+                                last_name: true,
+                            },
+                        },
                     },
                     where: {
                         claro_user: {
@@ -505,14 +511,16 @@ createService(
                     status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
                     invoiceType: { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
-                    items: inscriptions.map((sessionUser) => ({
-                        designation: sessionUser.claro_cursusbundle_course_session.course_name,
-                        unit: { value: 'part.', label: 'part.' },
-                        price: `${sessionUser.claro_cursusbundle_course_session.price ?? ''}`,
-                        amount: '1',
-                        vatCode: { value: 'EXONERE', label: 'EXONERE' },
-                        inscriptionId: sessionUser.id,
-                    })),
+                    items: inscriptions.map(
+                        ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }) => ({
+                            designation: `${last_name} ${first_name} - ${claro_cursusbundle_course_session.course_name}`,
+                            unit: { value: 'part.', label: 'part.' },
+                            price: `${claro_cursusbundle_course_session.price ?? ''}`,
+                            amount: '1',
+                            vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                            inscriptionId: id,
+                        })
+                    ),
                 },
                 cfEmail: req.headers['x-login-email-address'],
             })
