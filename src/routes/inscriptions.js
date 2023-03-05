@@ -825,7 +825,7 @@ createService(
                     postalAddressDepartment,
                     // postalAddressDepartmentCode,
                     postalAddressLocality,
-                } = mainOrganization ?? {}
+                } = { ...mainOrganization, ...organization }
 
                 await createInvoice({
                     invoiceData: {
@@ -860,9 +860,6 @@ createService(
                                 inscriptionId: currentInscription.id,
                             },
                         ],
-                        // TODO probably keep the inscription ids as a foreign key for direct and grouped
-                        // inscriptionId: currentInscription.id,
-                        // inscriptionStatus: newStatus,
                     },
                     cfEmail: req.headers['x-login-email-address'],
                 })

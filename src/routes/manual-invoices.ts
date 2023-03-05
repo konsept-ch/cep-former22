@@ -3,7 +3,12 @@ import type { Request, Response } from 'express'
 
 import { prisma } from '..'
 import { createService, mapStatusToValidationType, ValidationTypesKeys } from '../utils'
-import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
+import {
+    invoiceReasonsFromPrisma,
+    invoiceStatusesFromPrisma,
+    invoiceTypesFromPrisma,
+    invoiceReasonsKeys,
+} from '../constants'
 import { createInvoice } from './manualInvoicesUtils'
 import { STATUSES } from './inscriptionsUtils'
 
@@ -195,6 +200,174 @@ createService(
 
 createService(
     'post',
+    '/direct',
+    async (req: Request, res: Response) => {
+        try {
+            const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
+
+            const inscriptions = (
+                await prisma.claro_cursusbundle_course_session_user.findMany({
+                    select: {
+                        id: true,
+                        uuid: true,
+                        claro_cursusbundle_course_session: {
+                            select: {
+                                course_name: true,
+                                price: true,
+                            },
+                        },
+                        claro_user: {
+                            select: {
+                                first_name: true,
+                                last_name: true,
+                                user_organization: {
+                                    where: {
+                                        is_main: true,
+                                    },
+                                    select: {
+                                        claro__organization: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                })
+            ).filter(({ uuid }) =>
+                inscriptionsAdditionalData.some(
+                    ({ inscriptionId, inscriptionStatus }) =>
+                        inscriptionId === uuid &&
+                        (inscriptionStatus == null ||
+                            [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
+                                inscriptionStatus as any
+                            ))
+                )
+            )
+
+            const organizationsAdditionalData = await prisma.former22_organization.findMany()
+
+            for (const {
+                id,
+                uuid: inscriptionUuid,
+                claro_cursusbundle_course_session: { course_name: sessionName, price: sessionPrice },
+                claro_user: { first_name, last_name, user_organization },
+            } of inscriptions) {
+                const mainOrganization = user_organization[0]?.claro__organization
+
+                const organization = organizationsAdditionalData.find(
+                    ({ organizationUuid }) => organizationUuid === mainOrganization.uuid
+                )
+
+                const { inscriptionStatus } = inscriptionsAdditionalData.find(
+                    ({ inscriptionId }) => inscriptionId === inscriptionUuid
+                ) ?? {
+                    status: '',
+                }
+
+                let config: {
+                    concerns: string
+                    unit: { value: string; label: string }
+                    reason: invoiceReasonsKeys
+                    price: string
+                } | null = null
+
+                // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
+                if (inscriptionStatus === STATUSES.NON_PARTICIPATION) {
+                    config = {
+                        concerns: 'Absence non annoncée',
+                        unit: { value: 'part.', label: 'part.' },
+                        reason: 'Non_participation',
+                        price: `${sessionPrice}`,
+                    }
+                }
+
+                if (inscriptionStatus === STATUSES.ANNULEE_FACTURABLE) {
+                    config = {
+                        concerns: 'Annulation/report hors-délai',
+                        unit: { value: 'forfait(s)', label: 'forfait(s)' },
+                        reason: 'Annulation',
+                        price: '50',
+                    }
+                }
+
+                if (
+                    organization?.billingMode === 'Directe' &&
+                    [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus as any)
+                ) {
+                    config = {
+                        concerns: '',
+                        unit: { value: 'part.', label: 'part.' },
+                        reason: 'Participation',
+                        price: `${sessionPrice}`,
+                    }
+                }
+
+                if (config !== null) {
+                    const {
+                        uuid,
+                        name,
+                        code,
+                        addressTitle,
+                        postalAddressStreet,
+                        postalAddressCode,
+                        postalAddressCountry,
+                        // postalAddressCountryCode,
+                        postalAddressDepartment,
+                        // postalAddressDepartmentCode,
+                        postalAddressLocality,
+                    } = { ...mainOrganization, ...organization }
+
+                    await createInvoice({
+                        invoiceData: {
+                            status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                            invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
+                            reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
+                            client: {
+                                value: code,
+                                label: name,
+                                uuid,
+                            },
+                            customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
+                                postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
+                            }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
+                                postalAddressCode ? `${postalAddressCode} ` : ''
+                            }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
+                            customClientEmail: mainOrganization.email ?? '',
+                            selectedUserUuid: '',
+                            customClientTitle: '',
+                            customClientFirstname: '',
+                            customClientLastname: '',
+                            courseYear: new Date().getFullYear(),
+                            invoiceDate: new Date().toISOString(),
+                            concerns: config.concerns,
+                            items: [
+                                {
+                                    designation: `${first_name} ${last_name} - ${sessionName}`,
+                                    unit: config.unit,
+                                    price: config.price, // Prix TTC (coût affiché sur le site Claroline)
+                                    amount: '1',
+                                    vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                                    inscriptionId: id,
+                                },
+                            ],
+                        },
+                        cfEmail: req.headers['x-login-email-address'],
+                    })
+                }
+            }
+
+            res.json('Factures directes générées')
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(error)
+            res.status(500).send({ error: 'Erreur de création de facture' })
+        }
+    },
+    null,
+    manualInvoicesRouter
+)
+
+createService(
+    'post',
     '/grouped',
     async (req: Request, res: Response) => {
         // TODO generate for all inscriptions whose organisation mode is semestrial or annual.
@@ -281,17 +454,23 @@ createService(
                                 },
                             },
                         },
+                        claro_cursusbundle_course_session: {
+                            start_date: {
+                                gte: new Date('2023-01-01'),
+                            },
+                        },
                     },
                 })
-            ).filter(({ uuid }) =>
-                inscriptionsAdditionalData.some(
-                    ({ inscriptionId, inscriptionStatus }) =>
-                        inscriptionId === uuid &&
-                        (inscriptionStatus == null ||
-                            [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
-                                inscriptionStatus as any
-                            ))
-                )
+            ).filter(
+                ({ uuid }) =>
+                    !inscriptionsAdditionalData.some(
+                        ({ inscriptionId, inscriptionStatus }) =>
+                            inscriptionId === uuid &&
+                            (inscriptionStatus == null ||
+                                [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
+                                    inscriptionStatus as any
+                                ))
+                    )
             )
 
             if (inscriptions.length === 0) continue
