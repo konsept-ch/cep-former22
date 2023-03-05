@@ -432,3 +432,16 @@ createService(
     null,
     manualInvoicesRouter
 )
+
+createService(
+    'delete',
+    '/all',
+    async (_req: Request, res: Response) => {
+        await prisma.former22_invoice_item.deleteMany()
+        await prisma.former22_manual_invoice.deleteMany()
+
+        res.json('Toutes factures et articles ont été supprimés')
+    },
+    null,
+    manualInvoicesRouter
+)
