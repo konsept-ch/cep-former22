@@ -16,7 +16,9 @@ import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { attestationsRouter } from './routes/attestations'
+import { evaluationsRouter } from './routes/evaluations'
 import { contractTemplatesRouter } from './routes/contractTemplates'
+import { evaluationTemplatesRouter } from './routes/evaluationTemplates'
 import { eventsRouter } from './routes/events'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
@@ -28,7 +30,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
-import { checkAuth, hasAllProperties } from './utils'
+import { authMiddleware } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -104,31 +106,15 @@ app.get('/', (_req, res) => {
 app.use('/reception', receptionRouter)
 app.use('/auth', authRouter)
 app.use('/mail', mailRouter)
+app.use('/evaluations', evaluationsRouter)
 
-app.use('*', async (req, res, next) => {
-    if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
-        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
-        return
-    }
-
-    const email = (req.headers['x-login-email-address'] as string).trim()
-    const code = (req.headers['x-login-email-code'] as string).trim()
-    const token = (req.headers['x-login-token'] as string).trim()
-    const isAuthenticated = await checkAuth({ email, code, token })
-
-    if (isAuthenticated) {
-        next()
-    } else {
-        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
-        return
-        // throw new Error('Incorrect token and code for this email')
-    }
-})
+app.use('*', authMiddleware)
 
 app.use('/agenda', agendaRouter)
 app.use('/courses', coursesRouter)
 app.use('/attestations', attestationsRouter)
 app.use('/contract-templates', contractTemplatesRouter)
+app.use('/evaluation-templates', evaluationTemplatesRouter)
 app.use('/events', eventsRouter)
 app.use('/inscriptions', inscriptionsRouter)
 app.use('/invoices', invoicesRouter)
