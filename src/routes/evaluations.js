@@ -53,6 +53,7 @@ createService(
                     year,
                     sessionName: session.course_name,
                     courseName: course.course_name,
+                    link: new URL(`/evaluations/${uuid}`, process.env.EVALUATIONS_URL).href,
                 }
             })
         )
