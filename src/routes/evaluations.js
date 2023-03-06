@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
-import { createService } from '../utils'
+import { authMiddleware, createService } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { sendEmail } from '../sendEmail'
 import { PDFDocument, rgb, StandardFonts, breakTextIntoLines } from 'pdf-lib'
@@ -58,7 +58,8 @@ createService(
         )
     },
     null,
-    evaluationsRouter
+    evaluationsRouter,
+    authMiddleware
 )
 
 createService(
@@ -79,42 +80,8 @@ createService(
         res.json(sessions ?? 'Aucunes session trouvées')
     },
     null,
-    evaluationsRouter
-)
-
-createService(
-    'get',
-    '/:uuid',
-    async (req, res) => {
-        const evaluation = await prisma.former22_evaluation.findUnique({
-            select: {
-                uuid: true,
-                former22_evaluation_template: {
-                    select: {
-                        struct: true,
-                    },
-                },
-                claro_cursusbundle_course_session: {
-                    select: {
-                        course_name: true,
-                        start_date: true,
-                    },
-                },
-            },
-            where: {
-                uuid: req.params.uuid,
-            },
-        })
-
-        res.json({
-            uuid: evaluation.uuid,
-            struct: evaluation.former22_evaluation_template.struct,
-            sessionName: evaluation.claro_cursusbundle_course_session.course_name,
-            date: evaluation.claro_cursusbundle_course_session.start_date,
-        })
-    },
-    null,
-    evaluationsRouter
+    evaluationsRouter,
+    authMiddleware
 )
 
 createService(
@@ -310,6 +277,7 @@ createService(
     },
     null,
     evaluationsRouter
+    //authMiddleware
 )
 
 createService(
@@ -360,7 +328,7 @@ createService(
             },
         })
 
-        const evaluationLink = new URL(`/evaluations/${evaluation.uuid}`, 'https://localhost:3000').href
+        const evaluationLink = new URL(`/evaluations/${evaluation.uuid}`, process.env.EVALUATIONS_URL).href
 
         // ##############################################
         // SEND MAILS
@@ -407,6 +375,42 @@ createService(
 
         res.json({
             message: "L'évaluation à été généré avec succès.",
+        })
+    },
+    null,
+    evaluationsRouter,
+    authMiddleware
+)
+
+createService(
+    'get',
+    '/:uuid',
+    async (req, res) => {
+        const evaluation = await prisma.former22_evaluation.findUnique({
+            select: {
+                uuid: true,
+                former22_evaluation_template: {
+                    select: {
+                        struct: true,
+                    },
+                },
+                claro_cursusbundle_course_session: {
+                    select: {
+                        course_name: true,
+                        start_date: true,
+                    },
+                },
+            },
+            where: {
+                uuid: req.params.uuid,
+            },
+        })
+
+        res.json({
+            uuid: evaluation.uuid,
+            struct: evaluation.former22_evaluation_template.struct,
+            sessionName: evaluation.claro_cursusbundle_course_session.course_name,
+            date: evaluation.claro_cursusbundle_course_session.start_date,
         })
     },
     null,
