@@ -351,6 +351,7 @@ createService(
                             concerns: config.concerns,
                             items: [
                                 {
+                                    number: '',
                                     designation: `${last_name} ${first_name} - ${sessionName}`,
                                     unit: config.unit,
                                     price: config.price, // Prix TTC (coût affiché sur le site Claroline)

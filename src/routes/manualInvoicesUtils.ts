@@ -20,6 +20,7 @@ type InvoiceData = {
     invoiceDate: string
     courseYear: number
     items: {
+        number: string
         designation: string
         unit: { value: string; label: string }
         amount: string
