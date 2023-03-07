@@ -71,6 +71,54 @@ createService(
 
 createService(
     'get',
+    '/:sessionId/users',
+    async (req, res) => {
+        const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
+            select: {
+                uuid: true,
+                claro_user: {
+                    select: {
+                        uuid: true,
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+            },
+            where: {
+                registration_type: 'learner',
+                claro_cursusbundle_course_session: {
+                    uuid: req.params.sessionId,
+                    hidden: false,
+                },
+            },
+        })
+
+        const inscriptions = sessionUsers?.filter(
+            async (sessionUser) =>
+                (await prisma.former22_inscription.findFirst({
+                    select: {
+                        inscriptionId: true,
+                    },
+                    where: {
+                        inscriptionId: sessionUser.uuid,
+                        inscriptionStatus: STATUSES.PARTICIPATION,
+                    },
+                })) !== null
+        )
+
+        res.json(
+            inscriptions?.map(({ claro_user }) => ({
+                uuid: claro_user.uuid,
+                fullname: `${claro_user.first_name} ${claro_user.last_name}`,
+            })) ?? 'Aucun participant trouvé'
+        )
+    },
+    null,
+    sessionsRouter
+)
+
+createService(
+    'get',
     '/presence-list/:sessionId',
     async (req, res) => {
         const { sessionId } = req.params

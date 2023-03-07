@@ -5716,6 +5716,38 @@ model migrations_state {
   run_on DateTime @db.DateTime(0)
 }
 
+model former22_evaluation_template {
+  id                  Int                   @id @default(autoincrement())
+  uuid                String                @unique(map: "uuid") @db.VarChar(36)
+  title               String?               @default("Nouveau modèle d'évaluation") @db.VarChar(255)
+  description         String?               @db.Text
+  struct              Json?
+  former22_evaluation former22_evaluation[]
+}
+
+model former22_evaluation {
+  id                                Int                               @id @default(autoincrement())
+  uuid                              String                            @unique(map: "uuid") @db.VarChar(36)
+  sessionId                         Int                               @unique(map: "sessionId")
+  templateId                        Int
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_claro_cursusbundle_course_session")
+  former22_evaluation_template      former22_evaluation_template      @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_former22_evaluation_template")
+  former22_evaluation_result        former22_evaluation_result[]
+
+  @@index([templateId], map: "template_index")
+  @@index([sessionId], map: "session_index")
+}
+
+model former22_evaluation_result {
+  id                  Int                 @id @default(autoincrement())
+  uuid                String              @unique(map: "uuid") @db.VarChar(36)
+  evaluationId        Int
+  result              Json?
+  former22_evaluation former22_evaluation @relation(fields: [evaluationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_result_evaluation")
+
+  @@index([evaluationId], map: "evaluation_index")
+}
+
 model former22_invoice_item {
   id                                     Int                                     @id @default(autoincrement())
   uuid                                   String                                  @db.VarChar(255)
