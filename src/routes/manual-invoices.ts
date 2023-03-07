@@ -345,6 +345,7 @@ createService(
                             customClientTitle: '',
                             customClientFirstname: '',
                             customClientLastname: '',
+                            codeCompta: '',
                             courseYear: new Date().getFullYear(),
                             invoiceDate: new Date().toISOString(),
                             concerns: config.concerns,
