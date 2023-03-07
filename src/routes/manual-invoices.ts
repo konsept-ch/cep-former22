@@ -94,6 +94,7 @@ createService(
                         amount: true,
                         price: true,
                         vatCode: true,
+                        number: true,
                         claro_cursusbundle_course_session_user: {
                             select: {
                                 status: true,
@@ -118,6 +119,7 @@ createService(
                 concerns: true,
                 invoiceType: true,
                 reason: true,
+                codeCompta: true,
             },
         })
 
@@ -343,11 +345,13 @@ createService(
                             customClientTitle: '',
                             customClientFirstname: '',
                             customClientLastname: '',
+                            codeCompta: '',
                             courseYear: new Date().getFullYear(),
                             invoiceDate: new Date().toISOString(),
                             concerns: config.concerns,
                             items: [
                                 {
+                                    number: '',
                                     designation: `${last_name} ${first_name} - ${sessionName}`,
                                     unit: config.unit,
                                     price: config.price, // Prix TTC (coût affiché sur le site Claroline)
@@ -508,6 +512,7 @@ createService(
                     invoiceDate: now.toISOString(),
                     selectedUserUuid: '',
                     concerns: '',
+                    codeCompta: '',
                     status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
                     invoiceType: { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
@@ -519,6 +524,7 @@ createService(
                             amount: '1',
                             vatCode: { value: 'EXONERE', label: 'EXONERE' },
                             inscriptionId: id,
+                            number: '',
                         })
                     ),
                 },
@@ -556,6 +562,7 @@ createService(
                 selectedUserUuid,
                 status,
                 concerns,
+                codeCompta,
             } = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
@@ -608,6 +615,7 @@ createService(
                     invoiceDate,
                     courseYear,
                     concerns,
+                    codeCompta,
                     items,
                     status: status?.value,
                     creatorUserId,

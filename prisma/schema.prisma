@@ -5595,6 +5595,7 @@ model former22_manual_invoice {
   customClientLastname                                          String?                             @db.Text
   invoiceType                                                   former22_manual_invoice_invoiceType
   reason                                                        former22_manual_invoice_reason
+  codeCompta                                                    String?                             @db.Text
   former22_invoice_item                                         former22_invoice_item[]
   claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                         @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
   claro_user                                                    claro_user                          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
@@ -5759,6 +5760,7 @@ model former22_invoice_item {
   createdAt                              DateTime                                @default(now()) @db.DateTime(0)
   updatedAt                              DateTime                                @default(now()) @db.DateTime(0)
   inscriptionId                          Int?
+  number                                 String?                                 @db.Text
   claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user? @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
   former22_manual_invoice                former22_manual_invoice                 @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
 
