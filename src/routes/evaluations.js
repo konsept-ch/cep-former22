@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
 import { authMiddleware, createService } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
+import { STATUSES } from './inscriptionsUtils'
 import { sendEmail } from '../sendEmail'
 import { PDFDocument, rgb, StandardFonts, breakTextIntoLines } from 'pdf-lib'
 
@@ -73,7 +74,6 @@ createService(
                 course_name: true,
             },
             where: {
-                former22_evaluation: null,
                 hidden: false,
             },
         })
@@ -91,10 +91,12 @@ createService(
     async (req, res) => {
         const {
             id,
+            sessionId,
             former22_evaluation_template: { struct },
         } = await prisma.former22_evaluation.findUnique({
             select: {
                 id: true,
+                sessionId: true,
                 former22_evaluation_template: {
                     select: {
                         struct: true,
@@ -105,6 +107,34 @@ createService(
                 uuid: req.params.uuid,
             },
         })
+
+        const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
+            select: {
+                uuid: true,
+            },
+            where: {
+                registration_type: 'learner',
+                claro_cursusbundle_course_session: {
+                    id: sessionId,
+                    hidden: false,
+                },
+            },
+        })
+
+        const participantCount = sessionUsers
+            ? sessionUsers.filter(
+                  async (sessionUser) =>
+                      (await prisma.former22_inscription.findFirst({
+                          select: {
+                              inscriptionId: true,
+                          },
+                          where: {
+                              inscriptionId: sessionUser.uuid,
+                              inscriptionStatus: STATUSES.PARTICIPATION,
+                          },
+                      })) !== null
+              ).length
+            : 0
 
         const results = await prisma.former22_evaluation_result.findMany({
             select: {
@@ -117,13 +147,11 @@ createService(
             },
         })
 
-        const notes = struct.filter((block) => block.type === 'notes')
-
         const statistics = results.reduce((acc, result) => {
             //eslint-disable-next-line no-plusplus
             for (const key in result.result) if (acc[key]) ++acc[key][result.result[key]]
             return acc
-        }, Object.fromEntries(notes.map((block) => [block.identifier, Object.fromEntries(block.notes.map((note) => [note, 0]))])))
+        }, Object.fromEntries(struct.filter((block) => block.type === 'notes').map((block) => [block.identifier, Object.fromEntries(block.notes.map((note) => [note, 0]))])))
 
         // ##############################################
         // GENERATE PDF
@@ -134,6 +162,7 @@ createService(
 
         const margin = { x: 50, y: 30 }
         const maxWidth = page.getWidth() - (margin.x << 1)
+        const mr = margin.x + maxWidth
 
         const countLines = (text, size) =>
             breakTextIntoLines(text, doc.defaultWordBreaks, maxWidth, (t) => font.widthOfTextAtSize(t, size)).length
@@ -149,17 +178,6 @@ createService(
             checkAddingPage(dy)
             page.moveDown(dy)
         }
-
-        const leftChart =
-            margin.x +
-            Math.max(
-                ...notes
-                    .reduce((acc, block) => [...acc, ...block.notes], [])
-                    .map((note) => font.widthOfTextAtSize(note, 12))
-            ) +
-            20
-
-        const cellWidth = (maxWidth - leftChart) / results.length
 
         const drawText = (
             text,
@@ -181,6 +199,26 @@ createService(
             page.moveDown(dy1)
         }
 
+        const drawHLine = (y, x0, x1) => {
+            page.drawLine({
+                start: { x: x0, y },
+                end: { x: x1, y },
+                thickness: 1,
+                color: rgb(106 / 255, 97 / 255, 91 / 255),
+                opacity: 0.25,
+            })
+        }
+
+        const drawVLine = (x, y0, y1) => {
+            page.drawLine({
+                start: { x, y: y0 },
+                end: { x, y: y1 },
+                thickness: 1,
+                color: rgb(106 / 255, 97 / 255, 91 / 255),
+                opacity: 0.25,
+            })
+        }
+
         const blockRenders = {
             title: (block) => {
                 const style = {
@@ -199,56 +237,73 @@ createService(
             notes: (block) => {
                 drawText(block.text)
 
-                const t = page.getY()
+                const h = font.heightAtSize(12),
+                    h1 = h >> 1,
+                    h2 = h << 1,
+                    h4 = h2 << 1,
+                    t = page.getY(),
+                    th1 = t - h1,
+                    th3 = th1 - h2,
+                    b = t - h4
 
-                const h = font.heightAtSize(12)
-                const hh = h << 1
+                checkAddingPage(t + h - block.notes.length * h2)
 
-                let b = t + h
+                page.drawRectangle({
+                    x: margin.x,
+                    y: t - h2,
+                    width: maxWidth,
+                    height: h2,
+                    color: rgb(0.9, 0.9, 0.9),
+                })
 
-                checkAddingPage(t + h - block.notes.length * hh)
+                //eslint-disable-next-line no-plusplus
+                for (let i = 0; i < 3; ++i) drawHLine(t - h2 * i, margin.x, mr)
+                drawVLine(mr, t, b)
+                page.moveTo(mr, th1)
 
-                for (const note of block.notes) {
-                    drawText(note, 0, 12)
+                const extra = {
+                    'Nbr participants': `${participantCount}`,
+                    'Total réponses': `${Object.values(statistics[block.identifier]).reduce((sum, n) => sum + n, 0)}`,
+                }
+                for (const key in extra) {
+                    const value = extra[key]
+                    const kw = font.widthOfTextAtSize(key, 12)
+                    const fw = kw + h2
+                    const vcw = font.widthOfTextAtSize(value, 12) >> 1
+                    const fcw = fw >> 1
+                    const x = page.getX() - fw
 
-                    b -= hh
+                    page.moveTo(x + fcw - (kw >> 1), th1)
+                    drawText(key)
 
-                    page.drawRectangle({
-                        x: leftChart,
-                        y: b,
-                        width: cellWidth * statistics[block.identifier][note],
-                        height: h,
-                        color: rgb(Math.random(), Math.random(), Math.random()),
-                    })
+                    page.moveTo(x + fcw - vcw, th3)
+                    drawText(value)
+
+                    page.moveTo(x, th3)
+                    drawVLine(x, t, b)
+                }
+
+                const cw = (page.getX() - margin.x) / block.notes.length
+                const ccw = cw >> 1
+                //eslint-disable-next-line no-plusplus
+                for (let i = 0; i < block.notes.length; ++i) drawVLine(margin.x + cw * i, t, b)
+
+                //eslint-disable-next-line no-plusplus
+                for (let i = 0; i < block.notes.length; ++i) {
+                    const note = block.notes[i]
+                    page.moveTo(margin.x + cw * i + ccw - (font.widthOfTextAtSize(note, 12) >> 1), th1)
+                    drawText(note)
                 }
 
                 //eslint-disable-next-line no-plusplus
-                for (let i = 0, x = leftChart; i <= results.length; ++i, x += cellWidth) {
-                    page.drawLine({
-                        start: { x, y: t },
-                        end: { x, y: b },
-                        thickness: 1,
-                        color: rgb(106 / 255, 97 / 255, 91 / 255),
-                        opacity: 0.25,
-                    })
-                    const label = `${i}`
-                    page.drawText(label, {
-                        x: x - (font.widthOfTextAtSize(label, 12) >> 1),
-                        y: b - h - 5,
-                        size: 12,
-                        color: rgb(106 / 255, 97 / 255, 91 / 255),
-                    })
+                for (let i = 0; i < block.notes.length; ++i) {
+                    const result = `${statistics[block.identifier][block.notes[i]]}`
+                    page.moveTo(margin.x + cw * i + ccw - (font.widthOfTextAtSize(result, 12) >> 1), th3)
+                    drawText(result)
                 }
 
-                page.drawLine({
-                    start: { x: leftChart, y: b },
-                    end: { x: maxWidth, y: b },
-                    thickness: 1,
-                    color: rgb(106 / 255, 97 / 255, 91 / 255),
-                    opacity: 0.25,
-                })
-
-                moveDown(20)
+                page.moveTo(margin.x, t)
+                moveDown(h4 + 20)
             },
             remark: (block) => {
                 drawText(block.text, 20)
@@ -267,9 +322,7 @@ createService(
         })
         page.moveDown(20)
 
-        for (const block of struct) {
-            blockRenders[block.type](block)
-        }
+        for (const block of struct) blockRenders[block.type](block)
 
         res.type('pdf')
         res.set('Content-disposition', `filename=${req.params.uuid}`)
