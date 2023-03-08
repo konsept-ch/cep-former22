@@ -73,7 +73,7 @@ components:
             eventDates: ['2022-09-02T06:30:00.000Z', '2022-09-16T06:30:00.000Z', '2022-09-23T06:30:00.000Z']
             maxParticipants: 10
             sessionFormat: 'Visioconférence'
-            sessionLocation: 'Hors-Lausanne'
+            sessionLocation: '1002 Lausanne'
             inscriptions:
               - id: 'a67d4ade-6807-4a99-8418-425aa471c71a'
                 status: 'Refusée par CEP'
@@ -112,10 +112,7 @@ components:
           description: Le format de la session ('Présentiel', 'Visioconférence', 'Mixte', 'E-learning')
         sessionLocation:
           type: string
-          description: Le lieu de la session ('Lausanne', 'Hors-Lausanne')
-        sessionZip:
-          type: string
-          description: Le code postal du lieu de la session
+          description: Le lieu de la session, e.g. 1002 Lausanne
         inscriptions:
           type: array
           description: Toutes les inscriptions dans la session qui ont un e-mail qui contient "@lausanne.ch" et qui ont été modifiées depuis la date du filtre statusUpdatedSince
