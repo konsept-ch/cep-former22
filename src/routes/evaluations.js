@@ -312,7 +312,7 @@ createService(
 
         page.moveTo(margin.x, page.getHeight() - margin.y)
 
-        drawText(`Date de création: ${new Date().toLocaleString()}`)
+        drawText(`Date de création: ${new Date().toLocaleString('fr', { timeZone: 'Europe/Zurich' })}`)
         page.drawLine({
             start: { x: margin.x, y: page.getY() },
             end: { x: margin.x + maxWidth, y: page.getY() },
