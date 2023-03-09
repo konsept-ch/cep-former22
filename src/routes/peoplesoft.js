@@ -99,22 +99,23 @@ createService(
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
-                    const generateParentOrgFilter = ({ orgName, levels = 5 }) => ({
+                    //const generateParentOrgFilter = ({ orgName, levels = 5 }) => ({
+                    const generateParentOrgFilter = ({ orgCode, levels = 5 }) => ({
                         claro__organization:
                             levels > 0
                                 ? {
                                       OR: [
                                           {
-                                              name: {
-                                                  equals: orgName,
+                                              code: {
+                                                  equals: orgCode,
                                               },
                                           },
-                                          generateParentOrgFilter({ orgName, levels: levels - 1 }),
+                                          generateParentOrgFilter({ orgCode, levels: levels - 1 }),
                                       ],
                                   }
                                 : {
-                                      name: {
-                                          equals: orgName,
+                                      code: {
+                                          equals: orgCode,
                                       },
                                   },
                     })
@@ -125,7 +126,7 @@ createService(
                             user_organization: {
                                 some: {
                                     claro__organization: generateParentOrgFilter({
-                                        orgName: 'Ville de Lausanne (administration communale)',
+                                        orgCode: 'LAUSANNE',
                                         levels: 5,
                                     }),
                                 },
