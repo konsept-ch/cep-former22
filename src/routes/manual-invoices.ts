@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 
@@ -9,7 +10,7 @@ import {
     invoiceTypesFromPrisma,
     invoiceReasonsKeys,
 } from '../constants'
-import { createInvoice } from './manualInvoicesUtils'
+import { InvoiceData, createInvoice } from './manualInvoicesUtils'
 import { STATUSES } from './inscriptionsUtils'
 
 export const manualInvoicesRouter = Router()
@@ -303,7 +304,7 @@ createService(
                     [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus as any)
                 ) {
                     config = {
-                        concerns: '',
+                        concerns: inscriptionStatus === STATUSES.PARTICIPATION ? 'Participation formation CEP' : '',
                         unit: { value: 'part.', label: 'part.' },
                         reason: 'Participation',
                         price: `${sessionPrice}`,
@@ -563,7 +564,7 @@ createService(
                 status,
                 concerns,
                 codeCompta,
-            } = req.body
+            }: InvoiceData = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
@@ -616,11 +617,33 @@ createService(
                     courseYear,
                     concerns,
                     codeCompta,
-                    items,
                     status: status?.value,
                     creatorUserId,
                     organizationId,
                     selectedUserId,
+                    former22_invoice_item: {
+                        deleteMany: {},
+                        create: items.map(
+                            ({
+                                designation,
+                                unit: { value: unit },
+                                amount,
+                                price,
+                                vatCode: { value: vatCode },
+                                inscriptionId,
+                                number,
+                            }) => ({
+                                uuid: uuidv4(),
+                                designation,
+                                unit,
+                                amount,
+                                price,
+                                vatCode,
+                                inscriptionId,
+                                number,
+                            })
+                        ),
+                    },
                 },
             })
 
