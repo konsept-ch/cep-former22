@@ -223,7 +223,7 @@ createService(
 
             res.json({ rooms, events })
         } else {
-            res.json('Aucunes salle trouvées')
+            res.status(500).json('Aucune salle trouvée')
         }
     },
     null,

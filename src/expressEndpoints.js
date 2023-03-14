@@ -21,7 +21,7 @@ export const generateEndpoints = () => {
         const { emailResponse } = await sendEmail({
             to: 'dan@konsept.ch',
             subject: "Rapport d'erreur de l'interface utilisateur",
-            html_body: `<h2>Date:</h2><p>${date}</p><h2>Description:</h2><p>${req.body.errorDescription}</p>`,
+            html_body: `<h2>Date:${date}</h2><h2>Description:</h2><p><code>${req.body.errorDescription}</code></p>`,
         })
 
         await prisma.former22_error_report.create({

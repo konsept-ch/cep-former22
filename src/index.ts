@@ -6,6 +6,8 @@ import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
 import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
+import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
 
 import { generateEndpoints } from './expressEndpoints' // deprecated, use routes instead
 
@@ -14,24 +16,32 @@ import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
 import { mailRouter } from './routes/mail'
 import { attestationsRouter } from './routes/attestations'
+import { evaluationsRouter } from './routes/evaluations'
 import { contractTemplatesRouter } from './routes/contractTemplates'
+import { evaluationTemplatesRouter } from './routes/evaluationTemplates'
+import { eventsRouter } from './routes/events'
 import { inscriptionsRouter } from './routes/inscriptions'
 import { invoicesRouter } from './routes/invoices'
+import { manualInvoicesRouter } from './routes/manual-invoices'
 import { organizationsRouter } from './routes/organizations'
 import { peoplesoftRouter } from './routes/peoplesoft'
 import { sessionsRouter } from './routes/sessions'
 import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
+import { contractsRouter } from './routes/contracts'
+import { authMiddleware } from './utils'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
 
 export const app = express()
 
+app.use(helmet())
 app.use(cors())
 app.use(logger('dev'))
 app.use(express.json({ limit: '50mb' }))
+app.use(cookieParser())
 // app.use(express.urlencoded({ extended: false })) // TODO check if needed
 
 // const port = process.env.PORT ?? 4000
@@ -78,40 +88,13 @@ generateEndpoints()
 
 app.use('/peoplesoft', peoplesoftRouter)
 
-app.use('/auth', authRouter)
-app.use('/agenda', agendaRouter)
-app.use('/courses', coursesRouter)
-app.use('/mail', mailRouter)
-app.use('/attestations', attestationsRouter)
-app.use('/contract-templates', contractTemplatesRouter)
-app.use('/inscriptions', inscriptionsRouter)
-app.use('/invoices', invoicesRouter)
-app.use('/organizations', organizationsRouter)
-app.use('/sessions', sessionsRouter)
-app.use('/templates', templatesRouter)
-app.use('/users', usersRouter)
-app.use('/reception', receptionRouter)
-
 app.get('/', (_req, res) => {
-    // const allRoutes = app._router.stack
-    //     .filter(({ name }) => name === 'bound dispatch')
-    //     .map(({ route: { path, stack } }) => ({ path, method: stack[0].method }))
-    //     .slice(0, -1)
-
     const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
         path: `/peoplesoft${path}`,
         method: stack[0].method,
     }))
-    // const mailRoutes = mailRouter.stack.map(({ route: { path, stack } }) => ({
-    //     path: `/mail${path}`,
-    //     method: stack[0].method,
-    // }))
-    // const templatesRoutes = templatesRouter.stack.map(({ route: { path, stack } }) => ({
-    //     path: `/templates${path}`,
-    //     method: stack[0].method,
-    // }))
 
-    const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Middleware API documentation)</a>`
+    const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Former22 API documentation)</a>`
 
     res.send(
         `<ul><li>${SWAGGER_LINK}</li>${peoplesoftRoutes
@@ -120,6 +103,24 @@ app.get('/', (_req, res) => {
     )
 })
 
-// app.listen(port, () => {
-//     console.log(`Middleware app listening at port: ${port}`)
-// })
+app.use('/reception', receptionRouter)
+app.use('/auth', authRouter)
+app.use('/mail', mailRouter)
+app.use('/evaluations', evaluationsRouter)
+
+app.use('*', authMiddleware)
+
+app.use('/agenda', agendaRouter)
+app.use('/courses', coursesRouter)
+app.use('/attestations', attestationsRouter)
+app.use('/contract-templates', contractTemplatesRouter)
+app.use('/evaluation-templates', evaluationTemplatesRouter)
+app.use('/events', eventsRouter)
+app.use('/inscriptions', inscriptionsRouter)
+app.use('/invoices', invoicesRouter)
+app.use('/manual-invoices', manualInvoicesRouter)
+app.use('/organizations', organizationsRouter)
+app.use('/sessions', sessionsRouter)
+app.use('/templates', templatesRouter)
+app.use('/users', usersRouter)
+app.use('/contracts', contractsRouter)

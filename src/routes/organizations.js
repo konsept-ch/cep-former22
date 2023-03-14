@@ -46,8 +46,10 @@ createService(
                 uuid: true,
                 name: true,
                 code: true,
+                email: true,
                 former22_organization: {
                     select: {
+                        clientNumber: true,
                         addressTitle: true,
                         postalAddressCode: true,
                         postalAddressCountry: true,
@@ -56,6 +58,7 @@ createService(
                         postalAddressDepartmentCode: true,
                         postalAddressLocality: true,
                         postalAddressStreet: true,
+                        phone: true,
                     },
                 },
             },

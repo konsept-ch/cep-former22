@@ -31,6 +31,12 @@ createService(
                 updatedAt: true,
                 quota_days: true,
                 used_by_quotas: true,
+                max_users: true,
+                _count: {
+                    select: {
+                        claro_cursusbundle_course_session_user: true,
+                    },
+                },
             },
         })
         const sessionsAdditionalData = await prisma.former22_session.findMany()
@@ -50,12 +56,62 @@ createService(
                     updated: session.updatedAt,
                     quotaDays: session.quota_days,
                     isUsedForQuota: session.used_by_quotas,
+                    availables: session.max_users - session._count.claro_cursusbundle_course_session_user,
+                    occupation: session._count.claro_cursusbundle_course_session_user,
                 },
                 ...sessionAdditionalData,
             }
         })
 
         res.json(fullSessionsData ?? 'Aucunes session trouvées')
+    },
+    null,
+    sessionsRouter
+)
+
+createService(
+    'get',
+    '/:sessionId/users',
+    async (req, res) => {
+        const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
+            select: {
+                uuid: true,
+                claro_user: {
+                    select: {
+                        uuid: true,
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+            },
+            where: {
+                registration_type: 'learner',
+                claro_cursusbundle_course_session: {
+                    uuid: req.params.sessionId,
+                    hidden: false,
+                },
+            },
+        })
+
+        const inscriptions = sessionUsers?.filter(
+            async (sessionUser) =>
+                (await prisma.former22_inscription.findFirst({
+                    select: {
+                        inscriptionId: true,
+                    },
+                    where: {
+                        inscriptionId: sessionUser.uuid,
+                        inscriptionStatus: STATUSES.PARTICIPATION,
+                    },
+                })) !== null
+        )
+
+        res.json(
+            inscriptions?.map(({ claro_user }) => ({
+                uuid: claro_user.uuid,
+                fullname: `${claro_user.first_name} ${claro_user.last_name}`,
+            })) ?? 'Aucun participant trouvé'
+        )
     },
     null,
     sessionsRouter
@@ -79,15 +135,6 @@ createService(
                 },
                 code: true,
                 claro_cursusbundle_session_event: {
-                    where: {
-                        claro_planned_object: {
-                            claro__location: {
-                                name: {
-                                    equals: 'CEP',
-                                },
-                            },
-                        },
-                    },
                     select: {
                         claro_planned_object: {
                             select: {
@@ -124,7 +171,6 @@ createService(
                                 user_organization: {
                                     select: {
                                         is_main: true,
-                                        // claro__organization: true, // TODO: wait for Anthony to fix?
                                         claro__organization: {
                                             include: {
                                                 claro_cursusbundle_quota: true,
@@ -240,62 +286,67 @@ createService(
     '/:sessionId',
     async (req, res) => {
         const { sessionId } = req.params
+        const { onlyUpdate, ...payload } = req.body
 
         await prisma.former22_session.upsert({
             where: { sessionId },
-            update: { ...req.body },
-            create: { sessionId, ...req.body },
+            update: { ...payload },
+            create: { sessionId, ...payload },
         })
 
-        const { claro_cursusbundle_course_session_user: learners } =
-            await prisma.claro_cursusbundle_course_session.findUnique({
-                where: {
-                    uuid: sessionId,
-                },
-                select: {
-                    claro_cursusbundle_course_session_user: {
-                        where: { registration_type: 'learner' },
-                        select: { uuid: true, claro_user: { select: { mail: true } } },
-                    },
-                },
-            })
-
-        const templateForSessionInvites = await prisma.former22_template.findFirst({
-            where: { isUsedForSessionInvites: true },
-        })
-
-        if (templateForSessionInvites) {
-            const emailsToSend = learners.map(async (learner) => {
-                const {
-                    uuid: learnerId,
-                    claro_user: { mail: learnerEmail },
-                } = learner
-
-                const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                    req,
-                    templateId: templateForSessionInvites.templateId,
-                    sessionId,
-                    inscriptionId: learnerId,
-                })
-
-                const { emailResponse } = await sendEmail({
-                    to: learnerEmail,
-                    subject: emailSubject,
-                    html_body: emailContent,
-                })
-
-                await sendSms({ to: '359877155302', content: smsContent })
-
-                return { emailResponse }
-            })
-
-            const sentEmails = await Promise.allSettled(emailsToSend)
-
-            const data = sentEmails.map(({ value }) => value)
-
-            res.json(data ?? 'Aucun e-mail envoyé')
+        if (onlyUpdate) {
+            res.json(true)
         } else {
-            res.json("Aucun modèle pour sessions invitées n'a été trouvé")
+            const { claro_cursusbundle_course_session_user: learners } =
+                await prisma.claro_cursusbundle_course_session.findUnique({
+                    where: {
+                        uuid: sessionId,
+                    },
+                    select: {
+                        claro_cursusbundle_course_session_user: {
+                            where: { registration_type: 'learner' },
+                            select: { uuid: true, claro_user: { select: { mail: true } } },
+                        },
+                    },
+                })
+
+            const templateForSessionInvites = await prisma.former22_template.findFirst({
+                where: { isUsedForSessionInvites: true },
+            })
+
+            if (templateForSessionInvites) {
+                const emailsToSend = learners.map(async (learner) => {
+                    const {
+                        uuid: learnerId,
+                        claro_user: { mail: learnerEmail },
+                    } = learner
+
+                    const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
+                        req,
+                        templateId: templateForSessionInvites.templateId,
+                        sessionId,
+                        inscriptionId: learnerId,
+                    })
+
+                    const { emailResponse } = await sendEmail({
+                        to: learnerEmail,
+                        subject: emailSubject,
+                        html_body: emailContent,
+                    })
+
+                    await sendSms({ to: '359877155302', content: smsContent })
+
+                    return { emailResponse }
+                })
+
+                const sentEmails = await Promise.allSettled(emailsToSend)
+
+                const data = sentEmails.map(({ value }) => value)
+
+                res.json(data ?? 'Aucun e-mail envoyé')
+            } else {
+                res.json("Aucun modèle pour sessions invitées n'a été trouvé")
+            }
         }
 
         return {

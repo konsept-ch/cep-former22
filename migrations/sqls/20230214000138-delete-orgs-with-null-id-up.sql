@@ -1,0 +1,1 @@
+DELETE FROM former22_organization WHERE organizationId IS NULL;

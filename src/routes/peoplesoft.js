@@ -94,27 +94,28 @@ createService(
             if (currentAuth === 'Access Denied.') {
                 respondToPeopleSoft(res, "Votre token n'existe pas dans Claroline")
             } else {
-                const isAdmin = currentAuth[0]?.user?.permissions.administrate
+                const isAdmin = currentAuth[0]?.permissions.edit && currentAuth[0]?.permissions.edit
 
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
                 } else {
-                    const generateParentOrgFilter = ({ orgName, levels = 5 }) => ({
+                    //const generateParentOrgFilter = ({ orgName, levels = 5 }) => ({
+                    const generateParentOrgFilter = ({ orgCode, levels = 5 }) => ({
                         claro__organization:
                             levels > 0
                                 ? {
                                       OR: [
                                           {
-                                              name: {
-                                                  equals: orgName,
+                                              code: {
+                                                  equals: orgCode,
                                               },
                                           },
-                                          generateParentOrgFilter({ orgName, levels: levels - 1 }),
+                                          generateParentOrgFilter({ orgCode, levels: levels - 1 }),
                                       ],
                                   }
                                 : {
-                                      name: {
-                                          equals: orgName,
+                                      code: {
+                                          equals: orgCode,
                                       },
                                   },
                     })
@@ -125,7 +126,7 @@ createService(
                             user_organization: {
                                 some: {
                                     claro__organization: generateParentOrgFilter({
-                                        orgName: 'Ville de Lausanne (administration communale)',
+                                        orgCode: 'LAUSANNE',
                                         levels: 5,
                                     }),
                                 },
@@ -166,6 +167,11 @@ createService(
                                     code: true,
                                     createdAt: true,
                                     max_users: true,
+                                    claro__location: {
+                                        select: {
+                                            address_city: true,
+                                        },
+                                    },
                                     claro_cursusbundle_course_session_user: {
                                         where: registrationConditions,
                                         select: {
@@ -224,7 +230,6 @@ createService(
                         select: {
                             sessionId: true,
                             sessionFormat: true,
-                            sessionLocation: true,
                         },
                     })
 
@@ -305,8 +310,8 @@ createService(
                                             createdAt: sessionCreationDate,
                                             claro_cursusbundle_session_event,
                                             max_users: maxParticipants,
+                                            claro__location,
                                             sessionFormat = null,
-                                            sessionLocation = null,
                                             inscriptions,
                                             ...restSessionData
                                         }) => ({
@@ -322,7 +327,7 @@ createService(
                                                 .sort(),
                                             maxParticipants,
                                             sessionFormat,
-                                            sessionLocation,
+                                            sessionLocation: claro__location?.address_city,
                                             inscriptions: inscriptions
                                                 .map(
                                                     ({
