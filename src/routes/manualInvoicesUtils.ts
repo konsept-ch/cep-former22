@@ -10,7 +10,7 @@ import {
     invoiceTypesValues,
 } from '../constants'
 
-type InvoiceData = {
+export type InvoiceData = {
     client: { uuid: string; value: string; label: string }
     customClientEmail: string
     customClientAddress: string
@@ -115,6 +115,7 @@ export const createInvoice = async ({
                         price,
                         vatCode: { value: vatCode },
                         inscriptionId,
+                        number,
                     }) => ({
                         uuid: uuidv4(),
                         designation,
@@ -123,6 +124,7 @@ export const createInvoice = async ({
                         price,
                         vatCode,
                         inscriptionId,
+                        number,
                     })
                 ),
             },
