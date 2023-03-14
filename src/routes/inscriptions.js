@@ -22,6 +22,8 @@ import {
     STATUSES,
     statusesForAnnulation,
     transformFlagsToStatus,
+    getCustomFacetValues,
+    getUserCustomFieldValue,
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 import { createInvoice } from './manualInvoicesUtils'
@@ -323,10 +325,21 @@ createService(
                     },
                 })
 
+                const avsNumberFacetValues = await getCustomFacetValues({ customFieldName: 'ro AVS' })
+                const birthDateFacetValues = await getCustomFacetValues({ customFieldName: 'Date de naissance' })
+
                 const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
 
                 doc.render({
                     PARTICIPANT_NOM: `${user.first_name} ${user.last_name}`,
+                    PARTICIPANT_AVS: getUserCustomFieldValue({
+                        userId: user.id,
+                        customFacetValues: avsNumberFacetValues,
+                    }),
+                    PARTICIPANT_DATE_NAISSANCE: getUserCustomFieldValue({
+                        userId: user.id,
+                        customFacetValues: birthDateFacetValues,
+                    }),
                     FORMATION_NOM: courseName,
                     SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
                         year: 'numeric',
