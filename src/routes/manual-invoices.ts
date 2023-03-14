@@ -304,7 +304,7 @@ createService(
                     [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus as any)
                 ) {
                     config = {
-                        concerns: inscriptionStatus === STATUSES.PARTICIPATION ? 'Participation formation CEP' : '',
+                        concerns: 'Participation formation CEP',
                         unit: { value: 'part.', label: 'part.' },
                         reason: 'Participation',
                         price: `${sessionPrice}`,
