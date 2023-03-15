@@ -235,18 +235,18 @@ createService(
                 drawText(block.text, 20)
             },
             notes: (block) => {
-                drawText(block.text)
-
                 const h = font.heightAtSize(12),
                     h1 = h >> 1,
                     h2 = h << 1,
-                    h4 = h2 << 1,
-                    t = page.getY(),
+                    h4 = h2 << 1
+
+                checkAddingPage(countLines(block.text, 12) * font.heightAtSize(18) + h + block.notes.length * h2)
+                drawText(block.text)
+
+                const t = page.getY(),
                     th1 = t - h1,
                     th3 = th1 - h2,
                     b = t - h4
-
-                checkAddingPage(t + h - block.notes.length * h2)
 
                 page.drawRectangle({
                     x: margin.x,
@@ -306,7 +306,28 @@ createService(
                 moveDown(h4 + 20)
             },
             remark: (block) => {
-                drawText(block.text, 20)
+                const responses = results
+                    .filter(({ result }) => result[block.identifier])
+                    .map(({ result }) => ` -\t${result[block.identifier]}`)
+                    .join('\n')
+                const h = font.heightAtSize(12),
+                    h2 = h << 1,
+                    hl = font.heightAtSize(18),
+                    hb = (countLines(responses, 12) + 1) * hl
+
+                checkAddingPage(countLines(block.text, 12) * hl + hb + h)
+                drawText(block.text, 0, 18)
+
+                const t = page.getY()
+                page.drawRectangle({
+                    x: margin.x,
+                    y: t,
+                    width: maxWidth,
+                    height: -hb,
+                    color: rgb(0.98, 0.98, 0.98),
+                })
+                drawText(responses)
+                moveDown(h2)
             },
         }
 
