@@ -13,7 +13,7 @@ import { callApi } from '../callApi'
 // import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
+import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest, formatDate } from '../utils'
 import {
     fetchInscriptionsWithStatuses,
     finalStatuses,
@@ -336,9 +336,12 @@ createService(
                         userId: user.id,
                         customFacetValues: avsNumberFacetValues,
                     }),
-                    PARTICIPANT_DATE_NAISSANCE: getUserCustomFieldValue({
-                        userId: user.id,
-                        customFacetValues: birthDateFacetValues,
+                    PARTICIPANT_DATE_NAISSANCE: formatDate({
+                        dateString: getUserCustomFieldValue({
+                            userId: user.id,
+                            customFacetValues: birthDateFacetValues,
+                        }),
+                        isDateVisible: true,
                     }),
                     FORMATION_NOM: courseName,
                     SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
