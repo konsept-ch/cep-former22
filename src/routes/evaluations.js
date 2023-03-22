@@ -90,16 +90,33 @@ createService(
     '/:uuid/export',
     async (req, res) => {
         const {
-            id,
-            sessionId,
+            claro_cursusbundle_course_session: session,
             former22_evaluation_template: { struct },
+            former22_evaluation_result: results,
         } = await prisma.former22_evaluation.findUnique({
             select: {
-                id: true,
-                sessionId: true,
+                claro_cursusbundle_course_session: {
+                    select: {
+                        id: true,
+                        course_name: true,
+                        claro_cursusbundle_course_session_user: {
+                            select: {
+                                uuid: true,
+                            },
+                            where: {
+                                registration_type: 'learner',
+                            },
+                        },
+                    },
+                },
                 former22_evaluation_template: {
                     select: {
                         struct: true,
+                    },
+                },
+                former22_evaluation_result: {
+                    select: {
+                        result: true,
                     },
                 },
             },
@@ -108,44 +125,19 @@ createService(
             },
         })
 
-        const sessionUsers = await prisma.claro_cursusbundle_course_session_user.findMany({
-            select: {
-                uuid: true,
-            },
-            where: {
-                registration_type: 'learner',
-                claro_cursusbundle_course_session: {
-                    id: sessionId,
-                    hidden: false,
+        const participantCount = (
+            await prisma.former22_inscription.findMany({
+                select: {
+                    inscriptionId: true,
                 },
-            },
-        })
-
-        const participantCount = sessionUsers
-            ? sessionUsers.filter(
-                  async (sessionUser) =>
-                      (await prisma.former22_inscription.findFirst({
-                          select: {
-                              inscriptionId: true,
-                          },
-                          where: {
-                              inscriptionId: sessionUser.uuid,
-                              inscriptionStatus: STATUSES.PARTICIPATION,
-                          },
-                      })) !== null
-              ).length
-            : 0
-
-        const results = await prisma.former22_evaluation_result.findMany({
-            select: {
-                result: true,
-            },
-            where: {
-                former22_evaluation: {
-                    id,
+                where: {
+                    inscriptionId: {
+                        in: session.claro_cursusbundle_course_session_user.map((su) => su.uuid),
+                    },
+                    inscriptionStatus: STATUSES.PARTICIPATION,
                 },
-            },
-        })
+            })
+        ).length
 
         const statistics = results.reduce((acc, result) => {
             //eslint-disable-next-line no-plusplus
@@ -342,6 +334,8 @@ createService(
             opacity: 1,
         })
         page.moveDown(20)
+
+        drawText(session.course_name, 20, 24, 24, rgb(165 / 255, 159 / 255, 155 / 255))
 
         for (const block of struct) blockRenders[block.type](block)
 
