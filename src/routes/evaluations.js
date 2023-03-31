@@ -73,9 +73,6 @@ createService(
                 uuid: true,
                 course_name: true,
             },
-            where: {
-                hidden: false,
-            },
         })
 
         res.json(sessions ?? 'Aucunes session trouvées')
