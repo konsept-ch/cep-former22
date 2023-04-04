@@ -88,7 +88,6 @@ createService(
                 registration_type: 'learner',
                 claro_cursusbundle_course_session: {
                     uuid: req.params.sessionId,
-                    hidden: false,
                 },
             },
         })
