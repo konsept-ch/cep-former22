@@ -98,6 +98,7 @@ createService(
                         number: true,
                         claro_cursusbundle_course_session_user: {
                             select: {
+                                uuid: true,
                                 status: true,
                                 claro_cursusbundle_course_session: {
                                     select: {
@@ -162,6 +163,7 @@ createService(
                     reason: invoiceReasonsFromPrisma[reason],
                     items: former22_invoice_item.map(({ claro_cursusbundle_course_session_user, ...itemsRest }) => ({
                         ...itemsRest,
+                        inscriptionUuid: claro_cursusbundle_course_session_user?.uuid,
                         validationType:
                             mapStatusToValidationType[
                                 `${claro_cursusbundle_course_session_user?.status}` as ValidationTypesKeys
@@ -600,6 +602,19 @@ createService(
                           },
                       })
                     : undefined) ?? {}
+
+            for (const item of items) {
+                item.inscriptionId = (
+                    await prisma.claro_cursusbundle_course_session_user.findUnique({
+                        select: {
+                            id: true,
+                        },
+                        where: {
+                            uuid: item.inscriptionUuid,
+                        },
+                    })
+                )?.id
+            }
 
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.update({

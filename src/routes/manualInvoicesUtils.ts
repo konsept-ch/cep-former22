@@ -27,6 +27,7 @@ export type InvoiceData = {
         price: string
         vatCode: { value: string; label: string }
         inscriptionId?: number
+        inscriptionUuid?: string
     }[]
     selectedUserUuid: string
     concerns: string
