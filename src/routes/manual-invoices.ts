@@ -98,7 +98,21 @@ createService(
                         number: true,
                         claro_cursusbundle_course_session_user: {
                             select: {
+                                uuid: true,
                                 status: true,
+                                claro_cursusbundle_course_session: {
+                                    select: {
+                                        code: true,
+                                    },
+                                },
+                                claro_user: {
+                                    select: { first_name: true, last_name: true },
+                                },
+                            },
+                        },
+                        claro_cursusbundle_course_session_cancellation: {
+                            select: {
+                                uuid: true,
                                 claro_cursusbundle_course_session: {
                                     select: {
                                         code: true,
@@ -160,18 +174,27 @@ createService(
                     status: invoiceStatusesFromPrisma[status],
                     invoiceType: invoiceTypesFromPrisma[invoiceType],
                     reason: invoiceReasonsFromPrisma[reason],
-                    items: former22_invoice_item.map(({ claro_cursusbundle_course_session_user, ...itemsRest }) => ({
-                        ...itemsRest,
-                        validationType:
-                            mapStatusToValidationType[
-                                `${claro_cursusbundle_course_session_user?.status}` as ValidationTypesKeys
-                            ],
-                        sessionCode: claro_cursusbundle_course_session_user?.claro_cursusbundle_course_session.code,
-                        participantName:
-                            claro_cursusbundle_course_session_user != null
-                                ? `${claro_cursusbundle_course_session_user?.claro_user.last_name} ${claro_cursusbundle_course_session_user?.claro_user.first_name}`
-                                : undefined,
-                    })),
+                    items: former22_invoice_item.map(
+                        ({
+                            claro_cursusbundle_course_session_user,
+                            claro_cursusbundle_course_session_cancellation,
+                            ...itemsRest
+                        }) => {
+                            const inscription: any =
+                                claro_cursusbundle_course_session_user ?? claro_cursusbundle_course_session_cancellation
+                            return {
+                                ...itemsRest,
+                                inscriptionUuid: inscription?.uuid,
+                                validationType:
+                                    mapStatusToValidationType[`${inscription?.status ?? 4}` as ValidationTypesKeys],
+                                sessionCode: inscription?.claro_cursusbundle_course_session.code,
+                                participantName:
+                                    inscription != null
+                                        ? `${inscription.claro_user.last_name} ${inscription.claro_user.first_name}`
+                                        : undefined,
+                            }
+                        }
+                    ),
                     organizationUuid,
                     organizationName,
                     customClientTitle,
@@ -601,6 +624,29 @@ createService(
                       })
                     : undefined) ?? {}
 
+            for (const item of items) {
+                item.inscriptionId = (
+                    await prisma.claro_cursusbundle_course_session_user.findUnique({
+                        select: {
+                            id: true,
+                        },
+                        where: {
+                            uuid: item.inscriptionUuid,
+                        },
+                    })
+                )?.id
+                item.cancellationId = (
+                    await prisma.claro_cursusbundle_course_session_cancellation.findUnique({
+                        select: {
+                            id: true,
+                        },
+                        where: {
+                            uuid: item.inscriptionUuid,
+                        },
+                    })
+                )?.id
+            }
+
             // TODO handle foreign keys from uuid to id
             const { uuid } = await prisma.former22_manual_invoice.update({
                 where: {
@@ -631,6 +677,7 @@ createService(
                                 price,
                                 vatCode: { value: vatCode },
                                 inscriptionId,
+                                cancellationId,
                                 number,
                             }) => ({
                                 uuid: uuidv4(),
@@ -640,6 +687,7 @@ createService(
                                 price,
                                 vatCode,
                                 inscriptionId,
+                                cancellationId,
                                 number,
                             })
                         ),

@@ -129,6 +129,7 @@ createService(
                 registration_type: true,
                 claro_cursusbundle_course_session: {
                     select: {
+                        id: true,
                         uuid: true,
                         course_name: true,
                         price: true,
@@ -267,13 +268,42 @@ createService(
                 }
             }
 
+            let cancellationId = null
+
             if (statusesForAnnulation.includes(newStatus)) {
-                await callApi({
+                /*await callApi({
                     req,
                     path: `cursus_session/${session.uuid}/users/learner`,
                     params: { 'ids[0]': currentInscription.uuid },
                     method: 'delete',
+                })*/
+
+                await prisma.claro_cursusbundle_course_session_user.delete({
+                    where: {
+                        uuid: currentInscription.uuid,
+                    },
                 })
+
+                await prisma.claro_cursusbundle_course_session_cancellation.create({
+                    data: {
+                        uuid: uuidv4(),
+                        user_id: user.id,
+                        session_id: session.id,
+                        inscription_uuid: currentInscription.uuid,
+                        registration_date: new Date(),
+                    },
+                })
+
+                const cancellation = await prisma.claro_cursusbundle_course_session_cancellation.findFirst({
+                    select: {
+                        id: true,
+                    },
+                    where: {
+                        inscription_uuid: currentInscription.uuid,
+                    },
+                })
+
+                cancellationId = cancellation?.id
             }
 
             await prisma.former22_inscription.upsert({
@@ -857,7 +887,8 @@ createService(
                                 price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                 amount: '1',
                                 vatCode: { value: 'EXONERE', label: 'EXONERE' },
-                                inscriptionId: currentInscription.id,
+                                inscriptionId: cancellationId ? null : currentInscription.id,
+                                cancellationId,
                             },
                         ],
                     },
