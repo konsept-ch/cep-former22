@@ -28,6 +28,7 @@ export type InvoiceData = {
         vatCode: { value: string; label: string }
         inscriptionId?: number
         inscriptionUuid?: string
+        cancellationId?: number
     }[]
     selectedUserUuid: string
     concerns: string
@@ -116,6 +117,7 @@ export const createInvoice = async ({
                         price,
                         vatCode: { value: vatCode },
                         inscriptionId,
+                        cancellationId,
                         number,
                     }) => ({
                         uuid: uuidv4(),
@@ -125,6 +127,7 @@ export const createInvoice = async ({
                         price,
                         vatCode,
                         inscriptionId,
+                        cancellationId,
                         number,
                     })
                 ),

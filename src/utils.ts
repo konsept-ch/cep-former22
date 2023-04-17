@@ -274,6 +274,7 @@ export const mapStatusToValidationType = {
     '1': 'Refusée par RH',
     '2': 'Validée par RH',
     '3': 'Validée sur quota par RH',
+    '4': 'Annulé',
 } as const
 export type ValidationTypesKeys = keyof typeof mapStatusToValidationType
 
