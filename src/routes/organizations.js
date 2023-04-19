@@ -58,6 +58,7 @@ createService(
                         postalAddressLocality: true,
                         postalAddressStreet: true,
                         phone: true,
+                        email: true,
                     },
                 },
             },

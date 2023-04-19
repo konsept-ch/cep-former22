@@ -364,7 +364,7 @@ createService(
                             }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
                                 postalAddressCode ? `${postalAddressCode} ` : ''
                             }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
-                            customClientEmail: mainOrganization.email ?? '',
+                            customClientEmail: organization?.email ?? '',
                             selectedUserUuid: '',
                             customClientTitle: '',
                             customClientFirstname: '',
