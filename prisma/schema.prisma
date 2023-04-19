@@ -5472,6 +5472,7 @@ model former22_organization {
   postalAddressLocality       String?             @db.Text
   organizationId              Int                 @unique(map: "organizationId")
   clientNumber                Int?
+  email                       String?             @db.VarChar(255)
   claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
 
   @@index([organizationId], map: "organization_index")
