@@ -46,7 +46,6 @@ createService(
                 uuid: true,
                 name: true,
                 code: true,
-                email: true,
                 former22_organization: {
                     select: {
                         clientNumber: true,
