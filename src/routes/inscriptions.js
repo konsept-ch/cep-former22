@@ -824,7 +824,7 @@ createService(
 
             if (newStatus === STATUSES.ANNULEE_FACTURABLE) {
                 config = {
-                    concerns: 'Annulation/report hors-délai',
+                    concerns: 'Annulation ou report hors-délai',
                     unit: { value: 'forfait(s)', label: 'forfait(s)' },
                     reason: 'Annulation',
                     price: '50',
