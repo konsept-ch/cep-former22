@@ -76,6 +76,196 @@ app.get(SWAGGER_SCHEMA_YAML_PATH, (_req, res) => {
     res.set('Content-Type', 'text/yaml; charset=utf-8').status(200).send(yml)
 })
 
+import { Prisma } from '@prisma/client'
+import { v4 as uuidv4 } from 'uuid'
+app.get('/testtesttest0', async (_req, res) => {
+    const invoices = await prisma.former22_manual_invoice.findMany({
+        select: {
+            id: true,
+            items: true,
+            former22_invoice_item: true,
+        },
+        where: {
+            invoiceType: 'Directe',
+            items: {
+                not: Prisma.AnyNull,
+            },
+        },
+    })
+    res.json(invoices)
+})
+app.get('/testtesttest1', async (_req, res) => {
+    enum InscriptionType {
+        Inscription,
+        Cancellation,
+    }
+
+    const hash = (sessionName: any, userId: any) => sessionName + '...' + userId
+
+    const inscriptions = (
+        await prisma.claro_cursusbundle_course_session_user.findMany({
+            select: {
+                id: true,
+                claro_cursusbundle_course_session: {
+                    select: {
+                        course_name: true,
+                    },
+                },
+                user_id: true,
+            },
+        })
+    ).reduce(
+        (map, su) =>
+            map.set(hash(su.claro_cursusbundle_course_session.course_name, su.user_id), {
+                ...su,
+                type: InscriptionType.Inscription,
+            }),
+        (
+            await prisma.claro_cursusbundle_course_session_cancellation.findMany({
+                select: {
+                    id: true,
+                    claro_cursusbundle_course_session: {
+                        select: {
+                            course_name: true,
+                        },
+                    },
+                    user_id: true,
+                },
+            })
+        ).reduce(
+            (map, c) =>
+                map.set(hash(c.claro_cursusbundle_course_session.course_name, c.user_id), {
+                    ...c,
+                    type: InscriptionType.Cancellation,
+                }),
+            new Map()
+        )
+    )
+
+    const invoices = await prisma.former22_manual_invoice.findMany({
+        select: {
+            id: true,
+            items: true,
+        },
+        where: {
+            invoiceType: 'Directe',
+            items: {
+                not: Prisma.AnyNull,
+            },
+        },
+    })
+
+    for (const invoice of invoices) {
+        for (const item of invoice.items as any) {
+            const split: any = item.designation.split(' - ')
+            if (split.length < 2) {
+                res.json({
+                    message: 'The designation do not splitted.',
+                    designation: item.designation,
+                })
+                return
+            }
+
+            const sessionName: any = split.slice(1).join(' - ')
+            const nameParts = split[0].split(' ')
+            const firstname = nameParts[0]
+            const lastname = nameParts[nameParts.length - 1]
+
+            const users = await prisma.claro_user.findMany({
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                },
+                where: {
+                    first_name: {
+                        startsWith: firstname,
+                    },
+                    last_name: {
+                        endsWith: lastname,
+                    },
+                },
+            })
+            if (users.length == 0) {
+                res.json({
+                    message: 'The user is not exists.',
+                    user: nameParts.join(' '),
+                    session: sessionName,
+                    designation: item.designation,
+                })
+                return
+            }
+
+            let selectedUsers =
+                users.length > 1
+                    ? users.filter(
+                          (user: any) =>
+                              user.first_name.startsWith(firstname) &&
+                              user.last_name.endsWith(lastname) &&
+                              (nameParts.length > 2
+                                  ? user.first_name.endsWith(nameParts[1]) || user.last_name.startsWith(nameParts[1])
+                                  : true)
+                      )
+                    : users
+            if (selectedUsers.length == 0) {
+                res.json({
+                    message: 'The user can do not separated.',
+                    user: nameParts.join(' '),
+                    users,
+                })
+                return
+            }
+
+            let inscription = null
+            for (const user of selectedUsers) {
+                if ((inscription = inscriptions.get(hash(sessionName, user.id)))) break
+            }
+
+            if (inscription == null) {
+                res.json({
+                    message: 'The inscription is not exists',
+                    session: sessionName,
+                    user: nameParts.join(' '),
+                    users,
+                })
+                return
+            }
+
+            await prisma.former22_invoice_item.create({
+                data: {
+                    uuid: uuidv4(),
+                    invoiceId: invoice.id,
+                    designation: item.designation,
+                    unit: item.unit.value,
+                    amount: item.amount,
+                    price: item.price == 'null' ? null : item.price,
+                    vatCode: item.vatCode.value,
+                    ...(inscription.type == InscriptionType.Inscription
+                        ? { inscriptionId: inscription.id }
+                        : { cancellationId: inscription.id }),
+                },
+            })
+        }
+    }
+
+    res.json({
+        message: 'Successfull',
+    })
+})
+app.get('/testtesttest2', async (_req, res) => {
+    await prisma.former22_invoice_item.updateMany({
+        data: {
+            price: null,
+        },
+        where: {
+            price: 'null',
+        },
+    })
+    res.json({
+        message: 'Successfull',
+    })
+})
+
 // Make sure the schema file is publicly accessible, otherwise break our Swagger UI as well
 // https://github.com/scottie1984/swagger-ui-express#load-swagger-from-url
 app.use(
