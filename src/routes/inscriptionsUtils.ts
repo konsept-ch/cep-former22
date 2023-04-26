@@ -98,10 +98,7 @@ export const deriveInscriptionStatus = ({
 }: {
     savedStatus?: StatusesValues | null
     transformedStatus: StatusesValues
-}) =>
-    transformedStatus === STATUSES.A_TRAITER_PAR_RH || transformedStatus === STATUSES.REFUSEE_PAR_RH
-        ? transformedStatus
-        : savedStatus ?? transformedStatus
+}) => (savedStatus === STATUSES.A_TRAITER_PAR_RH ? transformedStatus : savedStatus ?? transformedStatus)
 
 export const getMainOrganization = (organizations: any[]) => {
     if (organizations != null) {
