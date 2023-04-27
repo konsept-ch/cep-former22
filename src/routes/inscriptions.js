@@ -15,6 +15,7 @@ import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
 import {
+    deriveInscriptionStatus,
     fetchInscriptionsWithStatuses,
     finalStatuses,
     lockGroups,
@@ -127,6 +128,7 @@ createService(
                 validated: true,
                 confirmed: true,
                 registration_type: true,
+                status: true,
                 claro_cursusbundle_course_session: {
                     select: {
                         id: true,
@@ -193,7 +195,15 @@ createService(
                                 is_main: true,
                             },
                             select: {
-                                claro__organization: true,
+                                claro__organization: {
+                                    include: {
+                                        claro_cursusbundle_quota: {
+                                            select: {
+                                                id: true,
+                                            },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -220,13 +230,17 @@ createService(
             where: { inscriptionId: currentInscription.uuid },
         })
 
-        const currentInscriptionStatus =
-            inscriptionStatusForId?.inscriptionStatus ??
-            transformFlagsToStatus({
+        const currentInscriptionStatus = deriveInscriptionStatus({
+            savedStatus: inscriptionStatusForId?.inscriptionStatus,
+            transformedStatus: transformFlagsToStatus({
                 validated: currentInscription.validated,
-                confirmed: currentInscription.confirmed,
                 registrationType: currentInscription.registration_type,
-            })
+                hrValidationStatus: currentInscription.status,
+                isHrValidationEnabled:
+                    currentInscription.claro_user.user_organization[0]?.claro__organization.claro_cursusbundle_quota !=
+                    null,
+            }),
+        })
 
         const arePrevAndNextStatusesPartOfSameLockGroup = lockGroups.some(
             (lockGroup) => lockGroup.includes(currentInscriptionStatus) && lockGroup.includes(newStatus)
