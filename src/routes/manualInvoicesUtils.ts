@@ -200,8 +200,6 @@ export const getMappedInscriptions = async (billingMode: any): any => {
 
     const mappedInscriptions = new Map()
 
-    const now = new Date()
-
     // create all invoices by organizations
     for (const { organizationId } of organizations) {
         const inscriptions = (
@@ -243,15 +241,15 @@ export const getMappedInscriptions = async (billingMode: any): any => {
             return (
                 i &&
                 (i.inscriptionStatus == null ||
-                    i.inscriptionStatus == STATUSES.ANNULEE_FACTURABLE ||
-                    i.inscriptionStatus == STATUSES.NON_PARTICIPATION)
+                    i.inscriptionStatus === STATUSES.ANNULEE_FACTURABLE ||
+                    i.inscriptionStatus === STATUSES.NON_PARTICIPATION)
             )
         })
 
         if (inscriptions.length === 0) continue
 
         for (const inscription of inscriptions) {
-            if (inscription.status != 3) continue
+            if (inscription.status !== 3) continue
 
             const getParentWithQuota: any = (id: any) => {
                 if (id == null) return null
