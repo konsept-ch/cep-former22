@@ -504,8 +504,8 @@ createService(
                 return !(
                     i &&
                     (i.inscriptionStatus == null ||
-                        i.inscriptionStatus == STATUSES.ANNULEE_FACTURABLE ||
-                        i.inscriptionStatus == STATUSES.NON_PARTICIPATION)
+                        i.inscriptionStatus === STATUSES.ANNULEE_FACTURABLE ||
+                        i.inscriptionStatus === STATUSES.NON_PARTICIPATION)
                 )
             })
 
@@ -513,7 +513,7 @@ createService(
                 let parentId = organizationId
                 let quotas = false
 
-                if (inscription.status == 3) {
+                if (inscription.status === 3) {
                     const getParentWithQuota: any = (id: any) => {
                         if (id == null) return null
                         const orga: any = organizationMap.get(id)
