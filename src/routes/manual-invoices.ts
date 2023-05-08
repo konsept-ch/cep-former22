@@ -569,10 +569,10 @@ createService(
                     selectedUserUuid: '',
                     concerns: '',
                     codeCompta: '',
-                    status: quotas
-                        ? { value: 'Quotas', label: invoiceStatusesFromPrisma.Quotas }
-                        : { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                    invoiceType: { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
+                    status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                    invoiceType: quotas
+                        ? { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
+                        : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
                     items: inscriptions.map(
                         ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }) => ({
