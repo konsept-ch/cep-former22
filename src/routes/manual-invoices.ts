@@ -575,7 +575,7 @@ createService(
                         : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
                     items: inscriptions.map(
-                        ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }) => ({
+                        ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }: any) => ({
                             designation: `${last_name} ${first_name} - ${claro_cursusbundle_course_session.course_name}`,
                             unit: { value: 'part.', label: 'part.' },
                             price: `${claro_cursusbundle_course_session.price ?? ''}`,
