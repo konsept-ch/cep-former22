@@ -423,57 +423,54 @@ createService(
         }
 
         // Get all organizations by billing mode
-        const organizations = await prisma.former22_organization.findMany({
-            select: {
-                billingMode: true,
-                organizationId: true,
-                organizationUuid: true,
-                addressTitle: true,
-                postalAddressCountry: true,
-                postalAddressCountryCode: true,
-                postalAddressCode: true,
-                postalAddressStreet: true,
-                postalAddressDepartment: true,
-                postalAddressDepartmentCode: true,
-                postalAddressLocality: true,
-            },
-            where: {
-                billingMode,
-            },
-        })
+        const organizationMap = (
+            await prisma.former22_organization.findMany({
+                select: {
+                    billingMode: true,
+                    organizationId: true,
+                    organizationUuid: true,
+                    addressTitle: true,
+                    postalAddressCountry: true,
+                    postalAddressCountryCode: true,
+                    postalAddressCode: true,
+                    postalAddressStreet: true,
+                    postalAddressDepartment: true,
+                    postalAddressDepartmentCode: true,
+                    postalAddressLocality: true,
+                    claro__organization: {
+                        select: {
+                            name: true,
+                            email: true,
+                            code: true,
+                            claro_cursusbundle_quota: true,
+                            parent_id: true,
+                        },
+                    },
+                },
+                where: {
+                    billingMode,
+                },
+            })
+        ).reduce((map, o) => map.set(o.organizationId, o), new Map())
+        const inscriptionMap = (await prisma.former22_inscription.findMany()).reduce(
+            (map, i) => map.set(i.inscriptionId, i),
+            new Map()
+        )
+        //const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
 
-        const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
+        const parentMap = new Map()
+        const mappedInscriptions = new Map()
 
         const now = new Date()
 
-        let invoiceCount = 0
-
         // create all invoices by organizations
-        for (const {
-            organizationId,
-            organizationUuid,
-            addressTitle,
-            postalAddressStreet,
-            postalAddressCode,
-            postalAddressCountry,
-            postalAddressDepartment,
-            postalAddressLocality,
-        } of organizations) {
-            const { name, email, code } =
-                (await prisma.claro__organization.findUnique({
-                    select: {
-                        name: true,
-                        email: true,
-                        code: true,
-                    },
-                    where: { id: organizationId },
-                })) ?? {}
-
+        for (const organizationId of organizationMap.keys()) {
             const inscriptions = (
                 await prisma.claro_cursusbundle_course_session_user.findMany({
                     select: {
                         id: true,
                         uuid: true,
+                        status: true,
                         claro_cursusbundle_course_session: {
                             select: {
                                 course_name: true,
@@ -502,19 +499,54 @@ createService(
                         },
                     },
                 })
-            ).filter(
-                ({ uuid }) =>
-                    !inscriptionsAdditionalData.some(
-                        ({ inscriptionId, inscriptionStatus }) =>
-                            inscriptionId === uuid &&
-                            (inscriptionStatus == null ||
-                                [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
-                                    inscriptionStatus as any
-                                ))
-                    )
-            )
+            ).filter(({ uuid }) => {
+                const i: any = inscriptionMap.get(uuid)
+                return !(
+                    i &&
+                    (i.inscriptionStatus == null ||
+                        i.inscriptionStatus == STATUSES.ANNULEE_FACTURABLE ||
+                        i.inscriptionStatus == STATUSES.NON_PARTICIPATION)
+                )
+            })
 
-            if (inscriptions.length === 0) continue
+            for (const inscription of inscriptions) {
+                let parentId = organizationId
+                let quotas = false
+
+                if (inscription.status == 3) {
+                    const getParentWithQuota: any = (id: any) => {
+                        if (id == null) return null
+                        const orga: any = organizationMap.get(id)
+                        return orga.claro__organization.claro_cursusbundle_quota
+                            ? id
+                            : getParentWithQuota(orga.parent_id)
+                    }
+
+                    parentId = parentMap.get(organizationId)
+                    if (!parentId) {
+                        parentId = getParentWithQuota(organizationId)
+                        parentMap.set(organizationId, parentId)
+                    }
+                    quotas = parentId != null
+                    parentId = parentId ?? organizationId
+                }
+
+                const key = [parentId, quotas]
+                mappedInscriptions.set(key, [...(mappedInscriptions.get(key) ?? []), inscription])
+            }
+        }
+
+        for (const [[organizationId, quotas], inscriptions] of mappedInscriptions) {
+            const {
+                organizationUuid,
+                addressTitle,
+                postalAddressStreet,
+                postalAddressCode,
+                postalAddressCountry,
+                postalAddressDepartment,
+                postalAddressLocality,
+                claro__organization: { name, email, code },
+            }: any = organizationMap.get(organizationId)
 
             await createInvoice({
                 invoiceData: {
@@ -537,7 +569,9 @@ createService(
                     selectedUserUuid: '',
                     concerns: '',
                     codeCompta: '',
-                    status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                    status: quotas
+                        ? { value: 'Quotas', label: invoiceStatusesFromPrisma.Quotas }
+                        : { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
                     invoiceType: { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
                     items: inscriptions.map(
@@ -554,12 +588,10 @@ createService(
                 },
                 cfEmail: req.headers['x-login-email-address'],
             })
-
-            invoiceCount += 1
         }
 
         res.json({
-            message: `${invoiceCount} factures groupées ont été générées.`,
+            message: 'Les factures groupées ont été générées avec succès.',
         })
     },
     null,
