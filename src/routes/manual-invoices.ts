@@ -405,22 +405,18 @@ createService(
     'post',
     '/grouped',
     async (req: Request, res: Response) => {
-        // TODO generate for all inscriptions whose organisation mode is semestrial or annual.
-        // One invoice per organisation.
-        // One item per inscription.
-        const typeToBillingMode = {
-            semestrial: 'Groupée - Semestrielle',
-            annual: 'Groupée - Annuelle',
-        } as const
-        type typeToBillingModeKeys = keyof typeof typeToBillingMode
-        // type typeToBillingModeValues = (typeof typeToBillingMode)[typeToBillingModeKeys]
-
-        const { type }: { type: typeToBillingModeKeys } = req.body
-
-        const billingMode = typeToBillingMode[type]
-        if (!billingMode) {
-            res.status(400).json('You need to pass a type, it should be annual or semestrial')
-        }
+        await prisma.former22_manual_invoice.deleteMany({
+            where: {
+                OR: [
+                    {
+                        invoiceType: 'Group_e',
+                    },
+                    {
+                        invoiceType: 'Quota',
+                    },
+                ],
+            },
+        })
 
         // Get all organizations by billing mode
         const organizationMap = (
@@ -448,7 +444,7 @@ createService(
                     },
                 },
                 where: {
-                    billingMode,
+                    billingMode: 'Groupée',
                 },
             })
         ).reduce((map, o) => map.set(o.organizationId, o), new Map())
@@ -456,7 +452,6 @@ createService(
             (map, i) => map.set(i.inscriptionId, i),
             new Map()
         )
-        //const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
 
         const parentMap = new Map()
         const mappedInscriptions = new Map()
@@ -489,6 +484,7 @@ createService(
                             user_organization: {
                                 some: {
                                     oganization_id: organizationId,
+                                    is_main: true,
                                 },
                             },
                         },
