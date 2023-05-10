@@ -327,7 +327,7 @@ createService(
                                                 .sort(),
                                             maxParticipants,
                                             sessionFormat,
-                                            sessionLocation: claro__location?.address_city,
+                                            sessionLocation: claro__location?.address_city || null,
                                             inscriptions: inscriptions
                                                 .map(
                                                     ({
