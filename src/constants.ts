@@ -17,6 +17,7 @@ export const invoiceTypesFromPrisma = {
     Manuelle: 'Manuelle',
     Directe: 'Directe',
     Group_e: 'Groupée',
+    Quota: 'Quota',
 } as const
 export type invoiceTypesKeys = keyof typeof invoiceTypesFromPrisma
 export type invoiceTypesValues = (typeof invoiceTypesFromPrisma)[invoiceTypesKeys]

@@ -38,6 +38,22 @@ const getDurationText = ({ days, hours }) =>
         ...(hours !== 0 ? [`${hours} ${hours < 2 ? 'heure' : 'heures'}`] : []),
     ].join(' + ')
 
+const getParentWithQuota = async (organization) => {
+    if (organization == null || organization.parent_id == null) return null
+    return organization.claro_cursusbundle_quota
+        ? organization
+        : getParentWithQuota(
+              await prisma.claro__organization.findUnique({
+                  include: {
+                      claro_cursusbundle_quota: true,
+                  },
+                  where: {
+                      id: organization.parent_id,
+                  },
+              })
+          )
+}
+
 createService(
     'get',
     '/',
@@ -211,6 +227,7 @@ createService(
             },
         })
 
+        const user = currentInscription.claro_user
         const session = currentInscription.claro_cursusbundle_course_session
         const {
             course_name: sessionName,
@@ -224,7 +241,8 @@ createService(
             claro_cursusbundle_course_session_user: tutors,
             claro_cursusbundle_session_event: sessionDates,
         } = session
-        const user = currentInscription.claro_user
+
+        const mainOrganization = user.user_organization[0]?.claro__organization
 
         const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
             where: { inscriptionId: currentInscription.uuid },
@@ -236,9 +254,7 @@ createService(
                 validated: currentInscription.validated,
                 registrationType: currentInscription.registration_type,
                 hrValidationStatus: currentInscription.status,
-                isHrValidationEnabled:
-                    currentInscription.claro_user.user_organization[0]?.claro__organization.claro_cursusbundle_quota !=
-                    null,
+                isHrValidationEnabled: mainOrganization.claro_cursusbundle_quota != null,
             }),
         })
 
@@ -818,15 +834,15 @@ createService(
                 // TODO throw error?
             }
 
-            const mainOrganization = user.user_organization[0]?.claro__organization
-
-            const organization = await prisma.former22_organization.findUnique({
+            const mainOrganizationExtra = await prisma.former22_organization.findUnique({
                 where: { organizationUuid: mainOrganization?.uuid },
             })
 
+            let organization = mainOrganization
+            let organizationExtra = mainOrganizationExtra
+            let invoiceType = { value: 'Directe', label: invoiceTypesFromPrisma.Directe }
             let config = null
 
-            // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
             if (newStatus === STATUSES.NON_PARTICIPATION) {
                 config = {
                     concerns: 'Absence non annoncée',
@@ -835,7 +851,6 @@ createService(
                     price: `${sessionPrice}`,
                 }
             }
-
             if (newStatus === STATUSES.ANNULEE_FACTURABLE) {
                 config = {
                     concerns: 'Annulation ou report hors-délai',
@@ -846,9 +861,25 @@ createService(
             }
 
             if (
-                organization?.billingMode === 'Directe' &&
+                (mainOrganizationExtra?.billingMode === 'Directe' ||
+                    mainOrganizationExtra?.billingMode === 'Groupée') &&
                 [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
             ) {
+                if (mainOrganizationExtra.billingMode === 'Groupée') {
+                    invoiceType = { value: 'Groupée', label: invoiceTypesFromPrisma.Group_e }
+
+                    if (currentInscription.status === 3) {
+                        const parentWithQuota = await getParentWithQuota(mainOrganization)
+                        if (parentWithQuota) {
+                            organization = parentWithQuota
+                            organizationExtra = await prisma.former22_organization.findUnique({
+                                where: { organizationUuid: parentWithQuota.uuid },
+                            })
+                            invoiceType = { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
+                        }
+                    }
+                }
+
                 config = {
                     unit: { value: 'part.', label: 'part.' },
                     reason: 'Participation',
@@ -869,12 +900,12 @@ createService(
                     postalAddressDepartment,
                     // postalAddressDepartmentCode,
                     postalAddressLocality,
-                } = { ...mainOrganization, ...organization }
+                } = { ...organization, ...organizationExtra }
 
                 await createInvoice({
                     invoiceData: {
                         status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                        invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
+                        invoiceType,
                         reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
                         client: {
                             value: code,
