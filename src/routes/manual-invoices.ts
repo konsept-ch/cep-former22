@@ -405,19 +405,6 @@ createService(
     'post',
     '/grouped',
     async (req: Request, res: Response) => {
-        await prisma.former22_manual_invoice.deleteMany({
-            where: {
-                OR: [
-                    {
-                        invoiceType: 'Group_e',
-                    },
-                    {
-                        invoiceType: 'Quota',
-                    },
-                ],
-            },
-        })
-
         // Get all organizations by billing mode
         const organizationMap = (
             await prisma.former22_organization.findMany({
