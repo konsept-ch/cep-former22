@@ -440,7 +440,6 @@ createService(
             new Map()
         )
 
-        const parentMap = new Map()
         const mappedInscriptions = new Map()
 
         const now = new Date()
@@ -492,34 +491,23 @@ createService(
                 )
             })
 
+            const getParentWithQuota: any = (id: any) => {
+                if (id == null) return null
+                const orga: any = organizationMap.get(id)
+                return orga.claro__organization.claro_cursusbundle_quota ? id : getParentWithQuota(orga.parent_id)
+            }
+            const parentWithQuota = getParentWithQuota(organizationId) ?? organizationId
+            const parentUseQuota = parentWithQuota !== organizationId ? 0.5 : 0
+
             for (const inscription of inscriptions) {
-                let parentId = organizationId
-                let quotas = false
-
-                if (inscription.status === 3) {
-                    const getParentWithQuota: any = (id: any) => {
-                        if (id == null) return null
-                        const orga: any = organizationMap.get(id)
-                        return orga.claro__organization.claro_cursusbundle_quota
-                            ? id
-                            : getParentWithQuota(orga.parent_id)
-                    }
-
-                    parentId = parentMap.get(organizationId)
-                    if (!parentId) {
-                        parentId = getParentWithQuota(organizationId)
-                        parentMap.set(organizationId, parentId)
-                    }
-                    quotas = parentId != null
-                    parentId = parentId ?? organizationId
-                }
-
-                const key = [parentId, quotas]
+                const key = inscription.status === 3 ? parentWithQuota + parentUseQuota : organizationId
                 mappedInscriptions.set(key, [...(mappedInscriptions.get(key) ?? []), inscription])
             }
         }
 
-        for (const [[organizationId, quotas], inscriptions] of mappedInscriptions) {
+        for (const [key, inscriptions] of mappedInscriptions) {
+            const organizationId = key | 0
+
             const {
                 organizationUuid,
                 addressTitle,
@@ -553,9 +541,10 @@ createService(
                     concerns: '',
                     codeCompta: '',
                     status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                    invoiceType: quotas
-                        ? { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
-                        : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
+                    invoiceType:
+                        organizationId !== key
+                            ? { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
+                            : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
                     items: inscriptions.map(
                         ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }: any) => ({
