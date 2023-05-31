@@ -243,6 +243,9 @@ createService(
         } = session
 
         const mainOrganization = user.user_organization[0]?.claro__organization
+        const mainOrganizationExtra = await prisma.former22_organization.findUnique({
+            where: { organizationUuid: mainOrganization?.uuid },
+        })
 
         const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
             where: { inscriptionId: currentInscription.uuid },
@@ -341,6 +344,17 @@ createService(
                 update: { inscriptionStatus: newStatus, updatedAt: new Date() },
                 create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
+
+            if (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus))) {
+                await prisma.former22_inscription.update({
+                    where: {
+                        inscriptionId: req.params.inscriptionId,
+                    },
+                    data: {
+                        organizationId: mainOrganizationExtra.id,
+                    },
+                })
+            }
 
             if (selectedAttestationTemplateUuid && selectedAttestationTemplateUuid !== 'no-attestation') {
                 const attestation = await prisma.former22_attestation.findUnique({
@@ -468,7 +482,8 @@ createService(
                         : null
 
                 const createResource = async ({ uuid }) => {
-                    const fileResource = await callApi({
+                    //const fileResource = await callApi({
+                    await callApi({
                         req,
                         path: `/resources/add/${uuid}`,
                         method: 'post',
@@ -644,7 +659,7 @@ createService(
 
                     // TODO do something with the response? Verify that it worked?
 
-                    console.log(fileResource)
+                    //console.log(fileResource)
                 }
 
                 if (resources) {
@@ -825,7 +840,7 @@ createService(
                             },
                         })
 
-                        console.log(newAttestationsFolder)
+                        //console.log(newAttestationsFolder)
 
                         await createResource({ uuid: newAttestationsFolder?.resourceNode?.id })
                     }
@@ -833,10 +848,6 @@ createService(
             } else {
                 // TODO throw error?
             }
-
-            const mainOrganizationExtra = await prisma.former22_organization.findUnique({
-                where: { organizationUuid: mainOrganization?.uuid },
-            })
 
             let organization = mainOrganization
             let organizationExtra = mainOrganizationExtra
@@ -866,7 +877,7 @@ createService(
                 [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
             ) {
                 if (mainOrganizationExtra.billingMode === 'Groupée') {
-                    invoiceType = { value: 'Groupée', label: invoiceTypesFromPrisma.Group_e }
+                    invoiceType = { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e }
 
                     if (currentInscription.status === 3) {
                         const parentWithQuota = await getParentWithQuota(mainOrganization)

@@ -4,7 +4,7 @@ import convert from 'xml-js'
 import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi'
 import { createService } from '../utils'
 import { prisma } from '..'
-import { deriveInscriptionStatus, getMainOrganization, STATUSES, transformFlagsToStatus } from './inscriptionsUtils'
+import { deriveInscriptionStatus, STATUSES, transformFlagsToStatus } from './inscriptionsUtils'
 
 export const peoplesoftRouter = Router()
 
@@ -193,6 +193,9 @@ createService(
                                                                 },
                                                             },
                                                         },
+                                                        where: {
+                                                            is_main: true,
+                                                        },
                                                     },
                                                 },
                                             },
@@ -356,7 +359,7 @@ createService(
                                                                 registrationType: registration_type,
                                                                 hrValidationStatus: status,
                                                                 isHrValidationEnabled:
-                                                                    getMainOrganization(user_organization)
+                                                                    user_organization?.claro__organization
                                                                         ?.claro_cursusbundle_quota != null,
                                                             }),
                                                         }).replace('Réfusée par RH', 'Refusée par RH'), // patch typo until fixed in db
