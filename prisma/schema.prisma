@@ -5319,13 +5319,16 @@ model former22_template {
 }
 
 model former22_inscription {
-  inscriptionId        String                @id @db.VarChar(255)
-  inscriptionStatus    String?               @db.Text
-  updatedAt            DateTime?             @default(now()) @db.DateTime(0)
-  attestationId        Int?
-  former22_attestation former22_attestation? @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
+  inscriptionId         String                 @id @db.VarChar(255)
+  inscriptionStatus     String?                @db.Text
+  updatedAt             DateTime?              @default(now()) @db.DateTime(0)
+  attestationId         Int?
+  organizationId        Int?
+  former22_organization former22_organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_inscription_organization")
+  former22_attestation  former22_attestation?  @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
 
   @@index([attestationId], map: "inscription_index")
+  @@index([organizationId], map: "organization_index")
 }
 
 model former22_course {
@@ -5380,24 +5383,25 @@ model former22_user {
 }
 
 model former22_organization {
-  id                          Int                 @id @default(autoincrement())
-  organizationUuid            String              @unique(map: "organizationUuid") @db.VarChar(36)
-  billingMode                 String?             @db.Text
-  dailyRate                   Float?              @db.Float
+  id                          Int                    @id @default(autoincrement())
+  organizationUuid            String                 @unique(map: "organizationUuid") @db.VarChar(36)
+  billingMode                 String?                @db.Text
+  dailyRate                   Float?                 @db.Float
   flyersCount                 Int?
-  phone                       String?             @db.Text
-  addressTitle                String?             @db.Text
-  postalAddressCountry        String?             @db.Text
-  postalAddressCountryCode    String?             @db.Text
-  postalAddressCode           String?             @db.Text
-  postalAddressStreet         String?             @db.Text
-  postalAddressDepartment     String?             @db.Text
-  postalAddressDepartmentCode String?             @db.Text
-  postalAddressLocality       String?             @db.Text
-  organizationId              Int                 @unique(map: "organizationId")
+  phone                       String?                @db.Text
+  addressTitle                String?                @db.Text
+  postalAddressCountry        String?                @db.Text
+  postalAddressCountryCode    String?                @db.Text
+  postalAddressCode           String?                @db.Text
+  postalAddressStreet         String?                @db.Text
+  postalAddressDepartment     String?                @db.Text
+  postalAddressDepartmentCode String?                @db.Text
+  postalAddressLocality       String?                @db.Text
+  organizationId              Int                    @unique(map: "organizationId")
   clientNumber                Int?
-  email                       String?             @db.VarChar(255)
-  claro__organization         claro__organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
+  email                       String?                @db.VarChar(255)
+  former22_inscription        former22_inscription[]
+  claro__organization         claro__organization    @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization")
 
   @@index([organizationId], map: "organization_index")
 }
@@ -5690,7 +5694,7 @@ model former22_invoice_item {
   number                                         String?                                         @db.Text
   claro_cursusbundle_course_session_cancellation claro_cursusbundle_course_session_cancellation? @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_course_session_cancellation")
   claro_cursusbundle_course_session_user         claro_cursusbundle_course_session_user?         @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
-  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
+  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
 
   @@index([invoiceId], map: "invoice_index")
   @@index([inscriptionId], map: "inscription_index")

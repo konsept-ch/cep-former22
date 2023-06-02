@@ -497,7 +497,7 @@ createService(
                 return orga.claro__organization.claro_cursusbundle_quota ? id : getParentWithQuota(orga.parent_id)
             }
             const parentWithQuota = getParentWithQuota(organizationId) ?? organizationId
-            const parentUseQuota = parentWithQuota !== organizationId ? 0.5 : 0
+            const parentUseQuota = parentWithQuota === null ? 0 : 0.5
 
             for (const inscription of inscriptions) {
                 const key = inscription.status === 3 ? parentWithQuota + parentUseQuota : organizationId

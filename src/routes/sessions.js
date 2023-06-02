@@ -4,13 +4,7 @@ import { prisma } from '..'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, LOG_TYPES } from '../utils'
-import {
-    deriveInscriptionStatus,
-    getMainOrganization,
-    getNamesByType,
-    STATUSES,
-    transformFlagsToStatus,
-} from './inscriptionsUtils'
+import { deriveInscriptionStatus, getNamesByType, STATUSES, transformFlagsToStatus } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
 export const sessionsRouter = Router()
@@ -176,6 +170,9 @@ createService(
                                             },
                                         },
                                     },
+                                    where: {
+                                        is_main: true,
+                                    },
                                 },
                             },
                         },
@@ -211,8 +208,8 @@ createService(
                                     registrationType: registration_type,
                                     hrValidationStatus: status,
                                     isHrValidationEnabled:
-                                        getMainOrganization(claro_user.user_organization)?.claro_cursusbundle_quota !=
-                                        null,
+                                        claro_user.user_organization?.claro__organization[0]
+                                            ?.claro_cursusbundle_quota != null,
                                 }),
                             }) !== STATUSES.REFUSEE_PAR_RH
                     ),

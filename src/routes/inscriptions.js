@@ -243,6 +243,9 @@ createService(
         } = session
 
         const mainOrganization = user.user_organization[0]?.claro__organization
+        const mainOrganizationExtra = await prisma.former22_organization.findUnique({
+            where: { organizationUuid: mainOrganization?.uuid },
+        })
 
         const inscriptionStatusForId = await prisma.former22_inscription.findUnique({
             where: { inscriptionId: currentInscription.uuid },
@@ -341,6 +344,17 @@ createService(
                 update: { inscriptionStatus: newStatus, updatedAt: new Date() },
                 create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
             })
+
+            if (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus))) {
+                await prisma.former22_inscription.update({
+                    where: {
+                        inscriptionId: req.params.inscriptionId,
+                    },
+                    data: {
+                        organizationId: mainOrganizationExtra.id,
+                    },
+                })
+            }
 
             if (selectedAttestationTemplateUuid && selectedAttestationTemplateUuid !== 'no-attestation') {
                 const attestation = await prisma.former22_attestation.findUnique({
@@ -468,7 +482,8 @@ createService(
                         : null
 
                 const createResource = async ({ uuid }) => {
-                    const fileResource = await callApi({
+                    //const fileResource = await callApi({
+                    await callApi({
                         req,
                         path: `/resources/add/${uuid}`,
                         method: 'post',
@@ -644,7 +659,7 @@ createService(
 
                     // TODO do something with the response? Verify that it worked?
 
-                    console.log(fileResource)
+                    //console.log(fileResource)
                 }
 
                 if (resources) {
@@ -825,7 +840,7 @@ createService(
                             },
                         })
 
-                        console.log(newAttestationsFolder)
+                        //console.log(newAttestationsFolder)
 
                         await createResource({ uuid: newAttestationsFolder?.resourceNode?.id })
                     }
@@ -833,10 +848,6 @@ createService(
             } else {
                 // TODO throw error?
             }
-
-            const mainOrganizationExtra = await prisma.former22_organization.findUnique({
-                where: { organizationUuid: mainOrganization?.uuid },
-            })
 
             let organization = mainOrganization
             let organizationExtra = mainOrganizationExtra
@@ -866,7 +877,7 @@ createService(
                 [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
             ) {
                 if (mainOrganizationExtra.billingMode === 'Groupée') {
-                    invoiceType = { value: 'Groupée', label: invoiceTypesFromPrisma.Group_e }
+                    invoiceType = { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e }
 
                     if (currentInscription.status === 3) {
                         const parentWithQuota = await getParentWithQuota(mainOrganization)
@@ -902,43 +913,83 @@ createService(
                     postalAddressLocality,
                 } = { ...organization, ...organizationExtra }
 
-                await createInvoice({
-                    invoiceData: {
-                        status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                        invoiceType,
-                        reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
-                        client: {
-                            value: code,
-                            label: name,
-                            uuid,
+                const customClientAddress = `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
+                    postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
+                }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
+                    postalAddressCode ? `${postalAddressCode} ` : ''
+                }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`
+
+                const invoiceItem = {
+                    designation: `${user.last_name} ${user.first_name} - ${sessionName}`,
+                    unit: config.unit,
+                    price: config.price, // Prix TTC (coût affiché sur le site Claroline)
+                    amount: '1',
+                    vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                    inscriptionId: cancellationId ? null : currentInscription.id,
+                    cancellationId,
+                }
+
+                let alreadyCreated = false
+
+                if (mainOrganizationExtra.billingMode === 'Groupée') {
+                    const invoice = await prisma.former22_manual_invoice.findFirst({
+                        select: {
+                            id: true,
                         },
-                        customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
-                            postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
-                        }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
-                            postalAddressCode ? `${postalAddressCode} ` : ''
-                        }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
-                        customClientEmail: organization.email,
-                        selectedUserUuid: '',
-                        customClientTitle: '',
-                        customClientFirstname: '',
-                        customClientLastname: '',
-                        courseYear: new Date().getFullYear(),
-                        invoiceDate: new Date().toISOString(),
-                        concerns: config.concerns,
-                        items: [
-                            {
-                                designation: `${user.last_name} ${user.first_name} - ${sessionName}`,
-                                unit: config.unit,
-                                price: config.price, // Prix TTC (coût affiché sur le site Claroline)
-                                amount: '1',
-                                vatCode: { value: 'EXONERE', label: 'EXONERE' },
-                                inscriptionId: cancellationId ? null : currentInscription.id,
-                                cancellationId,
+                        where: {
+                            status: 'A_traiter',
+                            invoiceType: invoiceType.value,
+                            claro__organization: {
+                                is: {
+                                    uuid,
+                                },
                             },
-                        ],
-                    },
-                    cfEmail: req.headers['x-login-email-address'],
-                })
+                        },
+                    })
+                    if (invoice) {
+                        alreadyCreated = true
+
+                        await prisma.former22_invoice_item.create({
+                            data: {
+                                uuid: uuidv4(),
+                                invoiceId: invoice.id,
+                                designation: invoiceItem.designation,
+                                unit: config.unit.value,
+                                price: config.price,
+                                amount: '1',
+                                vatCode: 'EXONERE',
+                                inscriptionId: invoiceItem.inscriptionId,
+                                cancellationId: invoiceItem.cancellationId,
+                            },
+                        })
+                    }
+                }
+
+                if (!alreadyCreated) {
+                    await createInvoice({
+                        invoiceData: {
+                            status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                            invoiceType,
+                            reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
+                            client: {
+                                value: code,
+                                label: name,
+                                uuid,
+                            },
+                            customClientAddress,
+                            customClientEmail: organization.email,
+                            selectedUserUuid: '',
+                            customClientTitle: '',
+                            customClientFirstname: '',
+                            customClientLastname: '',
+                            courseYear: new Date().getFullYear(),
+                            invoiceDate: new Date().toISOString(),
+                            concerns: config.concerns,
+                            items: [invoiceItem],
+                        },
+                        cfEmail: req.headers['x-login-email-address'],
+                    })
+                }
             }
 
             res.json({ isInvoiceCreated: config !== null })
