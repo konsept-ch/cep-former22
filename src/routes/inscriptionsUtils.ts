@@ -160,6 +160,13 @@ const formatOrganizationsHierarchy = (allOrganizations: any, organization: any, 
         return hierarchyLatest.reverse().join(' > ')
     }
 }
+const deriveInvoiceNumber = (invoice: any, cfNumber: any) =>
+    invoice
+        ? `${`${invoice.former22_manual_invoice.courseYear}`.slice(-2)}${`${cfNumber}`.padStart(
+              2,
+              '0'
+          )}${`${invoice.former22_manual_invoice.invoiceNumberForCurrentYear}`.padStart(4, '0')}`
+        : ''
 
 export const fetchInscriptionsWithStatuses = async (
     { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
@@ -180,6 +187,7 @@ export const fetchInscriptionsWithStatuses = async (
                         ? { registration_type: REGISTRATION_TYPES.TUTOR }
                         : { registration_type: REGISTRATION_TYPES.LEARNER },
                     select: {
+                        id: true,
                         uuid: true,
                         validated: true,
                         status: true,
@@ -219,6 +227,7 @@ export const fetchInscriptionsWithStatuses = async (
                 claro_cursusbundle_course_session_cancellation: shouldFetchCancellations && {
                     select: {
                         registration_date: true,
+                        id: true,
                         uuid: true,
                         inscription_uuid: true,
                         claro_user: {
@@ -262,6 +271,23 @@ export const fetchInscriptionsWithStatuses = async (
         })
         const usersAdditionalData = await prisma.former22_user.findMany()
         const allOrganizations = await prisma.claro__organization.findMany()
+        const invoices = await prisma.former22_invoice_item.findMany({
+            select: {
+                inscriptionId: true,
+                cancellationId: true,
+                former22_manual_invoice: {
+                    select: {
+                        invoiceNumberForCurrentYear: true,
+                        courseYear: true,
+                        claro_user: {
+                            select: {
+                                uuid: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
 
         if (typeof sessions !== 'undefined') {
             const fetchedInscriptions = sessions.flatMap(
@@ -318,6 +344,15 @@ export const fetchInscriptionsWithStatuses = async (
                                           isHrValidationEnabled,
                                       }),
                                   })
+
+                                  const invoice = shouldFetchCancellations
+                                      ? invoices.find((i) => i.cancellationId === (inscription as any).id)
+                                      : invoices.find((i) => i.inscriptionId === (inscription as any).id)
+                                  const cfNumber = invoice
+                                      ? usersAdditionalData.find(
+                                            (u) => u.userId === invoice?.former22_manual_invoice.claro_user.uuid
+                                        )?.cfNumber
+                                      : null
 
                                   return {
                                       id: inscription.uuid,
@@ -376,6 +411,7 @@ export const fetchInscriptionsWithStatuses = async (
                                               : '',
                                       organizationClientNumber:
                                           userMainOrganization?.former22_organization?.clientNumber,
+                                      invoiceNumber: deriveInvoiceNumber(invoice, cfNumber),
                                   }
                               } catch (error) {
                                   console.error(error)
