@@ -132,6 +132,39 @@ createService(
 
 createService(
     'put',
+    '/:inscriptionId/organization',
+    async (req, res) => {
+        const organization = await prisma.former22_organization.findUnique({
+            select: {
+                id: true,
+            },
+            where: {
+                organizationUuid: req.body.organizationId,
+            },
+        })
+        await prisma.former22_inscription.update({
+            where: { inscriptionId: req.params.inscriptionId },
+            data: {
+                organizationId: organization.id,
+            },
+        })
+
+        res.json({
+            message: "L'organisation a été modifiée avec succès.",
+        })
+
+        return {
+            entityName: 'Inscription',
+            entityId: req.params.inscriptionId,
+            actionName: `update organization (${req.body.organizationId})`,
+        }
+    },
+    null,
+    inscriptionsRouter
+)
+
+createService(
+    'put',
     '/:inscriptionId',
     async (req, res) => {
         const { emailTemplateId, selectedAttestationTemplateUuid, shouldSendSms, status: newStatus } = req.body

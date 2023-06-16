@@ -39,6 +39,34 @@ createService(
 
 createService(
     'get',
+    '/flat',
+    async (req, res) => {
+        const organizations = await prisma.claro__organization.findMany({
+            select: {
+                uuid: true,
+                name: true,
+                former22_organization: {
+                    select: {
+                        clientNumber: true,
+                    },
+                },
+            },
+        })
+
+        res.json(
+            organizations.map((o) => ({
+                uuid: o.uuid,
+                name: o.name,
+                clientNumber: o.former22_organization.clientNumber,
+            }))
+        )
+    },
+    null,
+    organizationsRouter
+)
+
+createService(
+    'get',
     '/flat-with-address',
     async (req, res) => {
         const organizations = await prisma.claro__organization.findMany({
