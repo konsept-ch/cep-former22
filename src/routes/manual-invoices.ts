@@ -485,11 +485,45 @@ createService(
                 const i: any = inscriptionMap.get(uuid)
                 return !(
                     i &&
-                    (i.inscriptionStatus == null ||
-                        i.inscriptionStatus === STATUSES.ANNULEE_FACTURABLE ||
-                        i.inscriptionStatus === STATUSES.NON_PARTICIPATION)
+                    (i.inscriptionStatus === STATUSES.PARTICIPATION ||
+                        i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
                 )
             })
+            const alreadyAdded = inscriptions.reduce((map, i) => map.set(i.uuid, i), new Map())
+
+            for (const i of inscriptionMap.values()) {
+                if (
+                    !alreadyAdded.has(i.uuid) &&
+                    i.organizationId &&
+                    i.organizationId === organizationId &&
+                    (i.inscriptionStatus === STATUSES.PARTICIPATION ||
+                        i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
+                ) {
+                    const inscription: any = await prisma.claro_cursusbundle_course_session_user.findUnique({
+                        select: {
+                            id: true,
+                            uuid: true,
+                            status: true,
+                            claro_cursusbundle_course_session: {
+                                select: {
+                                    course_name: true,
+                                    price: true,
+                                },
+                            },
+                            claro_user: {
+                                select: {
+                                    first_name: true,
+                                    last_name: true,
+                                },
+                            },
+                        },
+                        where: {
+                            uuid: i.inscriptionId,
+                        },
+                    })
+                    inscriptions.push(inscription)
+                }
+            }
 
             const getParentWithQuota: any = (id: any) => {
                 if (id == null) return null
