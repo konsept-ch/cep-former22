@@ -498,8 +498,31 @@ createService(
                     i.organizationId === organizationId &&
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
                         i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
-                )
-                    inscriptions.push(i)
+                ) {
+                    const inscription: any = await prisma.claro_cursusbundle_course_session_user.findUnique({
+                        select: {
+                            id: true,
+                            uuid: true,
+                            status: true,
+                            claro_cursusbundle_course_session: {
+                                select: {
+                                    course_name: true,
+                                    price: true,
+                                },
+                            },
+                            claro_user: {
+                                select: {
+                                    first_name: true,
+                                    last_name: true,
+                                },
+                            },
+                        },
+                        where: {
+                            uuid: i.inscriptionId,
+                        },
+                    })
+                    inscriptions.push(inscription)
+                }
             }
 
             const getParentWithQuota: any = (id: any) => {
