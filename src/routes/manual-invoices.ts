@@ -485,11 +485,22 @@ createService(
                 const i: any = inscriptionMap.get(uuid)
                 return !(
                     i &&
-                    (i.inscriptionStatus == null ||
-                        i.inscriptionStatus === STATUSES.ANNULEE_FACTURABLE ||
-                        i.inscriptionStatus === STATUSES.NON_PARTICIPATION)
+                    (i.inscriptionStatus === STATUSES.PARTICIPATION ||
+                        i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
                 )
             })
+            const alreadyAdded = inscriptions.reduce((map, i) => map.set(i.uuid, i), new Map())
+
+            for (const i of inscriptionMap.values()) {
+                if (
+                    !alreadyAdded.has(i.uuid) &&
+                    i.organizationId &&
+                    i.organizationId === organizationId &&
+                    (i.inscriptionStatus === STATUSES.PARTICIPATION ||
+                        i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
+                )
+                    inscriptions.push(i)
+            }
 
             const getParentWithQuota: any = (id: any) => {
                 if (id == null) return null
