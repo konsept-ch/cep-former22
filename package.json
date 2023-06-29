@@ -69,7 +69,7 @@
     "pdf-lib": "^1.17.1",
     "pizzip": "3.1.4",
     "pm2": "5.2.2",
-    "prisma": "4.9.0",
+    "prisma": "4.15.0",
     "swagger-jsdoc": "7.0.0-rc.6",
     "swagger-ui-express": "4.6.0",
     "ts-node": "10.9.1",
