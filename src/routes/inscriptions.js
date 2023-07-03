@@ -58,14 +58,14 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const participations = (await fetchInscriptionsWithStatuses()).filter(
-            ({ status }) => status !== STATUSES.REFUSEE_PAR_RH
-        )
+        const result = await fetchInscriptionsWithStatuses()
+        if (result === -1) {
+            res.status(500).json('Erreur')
+        }
 
+        const participations = result.filter(({ status }) => status !== STATUSES.REFUSEE_PAR_RH)
         if (participations.length > 0) {
             res.json(participations)
-        } else if (participations === -1) {
-            res.status(500).json('Erreur')
         } else {
             res.json('Aucune participation trouvée')
         }
@@ -114,14 +114,14 @@ createService(
     'get',
     '/refused-by-hr',
     async (req, res) => {
-        const hrRefusals = (await fetchInscriptionsWithStatuses()).filter(
-            ({ status }) => status === STATUSES.REFUSEE_PAR_RH
-        )
+        const result = await fetchInscriptionsWithStatuses()
+        if (result === -1) {
+            res.status(500).json('Erreur')
+        }
 
+        const hrRefusals = result.filter(({ status }) => status === STATUSES.REFUSEE_PAR_RH)
         if (hrRefusals.length > 0) {
             res.json(hrRefusals)
-        } else if (hrRefusals === -1) {
-            res.status(500).json('Erreur')
         } else {
             res.json('Aucun refus RH trouvé')
         }
