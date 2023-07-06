@@ -21,7 +21,7 @@ createService(
             },
         })
 
-        if (typeof roomsPrisma !== 'undefined') {
+        if (roomsPrisma) {
             const rooms = roomsPrisma.map(({ event_name, uuid, claro__location }) => ({
                 name: event_name,
                 id: uuid,
