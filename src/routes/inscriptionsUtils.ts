@@ -359,6 +359,7 @@ export const fetchInscriptionsWithStatuses = async (
                                       inscriptionDate: inscription.registration_date,
                                       type: (inscription as any).registration_type,
                                       deletedInscriptionUuid: (inscription as any).inscription_uuid,
+                                      remark: inscriptionStatusForId?.remark,
                                       coordinator,
                                       codeCategory,
                                       theme,

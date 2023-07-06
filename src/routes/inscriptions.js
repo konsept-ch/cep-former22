@@ -167,7 +167,7 @@ createService(
     'put',
     '/:inscriptionId',
     async (req, res) => {
-        const { emailTemplateId, selectedAttestationTemplateUuid, shouldSendSms, status: newStatus } = req.body
+        const { emailTemplateId, selectedAttestationTemplateUuid, shouldSendSms, status: newStatus, remark } = req.body
 
         const currentInscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
             where: { uuid: req.params.inscriptionId },
@@ -374,8 +374,12 @@ createService(
 
             await prisma.former22_inscription.upsert({
                 where: { inscriptionId: req.params.inscriptionId },
-                update: { inscriptionStatus: newStatus, updatedAt: new Date() },
-                create: { inscriptionStatus: newStatus, inscriptionId: req.params.inscriptionId },
+                update: { inscriptionStatus: newStatus, updatedAt: new Date(), ...(remark ? { remark } : {}) },
+                create: {
+                    inscriptionStatus: newStatus,
+                    inscriptionId: req.params.inscriptionId,
+                    ...(remark ? { remark } : {}),
+                },
             })
 
             if (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus))) {
