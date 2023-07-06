@@ -483,7 +483,7 @@ createService(
                 })
             ).filter(({ uuid }) => {
                 const i: any = inscriptionMap.get(uuid)
-                return !(
+                return (
                     i &&
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
                         i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)

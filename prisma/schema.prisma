@@ -5324,6 +5324,7 @@ model former22_inscription {
   updatedAt             DateTime?              @default(now()) @db.DateTime(0)
   attestationId         Int?
   organizationId        Int?
+  remark                String?                @db.Text
   former22_organization former22_organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_inscription_organization")
   former22_attestation  former22_attestation?  @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
 
