@@ -337,18 +337,18 @@ createService(
             let cancellationId = null
 
             if (statusesForAnnulation.includes(newStatus)) {
-                /*await callApi({
+                await callApi({
                     req,
                     path: `cursus_session/${session.uuid}/users/learner`,
                     params: { 'ids[0]': currentInscription.uuid },
                     method: 'delete',
-                })*/
+                })
 
-                await prisma.claro_cursusbundle_course_session_user.delete({
+                /*await prisma.claro_cursusbundle_course_session_user.delete({
                     where: {
                         uuid: currentInscription.uuid,
                     },
-                })
+                })*/
 
                 await prisma.claro_cursusbundle_course_session_cancellation.create({
                     data: {
