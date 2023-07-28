@@ -1,7 +1,7 @@
-import { prisma } from '..'
-import { callApi } from '../callApi'
-import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress } from '../utils'
-import { fetchInscriptionsWithStatuses } from './inscriptionsUtils'
+import { prisma } from '../index.js'
+import { callApi } from '../callApi.js'
+import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress } from '../utils.js'
+import { fetchInscriptionsWithStatuses } from './inscriptionsUtils.js'
 
 const formatSessionLessons = ({ sessionLessons }) => {
     // TODO add another format for multiday lessons :

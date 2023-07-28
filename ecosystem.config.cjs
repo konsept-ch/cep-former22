@@ -2,10 +2,9 @@ module.exports = {
     apps: [
         {
             name: 'server',
-            script: 'npm',
-            watch: ['src', 'prisma', 'bin'],
+            script: 'src/index.js',
+            watch: ['src', 'prisma'],
             ignore_watch: ['node_modules', 'logs'],
-            args: 'run ts-node',
             env: {
                 TZ: 'UTC',
                 DEBUG: 'server:*',

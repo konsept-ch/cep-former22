@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { customAlphabet } from 'nanoid'
 
-import { prisma } from '..'
-import { sendEmail } from '../sendEmail'
-import { checkAuth, createService, delay } from '../utils'
+import { prisma } from '../index.js'
+import { sendEmail } from '../sendEmail.js'
+import { checkAuth, createService, delay } from '../utils.js'
 
 const nanoid = customAlphabet('1234567890', 6)
 

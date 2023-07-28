@@ -1,14 +1,13 @@
 module.exports = {
     root: true,
-    parser: '@typescript-eslint/parser',
     parserOptions: {
         sourceType: 'module',
         ecmaFeatures: {
             impliedStrict: true,
         },
     },
-    plugins: ['@typescript-eslint', 'import'],
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
+    plugins: ['import'],
+    extends: ['eslint:recommended', 'prettier'],
     env: {
         node: true,
         es2022: true,
@@ -35,7 +34,6 @@ module.exports = {
         'no-useless-concat': 'error',
         'no-plusplus': 'error',
         'no-var': 'error',
-        '@typescript-eslint/no-unused-vars': 'error',
         'prefer-rest-params': 'error',
         'prefer-spread': 'error',
         'prefer-arrow-callback': 'error',

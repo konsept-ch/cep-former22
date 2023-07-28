@@ -2,8 +2,8 @@ import { Router } from 'express'
 import libre from 'libreoffice-convert'
 import util from 'util'
 
-import { prisma } from '..'
-import { createService } from '../utils'
+import { prisma } from '../index.js'
+import { createService } from '../utils.js'
 
 libre.convertAsync = util.promisify(libre.convert)
 

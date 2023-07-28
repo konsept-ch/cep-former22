@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-import { clarolineApiUrl } from './credentialsConfig'
+import { clarolineApiUrl } from './credentialsConfig.js'
 
 export const PEOPLESOFT_TOKEN = 'X-Former22-API-Key'
 export const CLAROLINE_TOKEN = 'CLAROLINE-API-TOKEN'

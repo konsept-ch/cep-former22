@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 
-import { prisma } from '..'
-import { createService, LOG_TYPES } from '../utils'
+import { prisma } from '../index.js'
+import { createService, LOG_TYPES } from '../utils.js'
 
 export const evaluationTemplatesRouter = Router()
 

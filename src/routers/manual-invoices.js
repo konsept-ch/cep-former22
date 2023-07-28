@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid'
 import { Router } from 'express'
 
-import { prisma } from '..'
-import { createService, mapStatusToValidationType } from '../utils'
-import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
-import { createInvoice } from './manualInvoicesUtils'
-import { STATUSES } from './inscriptionsUtils'
+import { prisma } from '../index.js'
+import { createService, mapStatusToValidationType } from '../utils.js'
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants.js'
+import { createInvoice } from './manualInvoicesUtils.js'
+import { STATUSES } from './inscriptionsUtils.js'
 
 export const manualInvoicesRouter = Router()
 

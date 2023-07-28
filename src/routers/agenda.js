@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
-import { prisma } from '..'
-import { createService } from '../utils'
+import { prisma } from '../index.js'
+import { createService } from '../utils.js'
 
 export const agendaRouter = Router()
 

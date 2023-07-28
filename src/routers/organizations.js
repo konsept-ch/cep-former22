@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { prisma } from '..'
-import { callApi } from '../callApi'
-import { createService, LOG_TYPES } from '../utils'
+import { prisma } from '../index.js'
+import { callApi } from '../callApi.js'
+import { createService, LOG_TYPES } from '../utils.js'
 
 export const organizationsRouter = Router()
 

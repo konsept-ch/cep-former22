@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { prisma } from '..'
-import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
-import { getProfessionFacetsValues, getUserProfession, parsePhoneForSms } from './inscriptionsUtils'
+import { prisma } from '../index.js'
+import { createService, getLogDescriptions, LOG_TYPES } from '../utils.js'
+import { getProfessionFacetsValues, getUserProfession, parsePhoneForSms } from './inscriptionsUtils.js'
 
 export const usersRouter = Router()
 
@@ -67,7 +67,7 @@ createService(
             }
 
             if (currentUserSettings) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                // eslint-disable-next-line
                 const { userId, ...settings } = currentUserSettings
 
                 enrichedUser = { ...enrichedUser, ...settings }

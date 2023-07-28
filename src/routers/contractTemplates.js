@@ -2,8 +2,8 @@ import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import multer from 'multer'
 
-import { prisma } from '..'
-import { createService, LOG_TYPES, contractTemplateFilesDest } from '../utils'
+import { prisma } from '../index.js'
+import { createService, LOG_TYPES, contractTemplateFilesDest } from '../utils.js'
 
 const upload = multer({ dest: contractTemplateFilesDest })
 

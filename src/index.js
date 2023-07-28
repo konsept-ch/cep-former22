@@ -9,33 +9,32 @@ import yaml from 'js-yaml'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 
-import { generateEndpoints } from './expressEndpoints' // deprecated, use routes instead
-
-import { authRouter } from './routes/auth'
-import { agendaRouter } from './routes/agenda'
-import { coursesRouter } from './routes/courses'
-import { mailRouter } from './routes/mail'
-import { attestationsRouter } from './routes/attestations'
-import { evaluationsRouter } from './routes/evaluations'
-import { contractTemplatesRouter } from './routes/contractTemplates'
-import { evaluationTemplatesRouter } from './routes/evaluationTemplates'
-import { eventsRouter } from './routes/events'
-import { inscriptionsRouter } from './routes/inscriptions'
-import { invoicesRouter } from './routes/invoices'
-import { manualInvoicesRouter } from './routes/manual-invoices'
-import { organizationsRouter } from './routes/organizations'
-import { peoplesoftRouter } from './routes/peoplesoft'
-import { sessionsRouter } from './routes/sessions'
-import { templatesRouter } from './routes/templates'
-import { usersRouter } from './routes/users'
-import { receptionRouter } from './routes/reception'
-import { contractsRouter } from './routes/contracts'
-import { authMiddleware } from './utils'
+import { authRouter } from './routers/auth.js'
+import { agendaRouter } from './routers/agenda.js'
+import { coursesRouter } from './routers/courses.js'
+import { mailRouter } from './routers/mail.js'
+import { attestationsRouter } from './routers/attestations.js'
+import { evaluationsRouter } from './routers/evaluations.js'
+import { contractTemplatesRouter } from './routers/contractTemplates.js'
+import { evaluationTemplatesRouter } from './routers/evaluationTemplates.js'
+import { eventsRouter } from './routers/events.js'
+import { inscriptionsRouter } from './routers/inscriptions.js'
+import { invoicesRouter } from './routers/invoices.js'
+import { manualInvoicesRouter } from './routers/manual-invoices.js'
+import { organizationsRouter } from './routers/organizations.js'
+import { peoplesoftRouter } from './routers/peoplesoft.js'
+import { sessionsRouter } from './routers/sessions.js'
+import { templatesRouter } from './routers/templates.js'
+import { usersRouter } from './routers/users.js'
+import { receptionRouter } from './routers/reception.js'
+import { contractsRouter } from './routers/contracts.js'
+import { authMiddleware } from './utils.js'
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
 
 export const app = express()
+const port = 4000
 
 app.use(helmet())
 app.use(cors())
@@ -84,8 +83,6 @@ app.use(
     swaggerUi.setup(undefined, swaggerUiOptions)
 )
 
-generateEndpoints()
-
 app.use('/peoplesoft', peoplesoftRouter)
 
 app.get('/', (_req, res) => {
@@ -124,3 +121,7 @@ app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
 app.use('/contracts', contractsRouter)
+
+app.listen(port, () => {
+    console.info(`Middleware app listening on port: ${port}`)
+})

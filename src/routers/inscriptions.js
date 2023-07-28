@@ -8,12 +8,12 @@ import path from 'path'
 import libre from 'libreoffice-convert'
 import util from 'util'
 
-import { prisma } from '..'
-import { callApi } from '../callApi'
-// import { MIDDLEWARE_URL } from '../credentialsConfig'
-import { sendEmail } from '../sendEmail'
-import { sendSms } from '../sendSms'
-import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest } from '../utils'
+import { prisma } from '../index.js'
+import { callApi } from '../callApi.js'
+// import { MIDDLEWARE_URL } from '../credentialsConfig.js'
+import { sendEmail } from '../sendEmail.js'
+import { sendSms } from '../sendSms.js'
+import { createService, getLogDescriptions, LOG_TYPES, attestationTemplateFilesDest } from '../utils.js'
 import {
     deriveInscriptionStatus,
     fetchInscriptionsWithStatuses,
@@ -23,10 +23,10 @@ import {
     STATUSES,
     statusesForAnnulation,
     transformFlagsToStatus,
-} from './inscriptionsUtils'
-import { getTemplatePreviews } from './templatesUtils'
-import { createInvoice } from './manualInvoicesUtils'
-import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
+} from './inscriptionsUtils.js'
+import { getTemplatePreviews } from './templatesUtils.js'
+import { createInvoice } from './manualInvoicesUtils.js'
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants.js'
 
 libre.convertAsync = util.promisify(libre.convert)
 

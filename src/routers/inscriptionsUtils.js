@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
-import { prisma } from '..'
+import { prisma } from '../index.js'
 
 export const STATUSES = {
     A_TRAITER_PAR_RH: 'À traiter par RH',

@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid'
 import { DateTime } from 'luxon'
 
-import { app, prisma } from '.'
-import { callApi } from './callApi'
-import { winstonLogger } from './winston'
+import { app, prisma } from './index.js'
+import { callApi } from './callApi.js'
+import { winstonLogger } from './winston.js'
 
 export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
 export const contractTemplateFilesDest = '/data/uploads/contract-templates'
