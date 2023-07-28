@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { URL, URLSearchParams } from 'url'
 
-import { smsSenderToken, smsSenderUrl } from './credentialsConfig.js'
+import { smsSenderToken, smsSenderUrl } from '../config/credentials.js'
 
 //TODO add winston
 export const sendSms = async ({ to, content }) => {

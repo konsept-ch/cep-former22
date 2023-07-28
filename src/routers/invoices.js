@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
-import { prisma } from '../index.js'
-import { createService, formatDate, LOG_TYPES } from '../utils.js'
+import prisma from '../plugins/prisma.js'
+import { createService, formatDate, LOG_TYPES } from '../helpers/core.js'
 
 export const invoicesRouter = Router()
 

@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import convert from 'xml-js'
 
-import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../callApi.js'
-import { createService } from '../utils.js'
-import { prisma } from '../index.js'
-import { deriveInscriptionStatus, STATUSES, transformFlagsToStatus } from './inscriptionsUtils.js'
+import { callApi, CLAROLINE_TOKEN, PEOPLESOFT_TOKEN } from '../plugins/claroline.js'
+import { createService } from '../helpers/core.js'
+import prisma from '../plugins/prisma.js'
+import { deriveInscriptionStatus, STATUSES, transformFlagsToStatus } from '../helpers/inscriptions.js'
 
 export const peoplesoftRouter = Router()
 

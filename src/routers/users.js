@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { prisma } from '../index.js'
-import { createService, getLogDescriptions, LOG_TYPES } from '../utils.js'
-import { getProfessionFacetsValues, getUserProfession, parsePhoneForSms } from './inscriptionsUtils.js'
+import prisma from '../plugins/prisma.js'
+import { createService, getLogDescriptions, LOG_TYPES } from '../helpers/core.js'
+import { getProfessionFacetsValues, getUserProfession, parsePhoneForSms } from '../helpers/inscriptions.js'
 
 export const usersRouter = Router()
 

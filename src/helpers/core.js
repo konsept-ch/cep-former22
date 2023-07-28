@@ -1,9 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 import { DateTime } from 'luxon'
 
-import { app, prisma } from './index.js'
-import { callApi } from './callApi.js'
-import { winstonLogger } from './winston.js'
+import prisma from '../plugins/prisma.js'
+import winstonLogger from '../plugins/winston.js'
+import { app } from '../index.js'
+import { callApi } from '../plugins/claroline.js'
 
 export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
 export const contractTemplateFilesDest = '/data/uploads/contract-templates'
@@ -201,8 +202,6 @@ export const getSessionAddress = ({ sessions, wantedSessionId }) => {
 
 export const addHours = ({ numOfHours, oldDate }) => new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
 
-export const hasAllProperties = (object, properties) => properties.every((property) => Object.hasOwn(object, property))
-
 export const checkAuth = async ({ email, code, token }) => {
     const authPair = await prisma.former22_auth_codes.findUnique({
         where: { email },
@@ -270,24 +269,4 @@ export const mapStatusToValidationType = {
     2: 'Validée par RH',
     3: 'Validée sur quota par RH',
     4: 'Annulé',
-}
-
-export const authMiddleware = async (req, res, next) => {
-    if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
-        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
-        return
-    }
-
-    const email = req.headers['x-login-email-address'].trim()
-    const code = req.headers['x-login-email-code'].trim()
-    const token = req.headers['x-login-token'].trim()
-    const isAuthenticated = await checkAuth({ email, code, token })
-
-    if (isAuthenticated) {
-        next()
-    } else {
-        res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
-        return
-        // throw new Error('Incorrect token and code for this email')
-    }
 }

@@ -2,11 +2,13 @@ import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { PDFDocument, rgb, StandardFonts, breakTextIntoLines } from 'pdf-lib'
 
-import { prisma } from '../index.js'
-import { authMiddleware, createService } from '../utils.js'
-import { getTemplatePreviews } from './templatesUtils.js'
-import { STATUSES } from './inscriptionsUtils.js'
-import { sendEmail } from '../sendEmail.js'
+import prisma from '../plugins/prisma.js'
+import authMiddleware from '../middlewares/auth.js'
+
+import { createService } from '../helpers/core.js'
+import { getTemplatePreviews } from '../helpers/templates.js'
+import { STATUSES } from '../helpers/inscriptions.js'
+import { sendEmail } from '../helpers/email.js'
 
 export const evaluationsRouter = Router()
 

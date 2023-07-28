@@ -4,7 +4,6 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
-import prismaClientPkg from '@prisma/client'
 import yaml from 'js-yaml'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
@@ -28,10 +27,9 @@ import { templatesRouter } from './routers/templates.js'
 import { usersRouter } from './routers/users.js'
 import { receptionRouter } from './routers/reception.js'
 import { contractsRouter } from './routers/contracts.js'
-import { authMiddleware } from './utils.js'
 
-const { PrismaClient } = prismaClientPkg
-export const prisma = new PrismaClient()
+import authMiddleware from './middlewares/auth.js'
+import errorMiddleware from './middlewares/error.js'
 
 export const app = express()
 const port = 4000
@@ -121,6 +119,8 @@ app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
 app.use('/contracts', contractsRouter)
+
+app.use(errorMiddleware)
 
 app.listen(port, () => {
     console.info(`Middleware app listening on port: ${port}`)

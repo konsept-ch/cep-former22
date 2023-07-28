@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { prisma } from '../index.js'
-import { createService, LOG_TYPES } from '../utils.js'
-import { deserializeStatuses, getTemplatePreviews, serializeStatuses } from './templatesUtils.js'
+import prisma from '../plugins/prisma.js'
+import { createService, LOG_TYPES } from '../helpers/core.js'
+import { deserializeStatuses, getTemplatePreviews, serializeStatuses } from '../helpers/templates.js'
 
 export const templatesRouter = Router()
 

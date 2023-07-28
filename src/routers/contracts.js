@@ -5,9 +5,9 @@ import Docxtemplater from 'docxtemplater'
 import fs from 'fs'
 import path from 'path'
 
-import { prisma } from '../index.js'
-import { createService, LOG_TYPES, contractTemplateFilesDest, contractFilesDest } from '../utils.js'
-import { CloneRowModule } from '../cloneRowModule.js'
+import prisma from '../plugins/prisma.js'
+import { createService, LOG_TYPES, contractTemplateFilesDest, contractFilesDest } from '../helpers/core.js'
+import { CloneRowModule } from '../plugins/cloneRowModule.js'
 
 export const contractsRouter = Router()
 

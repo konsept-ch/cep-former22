@@ -1,7 +1,7 @@
-import { prisma } from '../index.js'
-import { callApi } from '../callApi.js'
-import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress } from '../utils.js'
-import { fetchInscriptionsWithStatuses } from './inscriptionsUtils.js'
+import prisma from '../plugins/prisma.js'
+import { callApi } from '../plugins/claroline.js'
+import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress } from '../helpers/core.js'
+import { fetchInscriptionsWithStatuses } from './inscriptions.js'
 
 const formatSessionLessons = ({ sessionLessons }) => {
     // TODO add another format for multiday lessons :

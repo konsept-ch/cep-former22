@@ -11,7 +11,7 @@ import {
     mailgunApiKey,
     mailgunDomain,
     mailgunWhitelist,
-} from './credentialsConfig.js'
+} from '../config/credentials.js'
 
 const mailgun = new Mailgun(FormData)
 

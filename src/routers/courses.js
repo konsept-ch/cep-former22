@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { prisma } from '../index.js'
-import { callApi } from '../callApi.js'
-import { createService, getLogDescriptions, LOG_TYPES } from '../utils.js'
+import prisma from '../plugins/prisma.js'
+import { callApi } from '../plugins/claroline.js'
+import { createService, getLogDescriptions, LOG_TYPES } from '../helpers/core.js'
 
 export const coursesRouter = Router()
 

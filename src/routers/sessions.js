@@ -1,11 +1,11 @@
 import { Router } from 'express'
 
-import { prisma } from '../index.js'
-import { sendEmail } from '../sendEmail.js'
-import { sendSms } from '../sendSms.js'
-import { createService, LOG_TYPES } from '../utils.js'
-import { deriveInscriptionStatus, getNamesByType, STATUSES, transformFlagsToStatus } from './inscriptionsUtils.js'
-import { getTemplatePreviews } from './templatesUtils.js'
+import prisma from '../plugins/prisma.js'
+import { sendEmail } from '../helpers/email.js'
+import { sendSms } from '../helpers/sms.js'
+import { createService, LOG_TYPES } from '../helpers/core.js'
+import { deriveInscriptionStatus, getNamesByType, STATUSES, transformFlagsToStatus } from '../helpers/inscriptions.js'
+import { getTemplatePreviews } from '../helpers/templates.js'
 
 export const sessionsRouter = Router()
 

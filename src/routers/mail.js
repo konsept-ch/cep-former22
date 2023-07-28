@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { sendEmail } from '../sendEmail.js'
-import { createService } from '../utils.js'
-import { winstonLogger } from '../winston.js'
+import winstonLogger from '../plugins/winston.js'
+import { sendEmail } from '../helpers/email.js'
+import { createService } from '../helpers/core.js'
 
 export const mailRouter = Router()
 
