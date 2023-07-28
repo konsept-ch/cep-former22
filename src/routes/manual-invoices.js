@@ -1,16 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 import { Router } from 'express'
-import type { Request, Response } from 'express'
 
 import { prisma } from '..'
-import { createService, mapStatusToValidationType, ValidationTypesKeys } from '../utils'
-import {
-    invoiceReasonsFromPrisma,
-    invoiceStatusesFromPrisma,
-    invoiceTypesFromPrisma,
-    invoiceReasonsKeys,
-} from '../constants'
-import { InvoiceData, createInvoice } from './manualInvoicesUtils'
+import { createService, mapStatusToValidationType } from '../utils'
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
+import { createInvoice } from './manualInvoicesUtils'
 import { STATUSES } from './inscriptionsUtils'
 
 export const manualInvoicesRouter = Router()
@@ -18,7 +12,7 @@ export const manualInvoicesRouter = Router()
 createService(
     'get',
     '/enums',
-    async (_req: Request, res: Response) => {
+    async (_req, res) => {
         res.json({
             invoiceStatuses: invoiceStatusesFromPrisma,
             invoiceReasons: invoiceReasonsFromPrisma,
@@ -32,7 +26,7 @@ createService(
 createService(
     'put',
     '/statuses',
-    async (req: Request, res: Response) => {
+    async (req, res) => {
         const { uuids, status } = req.body
 
         await prisma.former22_manual_invoice.updateMany({
@@ -57,7 +51,7 @@ createService(
 createService(
     'get',
     '/',
-    async (_req: Request, res: Response) => {
+    async (_req, res) => {
         const invoices = await prisma.former22_manual_invoice.findMany({
             select: {
                 uuid: true,
@@ -180,13 +174,12 @@ createService(
                             claro_cursusbundle_course_session_cancellation,
                             ...itemsRest
                         }) => {
-                            const inscription: any =
+                            const inscription =
                                 claro_cursusbundle_course_session_user ?? claro_cursusbundle_course_session_cancellation
                             return {
                                 ...itemsRest,
                                 inscriptionUuid: inscription?.uuid,
-                                validationType:
-                                    mapStatusToValidationType[`${inscription?.status ?? 4}` as ValidationTypesKeys],
+                                validationType: mapStatusToValidationType[`${inscription?.status ?? 4}`],
                                 sessionCode: inscription?.claro_cursusbundle_course_session.code,
                                 participantName:
                                     inscription != null
@@ -211,7 +204,7 @@ createService(
 createService(
     'post',
     '/',
-    async (req: Request, res: Response) => {
+    async (req, res) => {
         try {
             res.json(await createInvoice({ invoiceData: req.body, cfEmail: req.headers['x-login-email-address'] }))
         } catch (error) {
@@ -227,7 +220,7 @@ createService(
 createService(
     'post',
     '/direct',
-    async (req: Request, res: Response) => {
+    async (req, res) => {
         try {
             const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
 
@@ -270,9 +263,7 @@ createService(
                     ({ inscriptionId, inscriptionStatus }) =>
                         inscriptionId === uuid &&
                         (inscriptionStatus == null ||
-                            [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
-                                inscriptionStatus as any
-                            ))
+                            [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(inscriptionStatus))
                 )
             )
 
@@ -296,12 +287,7 @@ createService(
                     status: '',
                 }
 
-                let config: {
-                    concerns: string
-                    unit: { value: string; label: string }
-                    reason: invoiceReasonsKeys
-                    price: string
-                } | null = null
+                let config = null
 
                 // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
                 if (inscriptionStatus === STATUSES.NON_PARTICIPATION) {
@@ -324,7 +310,7 @@ createService(
 
                 if (
                     organization?.billingMode === 'Directe' &&
-                    [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus as any)
+                    [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus)
                 ) {
                     config = {
                         concerns: 'Participation formation CEP',
@@ -404,7 +390,7 @@ createService(
 createService(
     'post',
     '/grouped',
-    async (req: Request, res: Response) => {
+    async (req, res) => {
         // Get all organizations by billing mode
         const organizationMap = (
             await prisma.former22_organization.findMany({
@@ -482,7 +468,7 @@ createService(
                     },
                 })
             ).filter(({ uuid }) => {
-                const i: any = inscriptionMap.get(uuid)
+                const i = inscriptionMap.get(uuid)
                 return (
                     i &&
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
@@ -499,7 +485,7 @@ createService(
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
                         i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
                 ) {
-                    const inscription: any = await prisma.claro_cursusbundle_course_session_user.findUnique({
+                    const inscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
                         select: {
                             id: true,
                             uuid: true,
@@ -525,9 +511,9 @@ createService(
                 }
             }
 
-            const getParentWithQuota: any = (id: any) => {
+            const getParentWithQuota = (id) => {
                 if (id == null) return null
-                const orga: any = organizationMap.get(id)
+                const orga = organizationMap.get(id)
                 return orga.claro__organization.claro_cursusbundle_quota ? id : getParentWithQuota(orga.parent_id)
             }
             const parentWithQuota = getParentWithQuota(organizationId) ?? organizationId
@@ -551,7 +537,7 @@ createService(
                 postalAddressDepartment,
                 postalAddressLocality,
                 claro__organization: { name, email, code },
-            }: any = organizationMap.get(organizationId)
+            } = organizationMap.get(organizationId)
 
             await createInvoice({
                 invoiceData: {
@@ -581,7 +567,7 @@ createService(
                             : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
                     reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
                     items: inscriptions.map(
-                        ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }: any) => ({
+                        ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }) => ({
                             designation: `${last_name} ${first_name} - ${claro_cursusbundle_course_session.course_name}`,
                             unit: { value: 'part.', label: 'part.' },
                             price: `${claro_cursusbundle_course_session.price ?? ''}`,
@@ -607,7 +593,7 @@ createService(
 createService(
     'put',
     '/:id',
-    async (req: Request, res: Response) => {
+    async (req, res) => {
         const { id } = req.params
 
         try {
@@ -625,7 +611,7 @@ createService(
                 status,
                 concerns,
                 codeCompta,
-            }: InvoiceData = req.body
+            } = req.body
 
             const { ['x-login-email-address']: cfEmail } = req.headers
 
@@ -747,7 +733,7 @@ createService(
 createService(
     'delete',
     '/all',
-    async (_req: Request, res: Response) => {
+    async (_req, res) => {
         await prisma.former22_invoice_item.deleteMany()
         await prisma.former22_manual_invoice.deleteMany()
 

@@ -1,5 +1,4 @@
 import fetch from 'node-fetch'
-import { Request } from 'express'
 
 import { clarolineApiUrl } from './credentialsConfig'
 
@@ -15,15 +14,6 @@ export const callApi = async ({
     headers = {},
     method = 'GET',
     predicate = () => true,
-}: {
-    req: Request
-    body?: any
-    isFormData?: boolean
-    path: string
-    params?: any
-    headers?: any
-    method?: string
-    predicate?: (value: any, index: number) => unknown
 }) => {
     const url = `${new URL(path, clarolineApiUrl)}?${new URLSearchParams(params)}`
 

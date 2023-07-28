@@ -4,16 +4,15 @@ import { DateTime } from 'luxon'
 import { app, prisma } from '.'
 import { callApi } from './callApi'
 import { winstonLogger } from './winston'
-import { NextFunction, Request, Response, Router } from 'express'
 
 export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
 export const contractTemplateFilesDest = '/data/uploads/contract-templates'
 export const contractFilesDest = '/data/uploads/contracts'
 
 // for testing/development purposes only
-export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+export const delay = (ms) => new Promise((res) => setTimeout(res, ms))
 
-export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }: any) => {
+export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }) => {
     const date = dateObject ?? (dateString ? new Date(dateString) : new Date())
     const getDay = () => (date.getDate() < 10 ? `0${date.getDate()}` : date.getDate())
     const getMonth = () => {
@@ -37,7 +36,7 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
     return [getDate(), getTime()].filter(Boolean).join(', ')
 }
 
-export const formatTime = ({ dateString }: { dateString: string }) =>
+export const formatTime = ({ dateString }) =>
     DateTime.fromISO(dateString, { zone: 'UTC' })
         .setZone('Europe/Zurich')
         .setLocale('fr')
@@ -65,24 +64,24 @@ export const LOG_TYPES = {
 
 // TODO: named params
 export const createService = (
-    method: keyof Router,
-    url: string,
-    handlerFunction: any,
-    logHelper: any,
-    router: Router = app,
-    middlewareFunction = (req: Request, res: Response, next: NextFunction) => {
+    method,
+    url,
+    handlerFunction,
+    logHelper,
+    router = app,
+    middlewareFunction = (req, res, next) => {
         next()
     }
 ) => {
-    ;(router as any)[method](url, middlewareFunction, async (req: Request, res: Response) => {
+    router[method](url, middlewareFunction, async (req, res) => {
         let logId
         try {
             if (logHelper) {
-                const userDetails = (await callApi({
+                const userDetails = await callApi({
                     req,
                     path: 'user/find',
                     params: `filters[email]=${req.headers['x-login-email-address']}`,
-                })) as { name: string; email: string }
+                })
 
                 const log = await prisma.former22_log.create({
                     data: {
@@ -119,7 +118,7 @@ export const createService = (
                     },
                 })
             }
-        } catch (error: any) {
+        } catch (error) {
             // eslint-disable-next-line no-console
             console.error(error)
             winstonLogger.error(
@@ -150,21 +149,19 @@ export const createService = (
 }
 
 export const getLogDescriptions = {
-    formation: ({ isUpdatedDetails }: { isUpdatedDetails: boolean }) =>
-        isUpdatedDetails ? `Updated course details` : 'Updated description',
-    inscription: ({ originalStatus, newStatus }: { originalStatus: string; newStatus: string }) =>
-        `Changed status from "${originalStatus}" to "${newStatus}"`,
-    user: ({ shouldReceiveSms, fullName }: { shouldReceiveSms: boolean; fullName: string }) =>
+    formation: ({ isUpdatedDetails }) => (isUpdatedDetails ? `Updated course details` : 'Updated description'),
+    inscription: ({ originalStatus, newStatus }) => `Changed status from "${originalStatus}" to "${newStatus}"`,
+    user: ({ shouldReceiveSms, fullName }) =>
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
-export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; sessionId?: string }) => {
+export const fetchSessionsLessons = async ({ req, sessionId }) => {
     if (typeof sessionId !== 'undefined') {
         const lessons = await callApi({ req, path: `cursus_session/${sessionId}/events` })
 
         return lessons
     } else {
-        const sessions = (await callApi({ req, path: 'cursus_session' })) as { id: string }[]
+        const sessions = await callApi({ req, path: 'cursus_session' })
 
         if (typeof sessions !== 'undefined') {
             const lessonsToFetch = sessions.map((session) =>
@@ -175,7 +172,7 @@ export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; s
                 })()
             )
 
-            const fetchedLessons = (await Promise.allSettled(lessonsToFetch)) as { value: any }[]
+            const fetchedLessons = await Promise.allSettled(lessonsToFetch)
 
             return fetchedLessons.flatMap(({ value }) => value)
         } else {
@@ -184,7 +181,7 @@ export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; s
     }
 }
 
-export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any[]; wantedSessionId: string }) => {
+export const getSessionAddress = ({ sessions, wantedSessionId }) => {
     const currentSessionData = sessions.find(({ id }) => wantedSessionId === id)
     const sessionLocation = currentSessionData.location
     const sessionAddress = sessionLocation?.address
@@ -202,13 +199,11 @@ export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any
     return location
 }
 
-export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate: Date }) =>
-    new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
+export const addHours = ({ numOfHours, oldDate }) => new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
 
-export const hasAllProperties = (object: object, properties: string[]) =>
-    properties.every((property) => Object.hasOwn(object, property))
+export const hasAllProperties = (object, properties) => properties.every((property) => Object.hasOwn(object, property))
 
-export const checkAuth = async ({ email, code, token }: { email: string; code: string; token: string }) => {
+export const checkAuth = async ({ email, code, token }) => {
     const authPair = await prisma.former22_auth_codes.findUnique({
         where: { email },
         select: {
@@ -270,23 +265,22 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
 }
 
 export const mapStatusToValidationType = {
-    '0': 'En attente',
-    '1': 'Refusée par RH',
-    '2': 'Validée par RH',
-    '3': 'Validée sur quota par RH',
-    '4': 'Annulé',
-} as const
-export type ValidationTypesKeys = keyof typeof mapStatusToValidationType
+    0: 'En attente',
+    1: 'Refusée par RH',
+    2: 'Validée par RH',
+    3: 'Validée sur quota par RH',
+    4: 'Annulé',
+}
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req, res, next) => {
     if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
         res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
         return
     }
 
-    const email = (req.headers['x-login-email-address'] as string).trim()
-    const code = (req.headers['x-login-email-code'] as string).trim()
-    const token = (req.headers['x-login-token'] as string).trim()
+    const email = req.headers['x-login-email-address'].trim()
+    const code = req.headers['x-login-email-code'].trim()
+    const token = req.headers['x-login-token'].trim()
     const isAuthenticated = await checkAuth({ email, code, token })
 
     if (isAuthenticated) {

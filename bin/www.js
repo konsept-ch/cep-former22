@@ -18,7 +18,7 @@ const server = http.createServer(app)
  * Normalize a port into a number, string, or false.
  */
 
-function normalizePort(val: string) {
+function normalizePort(val) {
     const port = parseInt(val, 10)
 
     if (isNaN(port)) {
@@ -45,8 +45,7 @@ app.set('port', port)
  * Event listener for HTTP server "error" event.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function onError(error: any) {
+function onError(error) {
     if (error.syscall !== 'listen') {
         throw error
     }
@@ -76,8 +75,7 @@ function onError(error: any) {
 
 function onListening() {
     const addr = server.address()
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr!.port
+    const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port
     debug('Listening on ' + bind)
 }
 

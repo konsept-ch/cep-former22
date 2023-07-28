@@ -22,7 +22,6 @@ createService(
                 const populatedChildren = populateAdditionalData({ orgsToPopulate: currentOrg.children })
 
                 if (currentOrgData) {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { organizationUuid, id, ...neededData } = currentOrgData
 
                     return { ...currentOrg, ...neededData, children: populatedChildren }

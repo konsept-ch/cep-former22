@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
@@ -20,9 +19,7 @@ export const STATUSES = {
     ANNULEE_FACTURABLE: 'Annulée facturable',
     ANNULEE_NON_FACTURABLE: 'Annulée non-facturable',
     ECARTEE: 'Écartée',
-} as const
-type StatusesKeys = keyof typeof STATUSES
-type StatusesValues = (typeof STATUSES)[StatusesKeys]
+}
 
 export const finalStatuses = [
     STATUSES.A_TRAITER_PAR_RH,
@@ -33,7 +30,7 @@ export const finalStatuses = [
     STATUSES.ANNULEE_FACTURABLE,
     STATUSES.ANNULEE_NON_FACTURABLE,
     STATUSES.ECARTEE,
-] as const
+]
 
 export const lockGroups = [
     [
@@ -44,7 +41,7 @@ export const lockGroups = [
         STATUSES.ANNULEE_FACTURABLE,
         STATUSES.ANNULEE_NON_FACTURABLE,
     ],
-] as const
+]
 
 export const statusesForAnnulation = [
     STATUSES.ANNULEE,
@@ -53,27 +50,15 @@ export const statusesForAnnulation = [
     STATUSES.NON_PARTICIPATION,
     STATUSES.REFUSEE_PAR_CEP,
     STATUSES.ECARTEE,
-] as const
+]
 
 export const REGISTRATION_TYPES = {
     CANCELLATION: 'cancellation',
     LEARNER: 'learner',
     TUTOR: 'tutor',
-} as const
-type RegistrationTypesKeys = keyof typeof REGISTRATION_TYPES
-type RegistrationTypesValues = (typeof REGISTRATION_TYPES)[RegistrationTypesKeys]
+}
 
-export const transformFlagsToStatus = ({
-    validated,
-    registrationType,
-    hrValidationStatus,
-    isHrValidationEnabled,
-}: {
-    validated: boolean
-    registrationType: RegistrationTypesValues
-    hrValidationStatus: 0 | 1 | 2 | 3
-    isHrValidationEnabled: boolean
-}) => {
+export const transformFlagsToStatus = ({ validated, registrationType, hrValidationStatus, isHrValidationEnabled }) => {
     if (registrationType === REGISTRATION_TYPES.CANCELLATION) {
         return STATUSES.ANNULEE_NON_FACTURABLE
     } else if (!validated) {
@@ -92,15 +77,10 @@ export const transformFlagsToStatus = ({
     }
 }
 
-export const deriveInscriptionStatus = ({
-    savedStatus,
-    transformedStatus,
-}: {
-    savedStatus?: StatusesValues | null
-    transformedStatus: StatusesValues
-}) => (savedStatus === STATUSES.A_TRAITER_PAR_RH ? transformedStatus : savedStatus ?? transformedStatus)
+export const deriveInscriptionStatus = ({ savedStatus, transformedStatus }) =>
+    savedStatus === STATUSES.A_TRAITER_PAR_RH ? transformedStatus : savedStatus ?? transformedStatus
 
-export const parsePhoneForSms = ({ phone }: { phone: string | null }) => {
+export const parsePhoneForSms = ({ phone }) => {
     // explanation: remove (0) and then spaces and chars: -–./)(+ and then starting zeroes
     if (phone) {
         const cleanPhone = `${parseInt(
@@ -131,15 +111,9 @@ export const getProfessionFacetsValues = async () => {
     return professionFacetsValues
 }
 
-export const getUserProfession = ({
-    userId,
-    professionFacetsValues,
-}: {
-    userId: number
-    professionFacetsValues: any[]
-}) => {
-    if (professionFacetsValues.some(({ user_id }: { user_id: number }) => user_id === userId)) {
-        const { field_value } = professionFacetsValues.find(({ user_id }: { user_id: number }) => user_id === userId)
+export const getUserProfession = ({ userId, professionFacetsValues }) => {
+    if (professionFacetsValues.some(({ user_id }) => user_id === userId)) {
+        const { field_value } = professionFacetsValues.find(({ user_id }) => user_id === userId)
 
         return JSON.parse(field_value).join(', ')
     } else {
@@ -147,20 +121,20 @@ export const getUserProfession = ({
     }
 }
 
-const formatOrganizationsHierarchy = (allOrganizations: any, organization: any, hierarchy = []): string | null => {
+const formatOrganizationsHierarchy = (allOrganizations, organization, hierarchy = []) => {
     if (organization == null) return null
 
-    const hierarchyLatest: any = [...hierarchy, organization.name]
+    const hierarchyLatest = [...hierarchy, organization.name]
     const parentId = organization.parent_id
 
     if (parentId) {
-        const parent: any = allOrganizations?.find(({ id }: any) => id === parentId)
+        const parent = allOrganizations?.find(({ id }) => id === parentId)
         return formatOrganizationsHierarchy(allOrganizations, parent, hierarchyLatest)
     } else {
         return hierarchyLatest.reverse().join(' > ')
     }
 }
-const deriveInvoiceNumber = (invoice: any, cfNumber: any) =>
+const deriveInvoiceNumber = (invoice, cfNumber) =>
     invoice
         ? `${`${invoice.former22_manual_invoice.courseYear}`.slice(-2)}${`${cfNumber}`.padStart(
               2,
@@ -309,14 +283,13 @@ export const fetchInscriptionsWithStatuses = async (
                                   )
                                   const inscriptionStatusForIdWhenCancellation = shouldFetchCancellations
                                       ? inscriptionsAdditionalData.find(
-                                            ({ inscriptionId }) =>
-                                                inscriptionId === (inscription as any).inscription_uuid
+                                            ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
                                         )
                                       : null
 
                                   const { shouldReceiveSms } =
                                       usersAdditionalData.find(
-                                          ({ userId }) => userId === (inscription as any).claro_user.uuid
+                                          ({ userId }) => userId === inscription.claro_user.uuid
                                       ) ?? {}
 
                                   const { coordinator, codeCategory, theme, targetAudience } =
@@ -326,7 +299,7 @@ export const fetchInscriptionsWithStatuses = async (
                                       ? allOrganizations.find(
                                             (o) => o.id === inscriptionStatusForId.former22_organization?.organizationId
                                         )
-                                      : (inscription as any).claro_user.user_organization[0]?.claro__organization
+                                      : inscription.claro_user.user_organization[0]?.claro__organization
 
                                   const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
@@ -334,20 +307,20 @@ export const fetchInscriptionsWithStatuses = async (
                                       savedStatus: (shouldFetchCancellations
                                           ? inscriptionStatusForIdWhenCancellation
                                           : inscriptionStatusForId
-                                      )?.inscriptionStatus as StatusesValues,
+                                      )?.inscriptionStatus,
                                       transformedStatus: transformFlagsToStatus({
-                                          validated: (inscription as any).validated,
+                                          validated: inscription.validated,
                                           registrationType: shouldFetchCancellations
                                               ? REGISTRATION_TYPES.CANCELLATION
-                                              : (inscription as any).registration_type,
-                                          hrValidationStatus: (inscription as any).status,
+                                              : inscription.registration_type,
+                                          hrValidationStatus: inscription.status,
                                           isHrValidationEnabled,
                                       }),
                                   })
 
                                   const invoice = shouldFetchCancellations
-                                      ? invoices.find((i) => i.cancellationId === (inscription as any).id)
-                                      : invoices.find((i) => i.inscriptionId === (inscription as any).id)
+                                      ? invoices.find((i) => i.cancellationId === inscription.id)
+                                      : invoices.find((i) => i.inscriptionId === inscription.id)
                                   const cfNumber = invoice
                                       ? usersAdditionalData.find(
                                             (u) => u.userId === invoice?.former22_manual_invoice.claro_user.uuid
@@ -357,8 +330,8 @@ export const fetchInscriptionsWithStatuses = async (
                                   return {
                                       id: inscription.uuid,
                                       inscriptionDate: inscription.registration_date,
-                                      type: (inscription as any).registration_type,
-                                      deletedInscriptionUuid: (inscription as any).inscription_uuid,
+                                      type: inscription.registration_type,
+                                      deletedInscriptionUuid: inscription.inscription_uuid,
                                       remark: inscriptionStatusForId?.remark,
                                       coordinator,
                                       codeCategory,
@@ -366,7 +339,7 @@ export const fetchInscriptionsWithStatuses = async (
                                       targetAudience,
                                       attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
                                       status: shouldFetchCancellations
-                                          ? statusesForAnnulation.includes(derivedStatus as any)
+                                          ? statusesForAnnulation.includes(derivedStatus)
                                               ? derivedStatus
                                               : STATUSES.ANNULEE_NON_FACTURABLE
                                           : derivedStatus,
@@ -379,18 +352,18 @@ export const fetchInscriptionsWithStatuses = async (
                                           courseName: courseData.course_name,
                                           coursePrice: courseData.price,
                                           courseDuration: courseData.session_days,
-                                          startYear: new Date(start_date as unknown as string).getFullYear(),
+                                          startYear: new Date(start_date).getFullYear(),
                                       },
                                       user: {
-                                          firstName: (inscription as any).claro_user.first_name,
-                                          lastName: (inscription as any).claro_user.last_name,
-                                          email: (inscription as any).claro_user.mail,
-                                          username: (inscription as any).claro_user.username,
-                                          phone: (inscription as any).claro_user.phone,
+                                          firstName: inscription.claro_user.first_name,
+                                          lastName: inscription.claro_user.last_name,
+                                          email: inscription.claro_user.mail,
+                                          username: inscription.claro_user.username,
+                                          phone: inscription.claro_user.phone,
                                           phoneForSms: parsePhoneForSms({
-                                              phone: (inscription as any).claro_user.phone,
+                                              phone: inscription.claro_user.phone,
                                           }),
-                                          userId: (inscription as any).claro_user.uuid,
+                                          userId: inscription.claro_user.uuid,
                                           shouldReceiveSms,
                                           hierarchy: formatOrganizationsHierarchy(
                                               allOrganizations,
@@ -400,14 +373,14 @@ export const fetchInscriptionsWithStatuses = async (
                                           organizationId: userMainOrganization?.uuid,
                                           organizationCode: userMainOrganization?.code,
                                           profession: getUserProfession({
-                                              userId: (inscription as any).claro_user.id,
+                                              userId: inscription.claro_user.id,
                                               professionFacetsValues,
                                           }),
                                       },
                                       validationType:
-                                          (inscription as any).status === 2
+                                          inscription.status === 2
                                               ? 'Validée'
-                                              : (inscription as any).status === 3
+                                              : inscription.status === 3
                                               ? 'Validée sur quota'
                                               : '',
                                       organizationClientNumber:
@@ -434,13 +407,13 @@ export const fetchInscriptionsWithStatuses = async (
                                       quotaDays: quota_days,
                                       isUsedForQuota: used_by_quotas,
                                       courseName: courseData.course_name,
-                                      startYear: new Date(start_date as unknown as string).getFullYear(),
+                                      startYear: new Date(start_date).getFullYear(),
                                   },
                               },
                           ]
             )
 
-            let fetchedPendingLearners: any[] = []
+            let fetchedPendingLearners = []
 
             if (!shouldFetchTutors && !shouldFetchCancellations) {
                 const allPendingInscriptionsOnCourseLevel = await prisma.claro_cursusbundle_course_course_user.findMany(
@@ -482,8 +455,7 @@ export const fetchInscriptionsWithStatuses = async (
                         const { shouldReceiveSms } =
                             usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ?? {}
 
-                        const userMainOrganization = (inscription as any).claro_user.user_organization[0]
-                            ?.claro__organization
+                        const userMainOrganization = inscription.claro_user.user_organization[0]?.claro__organization
 
                         const { coordinator, codeCategory, theme, targetAudience } =
                             coursesAdditionalData.get(inscription.claro_cursusbundle_course.uuid) ?? {}
@@ -541,21 +513,10 @@ export const fetchInscriptionsWithStatuses = async (
     }
 }
 
-export const getNamesByType = ({
-    inscriptions,
-    registrationType,
-}: {
-    inscriptions: any[]
-    registrationType: RegistrationTypesValues
-}) =>
+export const getNamesByType = ({ inscriptions, registrationType }) =>
     inscriptions
-        .filter(
-            ({ registration_type }: { registration_type: RegistrationTypesValues }) =>
-                registration_type === registrationType
-        )
-        .map(
-            ({ claro_user: { first_name, last_name } }: { claro_user: { first_name: string; last_name: string } }) => ({
-                firstName: first_name,
-                lastName: last_name,
-            })
-        )
+        .filter(({ registration_type }) => registration_type === registrationType)
+        .map(({ claro_user: { first_name, last_name } }) => ({
+            firstName: first_name,
+            lastName: last_name,
+        }))

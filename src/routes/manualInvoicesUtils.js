@@ -1,42 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
-import {
-    invoiceReasonsKeys,
-    invoiceReasonsValues,
-    invoiceStatusesKeys,
-    invoiceStatusesValues,
-    invoiceTypesKeys,
-    invoiceTypesValues,
-} from '../constants'
-
-export type InvoiceData = {
-    client: { uuid: string; value: string; label: string }
-    customClientEmail: string
-    customClientAddress: string
-    customClientTitle: string
-    customClientFirstname: string
-    customClientLastname: string
-    invoiceDate: string
-    courseYear: number
-    items: {
-        number: string
-        designation: string
-        unit: { value: string; label: string }
-        amount: string
-        price: string
-        vatCode: { value: string; label: string }
-        inscriptionId?: number
-        inscriptionUuid?: string
-        cancellationId?: number
-    }[]
-    selectedUserUuid: string
-    concerns: string
-    codeCompta: string
-    status: { value: invoiceStatusesKeys; label: invoiceStatusesValues }
-    invoiceType: { value: invoiceTypesKeys; label: invoiceTypesValues }
-    reason: { value: invoiceReasonsKeys; label: invoiceReasonsValues }
-}
 
 export const createInvoice = async ({
     invoiceData: {
@@ -57,9 +21,6 @@ export const createInvoice = async ({
         reason,
     },
     cfEmail,
-}: {
-    invoiceData: InvoiceData
-    cfEmail?: string | string[]
 }) => {
     const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear = undefined } = {}] =
         await prisma.former22_manual_invoice.findMany({
