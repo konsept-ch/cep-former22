@@ -350,7 +350,7 @@ createService(
                                                         inscriptionStatus,
                                                         ...restInscriptionData
                                                     }) => ({
-                                                        ...restInscriptionData,
+                                                        attestationId: restInscriptionData.attestationId,
                                                         id: inscriptionId,
                                                         status: deriveInscriptionStatus({
                                                             savedStatus: inscriptionStatus,
