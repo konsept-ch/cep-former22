@@ -46,18 +46,17 @@ app.use(cookieParser())
 const SWAGGER_UI_PATH = '/api-docs'
 const SWAGGER_SCHEMA_PATH = `${SWAGGER_UI_PATH}/swagger.json`
 const SWAGGER_SCHEMA_YAML_PATH = `${SWAGGER_UI_PATH}/swagger.yaml`
-const swaggerOptions = {
+
+const openapiSpecification = await swaggerJsdoc({
     definition: {
         openapi: '3.0.3',
         info: {
             title: 'Former22 API Documentation',
-            version: '1.0.0',
-        },
+            version: '1.0.0'
+        }
     },
-    apis: ['./src/swaggerSchemas.yml', './src/routes/peoplesoft.js'], // files containing annotations as above
-}
-
-const openapiSpecification = await swaggerJsdoc(swaggerOptions)
+    apis: ['./src/config/swaggerSchemas.yml', './src/routers/peoplesoft.js']
+})
 
 const swaggerUiOptions = {
     swaggerOptions: {
