@@ -10,38 +10,42 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const users = await prisma.claro_user.findMany({
-            where: {
-                is_removed: false,
-            },
+        const users = await prisma.former22_user.findMany({
             select: {
-                id: true,
-                uuid: true,
-                first_name: true,
-                last_name: true,
-                mail: true,
-                claro_user_role: {
-                    select: {
-                        claro_role: {
-                            select: {
-                                translation_key: true,
+                claro_user: {
+                    id: true,
+                    uuid: true,
+                    first_name: true,
+                    last_name: true,
+                    mail: true,
+                    claro_user_role: {
+                        select: {
+                            claro_role: {
+                                select: {
+                                    translation_key: true,
+                                },
                             },
                         },
                     },
-                },
-                user_organization: {
-                    where: {
-                        is_main: true,
-                    },
-                    select: {
-                        claro__organization: {
-                            select: {
-                                name: true,
+                    user_organization: {
+                        where: {
+                            is_main: true,
+                        },
+                        select: {
+                            claro__organization: {
+                                select: {
+                                    name: true,
+                                },
                             },
                         },
                     },
+                    phone: true,
                 },
-                phone: true,
+            },
+            where: {
+                claro_user: {
+                    is_removed: false,
+                },
             },
         })
 
