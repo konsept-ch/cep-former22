@@ -3375,7 +3375,7 @@ model claro_user {
   claro_workspace_requirements                                                                                                claro_workspace_requirements[]
   former22_manual_invoice_former22_manual_invoice_selectedUserIdToclaro_user                                                  former22_manual_invoice[]                        @relation("former22_manual_invoice_selectedUserIdToclaro_user")
   former22_manual_invoice                                                                                                     former22_manual_invoice[]
-  former22_user                                                                                                               former22_user[]
+  former22_user                                                                                                               former22_user?
   hevinci_ability_progress                                                                                                    hevinci_ability_progress[]
   hevinci_competency_progress                                                                                                 hevinci_competency_progress[]
   hevinci_competency_progress_log                                                                                             hevinci_competency_progress_log[]
@@ -5394,10 +5394,8 @@ model former22_user {
   shouldReceiveSms Boolean?
   colorCode        String?    @db.VarChar(255)
   cfNumber         Int?
-  userId           Int
+  userId           Int        @unique(map: "userId")
   claro_user       claro_user @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_user_claro_user")
-
-  @@index([userId], map: "FK_former22_user_claro_user")
 }
 
 model former22_organization {
