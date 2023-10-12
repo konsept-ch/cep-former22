@@ -238,6 +238,24 @@ export const fetchInscriptionsWithStatuses = async (
                                 username: true,
                                 phone: true,
                                 uuid: true,
+                                user_organization: {
+                                    select: {
+                                        is_main: true,
+                                        claro__organization: {
+                                            include: {
+                                                claro_cursusbundle_quota: true,
+                                                former22_organization: {
+                                                    select: {
+                                                        clientNumber: true,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                    where: {
+                                        is_main: true,
+                                    },
+                                },
                             },
                         },
                         claro_cursusbundle_course_session: {
