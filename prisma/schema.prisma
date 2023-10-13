@@ -1082,6 +1082,7 @@ model claro_cursusbundle_course_session {
   claro_cursusbundle_session_event                                         claro_cursusbundle_session_event[]
   claro_cursusbundle_session_event_set                                     claro_cursusbundle_session_event_set[]
   former22_evaluation                                                      former22_evaluation?
+  former22_session                                                         former22_session?
 
   @@index([course_id], map: "IDX_C5F56FDE591CC992")
   @@index([creator_id], map: "IDX_C5F56FDE61220EA6")
@@ -1315,6 +1316,7 @@ model claro_cursusbundle_session_event {
   claro_cursusbundle_session_event_group   claro_cursusbundle_session_event_group[]
   claro_cursusbundle_session_event_tutors  claro_cursusbundle_session_event_tutors[]
   claro_cursusbundle_session_event_user    claro_cursusbundle_session_event_user[]
+  former22_event                           former22_event?
 
   @@index([session_id], map: "IDX_257C3061613FECDF")
   @@index([presence_template_id], map: "IDX_257C3061D7F5EEA3")
@@ -5333,12 +5335,14 @@ model former22_template {
 }
 
 model former22_inscription {
-  inscriptionId         String                 @id @db.VarChar(255)
+  id                    Int                    @id @default(autoincrement())
+  inscriptionId         String                 @db.VarChar(255)
   inscriptionStatus     String?                @db.Text
   updatedAt             DateTime?              @default(now()) @db.DateTime(0)
   attestationId         Int?
   organizationId        Int?
   remark                String?                @db.Text
+  inscriptionFk         Int
   former22_organization former22_organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_inscription_organization")
   former22_attestation  former22_attestation?  @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
 
@@ -5371,12 +5375,14 @@ model former22_error_report {
 }
 
 model former22_session {
-  sessionId       String   @id @db.VarChar(255)
-  sessionName     String?  @db.Text
-  startDate       String?  @db.VarChar(255)
-  areInvitesSent  Boolean?
-  sessionFormat   String?  @db.Text
-  sessionLocation String?  @db.Text
+  id                                Int                               @id @default(autoincrement())
+  sessionName                       String?                           @db.Text
+  startDate                         String?                           @db.VarChar(255)
+  areInvitesSent                    Boolean?
+  sessionFormat                     String?                           @db.Text
+  sessionLocation                   String?                           @db.Text
+  sessionId                         Int                               @unique(map: "sessionId")
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_session_claro_cursusbundle_course_session")
 }
 
 model former22_log {
@@ -5625,9 +5631,11 @@ model icap__socialmedia_wall_item {
 }
 
 model former22_event {
-  eventId    String   @id @db.VarChar(255)
-  isFeesPaid Boolean? @default(false)
-  fees       Float?   @default(0) @db.Float
+  id                               Int                              @id @default(autoincrement())
+  isFeesPaid                       Boolean?                         @default(false)
+  fees                             Float?                           @default(0) @db.Float
+  eventId                          Int                              @unique(map: "eventId")
+  claro_cursusbundle_session_event claro_cursusbundle_session_event @relation(fields: [eventId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_event_claro_cursusbundle_session_event")
 }
 
 model former22_contract_template {
