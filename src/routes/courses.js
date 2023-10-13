@@ -22,15 +22,12 @@ createService(
                 session_days: true,
                 description: true,
                 slug: true,
+                former22_course: true,
             },
         })
 
-        const coursesFormer22Data = await prisma.former22_course.findMany()
-
-        const fullCoursesData = courses.map((course) => {
-            const courseAdditionalData = coursesFormer22Data.find(({ courseId }) => courseId === course.uuid)
-
-            return {
+        res.json(
+            courses.map((course) => ({
                 id: course.uuid,
                 name: course.course_name,
                 code: course.code,
@@ -41,11 +38,9 @@ createService(
                 duration: course.session_days,
                 description: course.description,
                 slug: course.slug,
-                ...courseAdditionalData,
-            }
-        })
-
-        res.json(fullCoursesData ?? 'Aucuns cours trouvés')
+                ...course.former22_course,
+            })) ?? 'Aucuns cours trouvés'
+        )
     },
     null,
     coursesRouter

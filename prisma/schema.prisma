@@ -970,6 +970,7 @@ model claro_cursusbundle_course {
   claro_cursusbundle_course_session                                             claro_cursusbundle_course_session[]
   claro_cursusbundle_course_validators                                          claro_cursusbundle_course_validators[]
   claro_cursusbundle_cursus                                                     claro_cursusbundle_cursus[]
+  former22_course                                                               former22_course?
 
   @@index([creator_id], map: "IDX_3359D34961220EA6")
   @@index([parent_id], map: "IDX_3359D349727ACA70")
@@ -5346,19 +5347,21 @@ model former22_inscription {
 }
 
 model former22_course {
-  courseId       String   @id @db.VarChar(255)
-  coordinator    String?  @db.Text
-  responsible    String?  @db.Text
-  typeStage      String?  @db.Text
-  teachingMethod String?  @db.Text
-  codeCategory   String?  @db.Text
-  theme          String?  @db.Text
-  targetAudience String?  @db.Text
-  billingMode    String?  @db.Text
-  pricingType    String?  @db.Text
-  baseRate       Float?   @db.Float
-  isRecurrent    Boolean? @default(false)
-  goals          String?  @db.Text
+  id                        Int                       @id @default(autoincrement())
+  coordinator               String?                   @db.Text
+  responsible               String?                   @db.Text
+  typeStage                 String?                   @db.Text
+  teachingMethod            String?                   @db.Text
+  codeCategory              String?                   @db.Text
+  theme                     String?                   @db.Text
+  targetAudience            String?                   @db.Text
+  billingMode               String?                   @db.Text
+  pricingType               String?                   @db.Text
+  baseRate                  Float?                    @db.Float
+  isRecurrent               Boolean?                  @default(false)
+  goals                     String?                   @db.Text
+  courseId                  Int                       @unique(map: "courseId")
+  claro_cursusbundle_course claro_cursusbundle_course @relation(fields: [courseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_course_claro_cursusbundle_course")
 }
 
 model former22_error_report {
