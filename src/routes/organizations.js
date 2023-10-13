@@ -2,7 +2,6 @@ import { Router } from 'express'
 
 import { prisma } from '..'
 import { createService, LOG_TYPES } from '../utils'
-import { callApi } from '../callApi'
 
 export const organizationsRouter = Router()
 
@@ -25,13 +24,13 @@ createService(
 
         function getRecursiveChildren(parent) {
             return organizations
-                .filter((o) => o.parent_id == parent?.id)
+                .filter((o) => o.parent_id === parent?.id)
                 .map((o) => ({
+                    ...o.former22_organization,
                     id: o.uuid,
                     name: o.name,
                     code: o.code,
                     type: o.type,
-                    ...o.former22_organization,
                     parent: parent
                         ? {
                               id: parent.uuid,
@@ -117,16 +116,23 @@ createService(
         const { organizationName, newData } = req.body
         const { organizationId: organizationUuid } = req.params
 
-        const { id } = await prisma.claro__organization.findUnique({
+        await prisma.claro__organization.update({
             where: { uuid: organizationUuid },
-            select: { id: true },
+            data: {
+                former22_organization: {
+                    upsert: {
+                        create: newData,
+                        update: newData,
+                    },
+                },
+            },
         })
 
-        await prisma.former22_organization.upsert({
+        /*await prisma.former22_organization.upsert({
             where: { organizationUuid },
             update: { ...newData, organizationId: id },
             create: { ...newData, organizationId: id, organizationUuid },
-        })
+        })*/
 
         res.json("L'organisation a été modifié")
 
