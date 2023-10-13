@@ -22,7 +22,22 @@ createService(
                 session_days: true,
                 description: true,
                 slug: true,
-                former22_course: true,
+                former22_course: {
+                    select: {
+                        coordinator: true,
+                        responsible: true,
+                        typeStage: true,
+                        teachingMethod: true,
+                        codeCategory: true,
+                        theme: true,
+                        targetAudience: true,
+                        billingMode: true,
+                        pricingType: true,
+                        baseRate: true,
+                        isRecurrent: true,
+                        goals: true,
+                    },
+                },
             },
         })
 
@@ -157,23 +172,25 @@ createService(
         const { courseId } = req.params
         const { newData } = req.body
 
-        await prisma.former22_course.upsert({
-            where: { courseId },
-            update: newData,
-            create: { ...newData, courseId },
-        })
-
-        res.json('Le cours a été modifié')
-
-        const currentCourse = await prisma.claro_cursusbundle_course.findUnique({
+        const course = await prisma.claro_cursusbundle_course.update({
             where: { uuid: courseId },
             select: {
                 course_name: true,
             },
+            data: {
+                former22_course: {
+                    upsert: {
+                        update: newData,
+                        create: newData,
+                    },
+                },
+            },
         })
 
+        res.json('Le cours a été modifié')
+
         return {
-            entityName: currentCourse.course_name,
+            entityName: course.course_name,
             entityId: courseId,
             actionName: getLogDescriptions.formation({ isUpdatedDetails: true }),
         }
