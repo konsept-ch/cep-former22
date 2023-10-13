@@ -18,7 +18,7 @@ const fusers = await prisma.former22_user.findMany({
 })
 
 for (const user of fusers) {
-    const u = users.find((u) => u.uuid == user.userId)
+    const u = users.find((e) => e.uuid === user.userId)
 
     await prisma.former22_user.update({
         data: {
