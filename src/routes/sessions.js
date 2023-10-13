@@ -26,6 +26,15 @@ createService(
                 quota_days: true,
                 used_by_quotas: true,
                 max_users: true,
+                former22_session: {
+                    select: {
+                        sessionName: true,
+                        startDate: true,
+                        areInvitesSent: true,
+                        sessionFormat: true,
+                        sessionLocation: true,
+                    },
+                },
                 _count: {
                     select: {
                         claro_cursusbundle_course_session_user: true,
@@ -33,31 +42,24 @@ createService(
                 },
             },
         })
-        const sessionsAdditionalData = await prisma.former22_session.findMany()
 
-        const fullSessionsData = sessions.map((session) => {
-            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid)
-
-            return {
-                ...{
-                    id: session.uuid,
-                    name: session.course_name,
-                    code: session.code,
-                    hidden: session.hidden,
-                    startDate: session.start_date,
-                    price: session.price,
-                    created: session.createdAt,
-                    updated: session.updatedAt,
-                    quotaDays: session.quota_days,
-                    isUsedForQuota: session.used_by_quotas,
-                    availables: session.max_users - session._count.claro_cursusbundle_course_session_user,
-                    occupation: session._count.claro_cursusbundle_course_session_user,
-                },
-                ...sessionAdditionalData,
-            }
-        })
-
-        res.json(fullSessionsData ?? 'Aucunes session trouvées')
+        res.json(
+            sessions.map((session) => ({
+                id: session.uuid,
+                name: session.course_name,
+                code: session.code,
+                hidden: session.hidden,
+                startDate: session.start_date,
+                price: session.price,
+                created: session.createdAt,
+                updated: session.updatedAt,
+                quotaDays: session.quota_days,
+                isUsedForQuota: session.used_by_quotas,
+                availables: session.max_users - session._count.claro_cursusbundle_course_session_user,
+                occupation: session._count.claro_cursusbundle_course_session_user,
+                ...session.former22_session,
+            })) ?? 'Aucunes session trouvées'
+        )
     },
     null,
     sessionsRouter
@@ -229,49 +231,47 @@ createService(
     'get',
     '/seances',
     async (req, res) => {
-        const seancesPrisma = await prisma.claro_cursusbundle_session_event.findMany({
-            include: {
-                claro_planned_object: true,
-                claro_cursusbundle_course_session: true,
-            },
-        })
-
-        const sessionsAdditionalData = await prisma.former22_session.findMany({
+        const events = await prisma.claro_cursusbundle_session_event.findMany({
             select: {
-                sessionId: true,
-                sessionFormat: true,
-                sessionLocation: true,
+                claro_planned_object: {
+                    select: {
+                        entity_name: true,
+                    },
+                },
+                claro_cursusbundle_course_session: {
+                    select: {
+                        price: true,
+                        quota_days: true,
+                        used_by_quotas: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        hidden: true,
+                        former22_session: {
+                            select: {
+                                sessionFormat: true,
+                                sessionLocation: true,
+                            },
+                        },
+                    },
+                },
             },
         })
 
-        const seances = seancesPrisma?.reduce((acc, seance) => {
-            if (seance) {
-                const sessionData = sessionsAdditionalData.find(
-                    ({ sessionId }) => sessionId === seance.claro_cursusbundle_course_session.uuid
-                )
-
-                const formatedSeance = {
-                    id: seance.uuid,
-                    name: seance.claro_planned_object.entity_name,
-                    code: seance.code,
-                    duration: seance.claro_cursusbundle_course_session.quota_days,
-                    price: seance.claro_cursusbundle_course_session.price,
-                    quotaDays: seance.claro_cursusbundle_course_session.quota_days,
-                    isUsedForQuota: seance.claro_cursusbundle_course_session.used_by_quotas,
-                    creationDate: seance.claro_cursusbundle_course_session.createdAt,
-                    lastModifiedDate: seance.claro_cursusbundle_course_session.updatedAt,
-                    hidden: seance.claro_cursusbundle_course_session.hidden,
-                    sessionFormat: sessionData?.sessionFormat,
-                    sessionLocation: sessionData?.sessionLocation,
-                }
-
-                return [...acc, formatedSeance]
-            } else {
-                return [...acc]
-            }
-        }, [])
-
-        res.json(seances ?? 'Aucunes session trouvées')
+        res.json(
+            events.map((event) => ({
+                id: event.uuid,
+                name: event.claro_planned_object.entity_name,
+                code: event.code,
+                duration: event.claro_cursusbundle_course_session.quota_days,
+                price: event.claro_cursusbundle_course_session.price,
+                quotaDays: event.claro_cursusbundle_course_session.quota_days,
+                isUsedForQuota: event.claro_cursusbundle_course_session.used_by_quotas,
+                creationDate: event.claro_cursusbundle_course_session.createdAt,
+                lastModifiedDate: event.claro_cursusbundle_course_session.updatedAt,
+                hidden: event.claro_cursusbundle_course_session.hidden,
+                ...event.claro_cursusbundle_course_session.former22_session,
+            })) ?? 'Aucunes session trouvées'
+        )
     },
     null,
     sessionsRouter
@@ -284,10 +284,18 @@ createService(
         const { sessionId } = req.params
         const { onlyUpdate, ...payload } = req.body
 
-        await prisma.former22_session.upsert({
-            where: { sessionId },
-            update: { ...payload },
-            create: { sessionId, ...payload },
+        await prisma.claro_cursusbundle_course_session.update({
+            where: {
+                uuid: sessionId,
+            },
+            data: {
+                former22_session: {
+                    upsert: {
+                        update: payload,
+                        create: payload,
+                    },
+                },
+            },
         })
 
         if (onlyUpdate) {
