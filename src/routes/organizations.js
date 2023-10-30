@@ -57,7 +57,7 @@ createService(
             organizations.map((o) => ({
                 uuid: o.uuid,
                 name: o.name,
-                clientNumber: o.former22_organization.clientNumber,
+                clientNumber: o.former22_organization?.clientNumber || '',
             }))
         )
     },
