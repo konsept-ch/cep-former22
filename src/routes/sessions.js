@@ -208,8 +208,8 @@ createService(
                                     registrationType: registration_type,
                                     hrValidationStatus: status,
                                     isHrValidationEnabled:
-                                        claro_user.user_organization?.claro__organization[0]
-                                            ?.claro_cursusbundle_quota != null,
+                                        claro_user.user_organization[0].claro__organization?.claro_cursusbundle_quota !=
+                                        null,
                                 }),
                             }) !== STATUSES.REFUSEE_PAR_RH
                     ),
