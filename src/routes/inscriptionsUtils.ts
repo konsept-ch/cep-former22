@@ -77,7 +77,7 @@ export const transformFlagsToStatus = ({
     if (registrationType === REGISTRATION_TYPES.CANCELLATION) {
         return STATUSES.ANNULEE_NON_FACTURABLE
     } else if (!validated) {
-        return STATUSES.REFUSEE_PAR_RH
+        return STATUSES.ENTREE_WEB
     } else if (isHrValidationEnabled) {
         if (hrValidationStatus === 1) {
             return STATUSES.REFUSEE_PAR_RH

@@ -189,7 +189,6 @@ createService(
                                 uuid: true,
                                 course_name: true,
                                 session_days: true,
-                                session_hours: true,
                             },
                         },
                         claro_cursusbundle_course_session_user: {
@@ -265,12 +264,7 @@ createService(
         const {
             course_name: sessionName,
             price: sessionPrice,
-            claro_cursusbundle_course: {
-                uuid: courseUuid,
-                course_name: courseName,
-                session_days: courseDurationDays,
-                session_hours: courseDurationHours,
-            },
+            claro_cursusbundle_course: { uuid: courseUuid, course_name: courseName, session_days: courseDurationDays },
             claro_cursusbundle_course_session_user: tutors,
             claro_cursusbundle_session_event: sessionDates,
         } = session
@@ -434,7 +428,7 @@ createService(
                     },
                 })
 
-                const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
+                const courseDurationText = getDurationText({ days: courseDurationDays })
 
                 doc.render({
                     PARTICIPANT_NOM: `${user.first_name} ${user.last_name}`,
