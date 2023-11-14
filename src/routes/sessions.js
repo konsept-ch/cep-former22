@@ -50,6 +50,7 @@ createService(
         })
         const coursesAdditionalData = await prisma.former22_course.findMany({
             select: {
+                courseId: true,
                 codeCategory: true,
             },
             where: {
