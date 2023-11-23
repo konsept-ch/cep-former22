@@ -158,13 +158,21 @@ export const getLogDescriptions = {
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
-export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; sessionId?: string }) => {
+export const fetchSessionsLessons = async ({
+    req,
+    sessionId,
+    list,
+}: {
+    req: Request
+    sessionId?: string
+    list: any
+}) => {
     if (typeof sessionId !== 'undefined') {
         const lessons = await callApi({ req, path: `cursus_session/${sessionId}/events` })
 
         return lessons
     } else {
-        const sessions = (await callApi({ req, path: 'cursus_session' })) as { id: string }[]
+        const sessions = (list || (await callApi({ req, path: 'cursus_session' }))) as { id: string }[]
 
         if (typeof sessions !== 'undefined') {
             const lessonsToFetch = sessions.map((session) =>
