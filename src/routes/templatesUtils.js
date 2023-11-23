@@ -92,7 +92,7 @@ export const getTemplatePreviews = async ({ req, templateId, sessionId, inscript
 
     const currentSession = sessions.find(({ id }) => id === sessionId)
 
-    const sessionLessons = await fetchSessionsLessons({ req, sessionId })
+    const sessionLessons = await fetchSessionsLessons({ req, sessionId, list: sessions })
 
     const inscriptions = await fetchInscriptionsWithStatuses()
 
