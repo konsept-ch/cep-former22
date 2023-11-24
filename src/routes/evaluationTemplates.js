@@ -15,11 +15,23 @@ createService(
                 uuid: true,
                 title: true,
                 description: true,
+                category: true,
                 struct: true,
             },
         })
 
-        res.json(evaluations ?? "Les évaluations n'ont pas été trouvés")
+        res.json(
+            evaluations.map((e) => ({
+                uuid: e.uuid,
+                title: e.title,
+                description: e.description,
+                category: [
+                    { label: 'CEP', value: 0 },
+                    { label: 'INTER', value: 1 },
+                ][e.category],
+                struct: e.struct,
+            })) ?? "Les évaluations n'ont pas été trouvés"
+        )
     },
     null,
     evaluationTemplatesRouter
@@ -59,7 +71,7 @@ createService(
     '/:uuid',
     async (req, res) => {
         const { uuid } = req.params
-        const { title, description, struct } = req.body
+        const { title, description, category, struct } = req.body
 
         try {
             await prisma.former22_evaluation_template.update({
@@ -69,6 +81,7 @@ createService(
                 data: {
                     title,
                     description,
+                    category,
                     struct,
                 },
             })

@@ -286,6 +286,7 @@ model claro_activity_evaluation {
   details                   String?                   @db.LongText
   claro_activity_parameters claro_activity_parameters @relation(fields: [activity_parameters_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F75EC869896F55DB")
   claro_user                claro_user                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_F75EC869A76ED395")
+  claro_log                 claro_log?                @relation(fields: [log_id], references: [id], onUpdate: NoAction, map: "FK_F75EC869EA675D86")
 
   @@unique([user_id, activity_parameters_id], map: "user_activity_unique_evaluation")
   @@index([activity_parameters_id], map: "IDX_F75EC869896F55DB")
@@ -326,6 +327,7 @@ model claro_activity_past_evaluation {
   details                   String?                    @db.LongText
   claro_activity_parameters claro_activity_parameters? @relation(fields: [activity_parameters_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182896F55DB")
   claro_user                claro_user?                @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182A76ED395")
+  claro_log                 claro_log?                 @relation(fields: [log_id], references: [id], onUpdate: NoAction, map: "FK_F1A76182EA675D86")
 
   @@index([activity_parameters_id], map: "IDX_F1A76182896F55DB")
   @@index([user_id], map: "IDX_F1A76182A76ED395")
@@ -1885,6 +1887,7 @@ model claro_group {
   claro_cursusbundle_cursus_group         claro_cursusbundle_cursus_group[]
   claro_cursusbundle_session_event_group  claro_cursusbundle_session_event_group[]
   claro_group_role                        claro_group_role[]
+  claro_log                               claro_log[]
   claro_scheduled_task                    claro_scheduled_task[]
   claro_user_group                        claro_user_group[]
   group_location                          group_location[]
@@ -2553,6 +2556,7 @@ model claro_resource_node {
   claro_dropzonebundle_dropzone                                                        claro_dropzonebundle_dropzone?
   claro_file                                                                           claro_file?
   claro_forum                                                                          claro_forum?
+  claro_log                                                                            claro_log[]
   claro_log_connect_resource                                                           claro_log_connect_resource[]
   claro_log_functionnal                                                                claro_log_functionnal[]
   claro_resource_comment                                                               claro_resource_comment[]
@@ -2655,6 +2659,7 @@ model claro_resource_type {
   defaultMask                 Int
   is_enabled                  Boolean
   claro_list_type_creation    claro_list_type_creation[]
+  claro_log                   claro_log[]
   claro_menu_action           claro_menu_action[]
   claro_resource_mask_decoder claro_resource_mask_decoder[]
   claro_resource_node         claro_resource_node[]
@@ -2707,6 +2712,7 @@ model claro_role {
   claro_general_facet_preference                                                                  claro_general_facet_preference[]
   claro_group_role                                                                                claro_group_role[]
   claro_home_tab_roles                                                                            claro_home_tab_roles[]
+  claro_log                                                                                       claro_log[]
   claro_panel_facet_role                                                                          claro_panel_facet_role[]
   claro_plannednotificationbundle_planned_notification_role                                       claro_plannednotificationbundle_planned_notification_role[]
   claro_resource_rights                                                                           claro_resource_rights[]
@@ -3318,6 +3324,8 @@ model claro_user {
   claro_forum_user                                                                                                            claro_forum_user[]
   claro_home_tab                                                                                                              claro_home_tab[]
   claro_ip_user                                                                                                               claro_ip_user[]
+  claro_log_claro_log_doer_idToclaro_user                                                                                     claro_log[]                                      @relation("claro_log_doer_idToclaro_user")
+  claro_log_claro_log_receiver_idToclaro_user                                                                                 claro_log[]                                      @relation("claro_log_receiver_idToclaro_user")
   claro_log_connect_admin_tool                                                                                                claro_log_connect_admin_tool[]
   claro_log_connect_platform                                                                                                  claro_log_connect_platform[]
   claro_log_connect_resource                                                                                                  claro_log_connect_resource[]
@@ -3660,6 +3668,7 @@ model claro_workspace {
   claro_cursusbundle_cursus                                                               claro_cursusbundle_cursus[]
   claro_event                                                                             claro_event[]
   claro_home_tab                                                                          claro_home_tab[]
+  claro_log                                                                               claro_log[]
   claro_log_connect_tool                                                                  claro_log_connect_tool[]
   claro_log_connect_workspace                                                             claro_log_connect_workspace[]
   claro_log_functionnal                                                                   claro_log_functionnal[]
@@ -5653,6 +5662,7 @@ model former22_evaluation_template {
   title               String?               @default("Nouveau modèle d'évaluation") @db.VarChar(255)
   description         String?               @db.Text
   struct              Json?
+  category            Int                   @default(0)
   former22_evaluation former22_evaluation[]
 }
 
@@ -5695,11 +5705,53 @@ model former22_invoice_item {
   number                                         String?                                         @db.Text
   claro_cursusbundle_course_session_cancellation claro_cursusbundle_course_session_cancellation? @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_course_session_cancellation")
   claro_cursusbundle_course_session_user         claro_cursusbundle_course_session_user?         @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
-  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
+  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_former22_invoice_item_former22_manual_invoice")
 
   @@index([invoiceId], map: "invoice_index")
   @@index([inscriptionId], map: "inscription_index")
   @@index([cancellationId], map: "cancellation_index")
+}
+
+model claro_log {
+  id                                           Int                              @id @default(autoincrement())
+  doer_id                                      Int?
+  receiver_id                                  Int?
+  receiver_group_id                            Int?
+  workspace_id                                 Int?
+  resource_type_id                             Int?
+  role_id                                      Int?
+  action                                       String                           @db.VarChar(255)
+  date_log                                     DateTime                         @db.DateTime(0)
+  short_date_log                               DateTime                         @db.Date
+  details                                      String?                          @db.LongText
+  doer_type                                    String                           @db.VarChar(255)
+  doer_ip                                      String?                          @db.VarChar(255)
+  doer_session_id                              String?                          @db.VarChar(255)
+  tool_name                                    String?                          @db.VarChar(255)
+  is_displayed_in_admin                        Boolean
+  is_displayed_in_workspace                    Boolean
+  other_element_id                             Int?
+  resourceNode_id                              Int?
+  claro_activity_evaluation                    claro_activity_evaluation[]
+  claro_activity_past_evaluation               claro_activity_past_evaluation[]
+  claro_user_claro_log_doer_idToclaro_user     claro_user?                      @relation("claro_log_doer_idToclaro_user", fields: [doer_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F12D3860F")
+  claro_workspace                              claro_workspace?                 @relation(fields: [workspace_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F82D40A1F")
+  claro_resource_type                          claro_resource_type?             @relation(fields: [resource_type_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91F98EC6B7B")
+  claro_resource_node                          claro_resource_node?             @relation(fields: [resourceNode_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FB87FAB32")
+  claro_group                                  claro_group?                     @relation(fields: [receiver_group_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FC6F122B2")
+  claro_user_claro_log_receiver_idToclaro_user claro_user?                      @relation("claro_log_receiver_idToclaro_user", fields: [receiver_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FCD53EDB6")
+  claro_role                                   claro_role?                      @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_97FAB91FD60322AC")
+
+  @@index([doer_id], map: "IDX_97FAB91F12D3860F")
+  @@index([workspace_id], map: "IDX_97FAB91F82D40A1F")
+  @@index([resource_type_id], map: "IDX_97FAB91F98EC6B7B")
+  @@index([resourceNode_id], map: "IDX_97FAB91FB87FAB32")
+  @@index([receiver_group_id], map: "IDX_97FAB91FC6F122B2")
+  @@index([receiver_id], map: "IDX_97FAB91FCD53EDB6")
+  @@index([role_id], map: "IDX_97FAB91FD60322AC")
+  @@index([action], map: "action_idx")
+  @@index([doer_type], map: "doer_type_idx")
+  @@index([tool_name], map: "tool_idx")
 }
 
 enum former22_manual_invoice_reason {
