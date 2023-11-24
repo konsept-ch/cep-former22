@@ -1,6 +1,6 @@
 import { prisma } from '..'
 import { callApi } from '../callApi'
-import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress } from '../utils'
+import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress1 } from '../utils'
 import { fetchInscriptionsWithStatuses } from './inscriptionsUtils'
 
 const formatSessionLessons = ({ sessionLessons }) => {
@@ -88,11 +88,9 @@ export const getTemplatePreviews = async ({ req, templateId, sessionId, inscript
         where: { templateId },
     })
 
-    const sessions = await callApi({ req, path: 'cursus_session' })
+    const currentSession = await callApi({ req, path: `cursus_session/${sessionId}` })
 
-    const currentSession = sessions.find(({ id }) => id === sessionId)
-
-    const sessionLessons = await fetchSessionsLessons({ req, sessionId, list: sessions })
+    const sessionLessons = await fetchSessionsLessons({ req, sessionId })
 
     const inscriptions = await fetchInscriptionsWithStatuses()
 
@@ -120,7 +118,7 @@ export const getTemplatePreviews = async ({ req, templateId, sessionId, inscript
         userFullName: `${currentInscription.user.firstName} ${currentInscription.user.lastName}`,
         sessionName: currentSession.name,
         startDate: formatDate({ dateString: currentSession.restrictions.dates[0], isDateVisible: true }),
-        location: getSessionAddress({ sessions, wantedSessionId: sessionId }),
+        location: getSessionAddress1(currentSession),
         lessons: formatSessionLessons({ sessionLessons }),
         inscriptionDate: formatDate({ dateObject: currentInscription.inscriptionDate, isDateVisible: true }),
         civility: userCivility,
