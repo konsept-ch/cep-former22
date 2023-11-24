@@ -158,21 +158,13 @@ export const getLogDescriptions = {
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
-export const fetchSessionsLessons = async ({
-    req,
-    sessionId,
-    list,
-}: {
-    req: Request
-    sessionId?: string
-    list: any
-}) => {
+export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; sessionId?: string }) => {
     if (typeof sessionId !== 'undefined') {
         const lessons = await callApi({ req, path: `cursus_session/${sessionId}/events` })
 
         return lessons
     } else {
-        const sessions = (list || (await callApi({ req, path: 'cursus_session' }))) as { id: string }[]
+        const sessions = (await callApi({ req, path: 'cursus_session' })) as { id: string }[]
 
         if (typeof sessions !== 'undefined') {
             const lessonsToFetch = sessions.map((session) =>
@@ -208,6 +200,20 @@ export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any
     const location = sessionAddressArray.filter(Boolean).join('<br/>')
 
     return location
+}
+
+export const getSessionAddress1 = (session: any) => {
+    const location = session.location
+    const address = location?.address
+    return [
+        location?.name,
+        address?.street1,
+        address?.street2,
+        [address?.postalCode, address?.state].filter(Boolean).join(' '),
+        [address?.city, address?.country].filter(Boolean).join(', '),
+    ]
+        .filter(Boolean)
+        .join('<br/>')
 }
 
 export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate: Date }) =>
