@@ -1,22 +1,5 @@
 import { prisma } from '..'
-import { callApi } from '../callApi'
-import { fetchSessionsLessons, formatDate, formatTime, getSessionAddress1 } from '../utils'
-import { fetchInscriptionsWithStatuses } from './inscriptionsUtils'
-
-const formatSessionLessons = ({ sessionLessons }) => {
-    // TODO add another format for multiday lessons :
-    // 15.12.2022 13h30 - 16.12.2022 15h30
-    const lessonsResume = sessionLessons.map(({ start, end }) =>
-        [
-            formatDate({ dateString: start, isDateVisible: true }),
-            [formatTime({ dateString: start }), formatTime({ dateString: end })].join('-'),
-        ].join(', ')
-    )
-
-    const lessons = `<code>${lessonsResume.join('<br/>')}</code>`
-
-    return lessons
-}
+import { formatDate, formatTime, getSessionAddress1 } from '../utils'
 
 export const draftVariables = {
     PARTICIPANT_NOM: '[PARTICIPANT_NOM]',
@@ -83,45 +66,92 @@ export const serializeStatuses = (statusesArray) => statusesArray.map(({ value }
 export const deserializeStatuses = (statusesString) =>
     statusesString.split(', ').map((status) => ({ value: status, label: status }))
 
-export const getTemplatePreviews = async ({ req, templateId, sessionId, inscriptionId, evaluationLink }) => {
+export const getTemplatePreviews = async ({ templateId, sessionId, inscriptionId, evaluationLink }) => {
     const template = await prisma.former22_template.findUnique({
         where: { templateId },
     })
 
-    const currentSession = await callApi({ req, path: `cursus_session/${sessionId}` })
+    const currentSession = await prisma.claro_cursusbundle_course_session.findUnique({
+        select: {
+            course_name: true,
+            start_date: true,
+            claro__location: {
+                select: {
+                    name: true,
+                    address_street1: true,
+                    address_street2: true,
+                    address_postal_code: true,
+                    address_city: true,
+                    address_state: true,
+                    address_country: true,
+                },
+            },
+            claro_cursusbundle_session_event: {
+                select: {
+                    claro_planned_object: {
+                        select: {
+                            start_date: true,
+                            end_date: true,
+                        },
+                    },
+                },
+            },
+        },
+        where: {
+            uuid: sessionId,
+        },
+    })
 
-    const sessionLessons = await fetchSessionsLessons({ req, sessionId })
-
-    const inscriptions = await fetchInscriptionsWithStatuses()
-
-    const currentInscription = inscriptions.find(({ id }) => id === inscriptionId)
-
-    const userData = await callApi({ req, path: `profile/${currentInscription.user.username}` })
-
-    let userCivility = '(Civilité non défini)'
-
-    if (userData.user.profile) {
-        userData.facets.forEach(({ sections }) =>
-            sections.forEach(({ fields }) =>
-                fields.forEach(({ name, id }) => {
-                    if (name.includes('civilit')) {
-                        if (userData.user.profile[id]) {
-                            userCivility = userData.user.profile[id]
-                        }
-                    }
-                })
-            )
-        )
+    const query = {
+        select: {
+            registration_date: true,
+            claro_user: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    username: true,
+                    claro_field_facet_value: {
+                        select: {
+                            field_value: true,
+                        },
+                        where: {
+                            claro_field_facet: {
+                                is: {
+                                    name: {
+                                        startsWith: 'Civilit',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        where: {
+            uuid: inscriptionId,
+        },
     }
+    const currentInscription =
+        (await prisma.claro_cursusbundle_course_session_user.findUnique(query)) ||
+        (await prisma.claro_cursusbundle_course_session_cancellation.findUnique(query))
 
     return replacePlaceholders({
-        userFullName: `${currentInscription.user.firstName} ${currentInscription.user.lastName}`,
-        sessionName: currentSession.name,
-        startDate: formatDate({ dateString: currentSession.restrictions.dates[0], isDateVisible: true }),
+        userFullName: `${currentInscription.claro_user.first_name} ${currentInscription.claro_user.last_name}`,
+        sessionName: currentSession.course_name,
+        startDate: formatDate({ dateString: currentSession.start_date, isDateVisible: true }),
         location: getSessionAddress1(currentSession),
-        lessons: formatSessionLessons({ sessionLessons }),
-        inscriptionDate: formatDate({ dateObject: currentInscription.inscriptionDate, isDateVisible: true }),
-        civility: userCivility,
+        lessons: `<code>${currentSession.claro_cursusbundle_session_event
+            .map((e) => [
+                formatDate({ dateString: e.claro_planned_object.start_date, isDateVisible: true }),
+                [
+                    formatTime({ dateString: new Date(e.claro_planned_object.start_date).toISOString() }),
+                    formatTime({ dateString: new Date(e.claro_planned_object.end_date).toISOString() }),
+                ].join('-'),
+            ])
+            .join(',<br/>')}</code>`,
+        inscriptionDate: formatDate({ dateObject: currentInscription.registration_date, isDateVisible: true }),
+        civility: currentInscription.claro_user.claro_field_facet_value?.field_value || '(Civilité non défini)',
         evaluationLink,
         template,
     })
