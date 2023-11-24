@@ -1,5 +1,25 @@
+import { DateTime } from 'luxon'
 import { prisma } from '..'
-import { formatDate, formatTime, getSessionAddress1 } from '../utils'
+import { formatDate } from '../utils'
+
+const getSessionAddress = (session) => {
+    const location = session.claro__location
+    return [
+        location?.name,
+        location?.address_street1,
+        location?.address_street2,
+        [location?.address_postal_code, location?.address_state].filter(Boolean).join(' '),
+        [location?.address_city, location?.address_country].filter(Boolean).join(', '),
+    ]
+        .filter(Boolean)
+        .join('<br/>')
+}
+
+const formatTime = (dateString) =>
+    DateTime.fromISO(new Date(dateString).toISOString(), { zone: 'UTC' })
+        .setZone('Europe/Zurich')
+        .setLocale('fr')
+        .toLocaleString(DateTime.TIME_SIMPLE)
 
 export const draftVariables = {
     PARTICIPANT_NOM: '[PARTICIPANT_NOM]',
@@ -140,14 +160,11 @@ export const getTemplatePreviews = async ({ templateId, sessionId, inscriptionId
         userFullName: `${currentInscription.claro_user.first_name} ${currentInscription.claro_user.last_name}`,
         sessionName: currentSession.course_name,
         startDate: formatDate({ dateString: currentSession.start_date, isDateVisible: true }),
-        location: getSessionAddress1(currentSession),
+        location: getSessionAddress(currentSession),
         lessons: `<code>${currentSession.claro_cursusbundle_session_event
             .map((e) => [
                 formatDate({ dateString: e.claro_planned_object.start_date, isDateVisible: true }),
-                [
-                    formatTime({ dateString: new Date(e.claro_planned_object.start_date).toISOString() }),
-                    formatTime({ dateString: new Date(e.claro_planned_object.end_date).toISOString() }),
-                ].join('-'),
+                [formatTime(e.claro_planned_object.start_date), formatTime(e.claro_planned_object.end_date)].join('-'),
             ])
             .join(',<br/>')}</code>`,
         inscriptionDate: formatDate({ dateObject: currentInscription.registration_date, isDateVisible: true }),

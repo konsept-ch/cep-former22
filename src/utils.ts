@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid'
-import { DateTime } from 'luxon'
 
 import { app, prisma } from '.'
 import { callApi } from './callApi'
@@ -36,12 +35,6 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
 
     return [getDate(), getTime()].filter(Boolean).join(', ')
 }
-
-export const formatTime = ({ dateString }: { dateString: string }) =>
-    DateTime.fromISO(dateString, { zone: 'UTC' })
-        .setZone('Europe/Zurich')
-        .setLocale('fr')
-        .toLocaleString(DateTime.TIME_SIMPLE)
 
 export const LOG_STATUSES = {
     PENDING: 'Pending',
@@ -158,68 +151,8 @@ export const getLogDescriptions = {
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
-export const fetchSessionsLessons = async ({ req, sessionId }: { req: Request; sessionId?: string }) => {
-    if (typeof sessionId !== 'undefined') {
-        const lessons = await callApi({ req, path: `cursus_session/${sessionId}/events` })
-
-        return lessons
-    } else {
-        const sessions = (await callApi({ req, path: 'cursus_session' })) as { id: string }[]
-
-        if (typeof sessions !== 'undefined') {
-            const lessonsToFetch = sessions.map((session) =>
-                (async () => {
-                    const lessons = await callApi({ req, path: `cursus_session/${session.id}/events` })
-
-                    return { [session.id]: lessons }
-                })()
-            )
-
-            const fetchedLessons = (await Promise.allSettled(lessonsToFetch)) as { value: any }[]
-
-            return fetchedLessons.flatMap(({ value }) => value)
-        } else {
-            return []
-        }
-    }
-}
-
-export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any[]; wantedSessionId: string }) => {
-    const currentSessionData = sessions.find(({ id }) => wantedSessionId === id)
-    const sessionLocation = currentSessionData.location
-    const sessionAddress = sessionLocation?.address
-
-    const sessionAddressArray = [
-        sessionLocation?.name,
-        sessionAddress?.street1,
-        sessionAddress?.street2,
-        [sessionAddress?.postalCode, sessionAddress?.state].filter(Boolean).join(' '),
-        [sessionAddress?.city, sessionAddress?.country].filter(Boolean).join(', '),
-    ]
-
-    const location = sessionAddressArray.filter(Boolean).join('<br/>')
-
-    return location
-}
-
-export const getSessionAddress1 = (session: any) => {
-    const location = session.claro__location
-    return [
-        location?.name,
-        location?.address_street1,
-        location?.address_street2,
-        [location?.address_postal_code, location?.address_state].filter(Boolean).join(' '),
-        [location?.address_city, location?.address_country].filter(Boolean).join(', '),
-    ]
-        .filter(Boolean)
-        .join('<br/>')
-}
-
 export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate: Date }) =>
     new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
-
-export const hasAllProperties = (object: object, properties: string[]) =>
-    properties.every((property) => Object.hasOwn(object, property))
 
 export const checkAuth = async ({ email, code, token }: { email: string; code: string; token: string }) => {
     const authPair = await prisma.former22_auth_codes.findUnique({
@@ -292,7 +225,11 @@ export const mapStatusToValidationType = {
 export type ValidationTypesKeys = keyof typeof mapStatusToValidationType
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    if (!hasAllProperties(req.headers, ['x-login-email-address', 'x-login-email-code', 'x-login-token'])) {
+    if (
+        !['x-login-email-address', 'x-login-email-code', 'x-login-token'].every((property) =>
+            Object.hasOwn(req.headers, property)
+        )
+    ) {
         res.status(401).send({ error: "Vous n'avez pas les droits nécessaires" })
         return
     }
