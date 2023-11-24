@@ -13,7 +13,7 @@ createService(
     async (req, res) => {
         const { templateId, sessionId, inscriptionId } = req.query
 
-        const previews = await getTemplatePreviews({ req, templateId, sessionId, inscriptionId })
+        const previews = await getTemplatePreviews({ templateId, sessionId, inscriptionId })
 
         res.json(previews ?? "Les espaces réservés n'ont pas été trouvés")
     },

@@ -389,7 +389,6 @@ createService(
                     } = learner
 
                     const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                        req,
                         templateId: templateForSessionInvites.templateId,
                         sessionId,
                         inscriptionId: learnerId,
