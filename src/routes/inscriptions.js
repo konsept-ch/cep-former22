@@ -314,7 +314,6 @@ createService(
         if (typeof currentInscription !== 'undefined') {
             if (emailTemplateId) {
                 const { emailContent, emailSubject, smsContent } = await getTemplatePreviews({
-                    req,
                     templateId: emailTemplateId,
                     sessionId: session.uuid,
                     inscriptionId: currentInscription.uuid,

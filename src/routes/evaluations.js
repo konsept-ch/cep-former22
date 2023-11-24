@@ -422,7 +422,6 @@ createService(
         await Promise.allSettled(
             sessionUsers.map(async (sessionUser) => {
                 const { emailContent, emailSubject } = await getTemplatePreviews({
-                    req,
                     templateId: req.body.email,
                     sessionId: req.body.session,
                     inscriptionId: sessionUser.uuid,

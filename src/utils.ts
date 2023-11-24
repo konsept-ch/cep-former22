@@ -203,14 +203,13 @@ export const getSessionAddress = ({ sessions, wantedSessionId }: { sessions: any
 }
 
 export const getSessionAddress1 = (session: any) => {
-    const location = session.location
-    const address = location?.address
+    const location = session.claro__location
     return [
         location?.name,
-        address?.street1,
-        address?.street2,
-        [address?.postalCode, address?.state].filter(Boolean).join(' '),
-        [address?.city, address?.country].filter(Boolean).join(', '),
+        location?.address_street1,
+        location?.address_street2,
+        [location?.address_postal_code, location?.address_state].filter(Boolean).join(' '),
+        [location?.address_city, location?.address_country].filter(Boolean).join(', '),
     ]
         .filter(Boolean)
         .join('<br/>')
