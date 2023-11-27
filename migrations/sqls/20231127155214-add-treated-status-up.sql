@@ -6,5 +6,6 @@ ALTER TABLE
         'Non transmissible',
         'Annulée',
         'Envoyée',
+        'Quotas',
 		'Traitée'
     ) NOT NULL COMMENT 'invoice status';

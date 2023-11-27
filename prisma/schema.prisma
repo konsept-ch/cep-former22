@@ -5775,5 +5775,6 @@ enum former22_manual_invoice_status {
   Non_transmissible @map("Non transmissible")
   Annul_e           @map("Annulée")
   Envoy_e           @map("Envoyée")
+  Quotas
   Trait_e           @map("Traitée")
 }
