@@ -5761,19 +5761,19 @@ enum former22_manual_invoice_reason {
   Non_participation @map("Non-participation")
 }
 
-enum former22_manual_invoice_status {
-  En_pr_paration    @map("En préparation")
-  A_traiter         @map("A traiter")
-  Export_e          @map("Exportée")
-  Annul_e           @map("Annulée")
-  Envoy_e           @map("Envoyée")
-  Non_transmissible @map("Non transmissible")
-  Quotas
-}
-
 enum former22_manual_invoice_invoiceType {
   Manuelle
   Directe
   Group_e  @map("Groupée")
   Quota
+}
+
+enum former22_manual_invoice_status {
+  En_pr_paration    @map("En préparation")
+  A_traiter         @map("A traiter")
+  Export_e          @map("Exportée")
+  Non_transmissible @map("Non transmissible")
+  Annul_e           @map("Annulée")
+  Envoy_e           @map("Envoyée")
+  Trait_e           @map("Traitée")
 }
