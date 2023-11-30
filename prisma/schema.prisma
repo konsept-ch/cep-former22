@@ -3396,6 +3396,7 @@ model claro_user {
   icap__wiki_contribution                                                                                                     icap__wiki_contribution[]
   icap__wiki_section                                                                                                          icap__wiki_section[]
   innova_path_progression                                                                                                     innova_path_progression[]
+  ujm_paper                                                                                                                   ujm_paper[]
   ujm_question                                                                                                                ujm_question[]
   ujm_share                                                                                                                   ujm_share[]
   user_location                                                                                                               user_location[]
@@ -4837,6 +4838,7 @@ model ujm_exercise {
   endStats                 String               @db.VarChar(255)
   overviewStats            String               @db.VarChar(255)
   claro_resource_node      claro_resource_node? @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_374DF525B87FAB32")
+  ujm_paper                ujm_paper[]
   ujm_step                 ujm_step[]
 }
 
@@ -5187,16 +5189,17 @@ model ujm_question_resource {
 }
 
 model ujm_response {
-  id          Int     @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   paper_id    Int?
-  ip          String  @db.VarChar(255)
+  ip          String     @db.VarChar(255)
   mark        Float?
-  feedback    String? @db.LongText
+  feedback    String?    @db.LongText
   nb_tries    Int
-  response    String? @db.LongText
-  used_hints  String? @db.LongText
-  question_id String  @db.VarChar(36)
-  uuid        String  @unique(map: "UNIQ_A7EC2BC2D17F50A6") @db.VarChar(36)
+  response    String?    @db.LongText
+  used_hints  String?    @db.LongText
+  question_id String     @db.VarChar(36)
+  uuid        String     @unique(map: "UNIQ_A7EC2BC2D17F50A6") @db.VarChar(36)
+  ujm_paper   ujm_paper? @relation(fields: [paper_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A7EC2BC2E6758861")
 
   @@index([paper_id], map: "IDX_A7EC2BC2E6758861")
 }
@@ -5640,6 +5643,8 @@ model former22_contract {
   courseId                   String                     @db.VarChar(36)
   templateId                 Int
   year                       Int
+  user_id                    Int
+  course_id                  Int
   former22_contract_template former22_contract_template @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contract_template")
 
   @@index([templateId], map: "fk_contract_template")
@@ -5706,7 +5711,7 @@ model former22_invoice_item {
   number                                         String?                                         @db.Text
   claro_cursusbundle_course_session_cancellation claro_cursusbundle_course_session_cancellation? @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_course_session_cancellation")
   claro_cursusbundle_course_session_user         claro_cursusbundle_course_session_user?         @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
-  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "FK_former22_invoice_item_former22_manual_invoice")
+  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
 
   @@index([invoiceId], map: "invoice_index")
   @@index([inscriptionId], map: "inscription_index")
@@ -5762,6 +5767,28 @@ model former22_tutor {
   claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tutor_inscription")
 
   @@index([inscriptionId], map: "tutor_inscription")
+}
+
+model ujm_paper {
+  id             Int            @id @default(autoincrement())
+  user_id        Int?
+  exercise_id    Int?
+  num_paper      Int
+  start          DateTime       @db.DateTime(0)
+  end            DateTime?      @db.DateTime(0)
+  ordre_question String?        @db.LongText
+  interupt       Boolean?
+  score          Float?
+  total          Float?
+  anonymous      Boolean?
+  invalidated    Boolean
+  uuid           String         @unique(map: "UNIQ_82972E4BD17F50A6") @db.VarChar(36)
+  claro_user     claro_user?    @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_82972E4BA76ED395")
+  ujm_exercise   ujm_exercise?  @relation(fields: [exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_82972E4BE934951A")
+  ujm_response   ujm_response[]
+
+  @@index([user_id], map: "IDX_82972E4BA76ED395")
+  @@index([exercise_id], map: "IDX_82972E4BE934951A")
 }
 
 enum former22_manual_invoice_reason {

@@ -19,6 +19,7 @@
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
+    "foreignkey:contracts": "node ./scripts/contracts.js",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",
     "schema": "prisma db pull && prisma generate",
