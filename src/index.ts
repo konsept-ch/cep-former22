@@ -30,6 +30,7 @@ import { templatesRouter } from './routes/templates'
 import { usersRouter } from './routes/users'
 import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
+import { tutorsRouter } from './routes/tutors'
 import { authMiddleware } from './utils'
 
 const { PrismaClient } = prismaClientPkg
@@ -124,3 +125,4 @@ app.use('/sessions', sessionsRouter)
 app.use('/templates', templatesRouter)
 app.use('/users', usersRouter)
 app.use('/contracts', contractsRouter)
+app.use('/tutors', tutorsRouter)
