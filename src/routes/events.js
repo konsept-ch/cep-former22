@@ -128,14 +128,9 @@ createService(
                     contract: contract?.uuid || null,
                 }
             })
+            if (result < 0) res.status(500).json('Erreur')
 
-            if (result.length > 0) {
-                res.json(result)
-            } else if (result === -1) {
-                res.status(500).json('Erreur')
-            } else {
-                res.json('Aucune inscription trouvée')
-            }
+            res.json(result)
         } catch (error) {
             console.error(error)
             return -1
