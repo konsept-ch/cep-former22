@@ -145,13 +145,19 @@ createService(
     'put',
     '/:eventId',
     async (req, res) => {
-        const eventId = req.params.eventId
-
         try {
-            await prisma.former22_event.upsert({
-                where: { eventId },
-                update: { ...req.body },
-                create: { eventId, ...req.body },
+            await prisma.claro_cursusbundle_session_event.update({
+                data: {
+                    former22_event: {
+                        upsert: {
+                            create: req.body,
+                            update: req.body,
+                        },
+                    },
+                },
+                where: {
+                    uuid: req.params.eventId,
+                },
             })
             res.json(true)
         } catch (error) {

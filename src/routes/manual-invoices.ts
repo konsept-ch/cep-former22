@@ -61,6 +61,7 @@ createService(
         const invoices = await prisma.former22_manual_invoice.findMany({
             select: {
                 uuid: true,
+                number: true,
                 claro_user: {
                     select: {
                         uuid: true,

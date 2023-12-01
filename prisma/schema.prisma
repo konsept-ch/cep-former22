@@ -5522,6 +5522,7 @@ model former22_attestation {
 model former22_manual_invoice {
   id                                                            Int                                 @id @default(autoincrement())
   uuid                                                          String?                             @unique(map: "uuid") @db.VarChar(255)
+  number                                                        String                              @db.VarChar(32)
   organizationId                                                Int
   creatorUserId                                                 Int
   invoiceNumberForCurrentYear                                   Int
