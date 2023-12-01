@@ -71,34 +71,35 @@ export const createInvoice = async ({
             },
         })
 
-    const { id: organizationId } =
-        (await prisma.claro__organization.findUnique({
-            where: {
-                uuid: client.uuid,
-            },
-        })) ?? {}
+    const creator = await prisma.claro_user.findUnique({
+        select: {
+            uuid: true,
+        },
+        where: {
+            mail: typeof cfEmail === 'string' ? cfEmail : cfEmail?.join(),
+        },
+    })
 
-    const { id: creatorUserId } =
-        (await prisma.claro_user.findUnique({
-            where: {
-                mail: typeof cfEmail === 'string' ? cfEmail : cfEmail?.join(),
-            },
-        })) ?? {}
+    const cf = await prisma.former22_user.findUnique({
+        select: {
+            cfNumber: true,
+        },
+        where: {
+            userId: creator?.uuid,
+        },
+    })
 
-    const { id: selectedUserId } =
-        (selectedUserUuid != null
-            ? await prisma.claro_user.findUnique({
-                  where: {
-                      uuid: selectedUserUuid,
-                  },
-              })
-            : undefined) ?? {}
+    const invoiceNumberForCurrentYear = invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1
 
     // TODO handle foreign keys from uuid to id
     const { uuid } = await prisma.former22_manual_invoice.create({
         data: {
             uuid: uuidv4(),
-            invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
+            number: `${`${courseYear}`.slice(-2)}${`${cf?.cfNumber}`.padStart(
+                2,
+                '0'
+            )}${`${invoiceNumberForCurrentYear}`.padStart(4, '0')}`,
+            invoiceNumberForCurrentYear,
             customClientEmail,
             customClientAddress,
             customClientTitle,
@@ -137,19 +138,19 @@ export const createInvoice = async ({
             reason: reason?.value,
             claro_user: {
                 connect: {
-                    id: creatorUserId,
+                    uuid: creator?.uuid,
                 },
             },
             claro__organization: {
                 connect: {
-                    id: organizationId,
+                    uuid: client.uuid,
                 },
             },
             claro_user_former22_manual_invoice_selectedUserIdToclaro_user:
-                selectedUserId != null
+                selectedUserUuid != null
                     ? {
                           connect: {
-                              id: selectedUserId,
+                              uuid: selectedUserUuid,
                           },
                       }
                     : undefined,
