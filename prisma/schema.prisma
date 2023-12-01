@@ -1315,6 +1315,7 @@ model claro_cursusbundle_session_event {
   claro_cursusbundle_session_event_group   claro_cursusbundle_session_event_group[]
   claro_cursusbundle_session_event_tutors  claro_cursusbundle_session_event_tutors[]
   claro_cursusbundle_session_event_user    claro_cursusbundle_session_event_user[]
+  former22_event                           former22_event?
 
   @@index([session_id], map: "IDX_257C3061613FECDF")
   @@index([presence_template_id], map: "IDX_257C3061D7F5EEA3")
@@ -5621,10 +5622,11 @@ model icap__socialmedia_wall_item {
 }
 
 model former22_event {
-  eventId    String   @id @db.VarChar(255)
-  isFeesPaid Boolean? @default(false)
-  fees       Float?   @default(0) @db.Float
-  event_id   Int
+  id                               Int                              @id @default(autoincrement())
+  isFeesPaid                       Boolean?                         @default(false)
+  fees                             Float?                           @default(0) @db.Float
+  event_id                         Int                              @unique(map: "event_id")
+  claro_cursusbundle_session_event claro_cursusbundle_session_event @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_event")
 }
 
 model former22_contract_template {
