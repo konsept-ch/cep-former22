@@ -20,6 +20,7 @@
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
     "foreignkey:contracts": "node ./scripts/contracts.js",
+    "foreignkey:events": "node ./scripts/events.js",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",
     "schema": "prisma db pull && prisma generate",
