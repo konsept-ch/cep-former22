@@ -5624,6 +5624,7 @@ model former22_event {
   eventId    String   @id @db.VarChar(255)
   isFeesPaid Boolean? @default(false)
   fees       Float?   @default(0) @db.Float
+  event_id   Int
 }
 
 model former22_contract_template {
@@ -5643,8 +5644,6 @@ model former22_contract {
   courseId                   String                     @db.VarChar(36)
   templateId                 Int
   year                       Int
-  user_id                    Int
-  course_id                  Int
   former22_contract_template former22_contract_template @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contract_template")
 
   @@index([templateId], map: "fk_contract_template")
