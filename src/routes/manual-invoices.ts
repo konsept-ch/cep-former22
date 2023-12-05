@@ -664,6 +664,8 @@ createService(
                     : undefined) ?? {}
 
             for (const item of items) {
+                if (!item.inscriptionUuid) continue
+
                 item.inscriptionId = (
                     await prisma.claro_cursusbundle_course_session_user.findUnique({
                         select: {
