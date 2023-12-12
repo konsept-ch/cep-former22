@@ -39,11 +39,24 @@ createService(
                                 start_date: true,
                             },
                         },
+                        former22_event: {
+                            select: {
+                                fees: true,
+                            },
+                        },
                     },
                 },
-                _count: {
+                claro_cursusbundle_course_session_user: {
                     select: {
-                        claro_cursusbundle_course_session_user: true,
+                        id: true,
+                    },
+                    where: {
+                        registration_type: 'learner',
+                        validated: true,
+                        confirmed: true,
+                        claro_user: {
+                            is_removed: false,
+                        },
                     },
                 },
             },
@@ -66,28 +79,6 @@ createService(
                 },
             },
         })
-        const eventsAdditionalData = await prisma.former22_event.findMany({
-            select: {
-                eventId: true,
-                fees: true,
-            },
-            where: {
-                eventId: {
-                    in: sessions.reduce((a, s) => [...a, ...s.claro_cursusbundle_session_event.map((e) => e.uuid)], []),
-                },
-            },
-        })
-
-        /*console.log(
-            new Date(
-                Math.min(
-                    ...sessions[5].claro_cursusbundle_session_event.map(
-                        (e) => new Date(e.claro_planned_object.start_date)
-                    )
-                )
-            )
-        )
-        return*/
 
         const fullSessionsData = sessions.map((session) => {
             const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid)
@@ -105,24 +96,13 @@ createService(
                 code: session.code,
                 hidden: session.hidden,
                 startDate,
-                /*startDate: startDate
-                    ? Intl.DateTimeFormat('fr-CH', {
-                          timeZone: 'Europe/Zurich',
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                      }).format(startDate)
-                    : '',*/
-                fees: session.claro_cursusbundle_session_event.reduce(
-                    (a, e) => a + (eventsAdditionalData.find((d) => d.eventId === e.uuid)?.fees || 0),
-                    0
-                ),
+                fees: session.claro_cursusbundle_session_event.reduce((a, e) => a + (e.former22_event?.fees || 0), 0),
                 created: session.createdAt,
                 updated: session.updatedAt,
                 quotaDays: session.quota_days,
                 isUsedForQuota: session.used_by_quotas,
-                availables: session.max_users - session._count.claro_cursusbundle_course_session_user,
-                occupation: session._count.claro_cursusbundle_course_session_user,
+                availables: session.max_users - session.claro_cursusbundle_course_session_user.length,
+                occupation: session.claro_cursusbundle_course_session_user.length,
                 category: courseAdditionalData?.codeCategory,
                 ...sessionAdditionalData,
             }
