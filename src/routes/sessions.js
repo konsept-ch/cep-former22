@@ -51,6 +51,7 @@ createService(
                         id: true,
                     },
                     where: {
+                        registration_type: 'learner',
                         validated: true,
                         confirmed: true,
                         claro_user: {
