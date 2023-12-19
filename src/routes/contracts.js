@@ -82,54 +82,58 @@ createService(
             })
         }
 
-        const course = await prisma.claro_cursusbundle_course.findFirst({
+        const subscriptions = await prisma.claro_cursusbundle_session_event_user.findMany({
             select: {
-                course_name: true,
-                claro_cursusbundle_course_session: {
+                claro_cursusbundle_session_event: {
                     select: {
-                        course_name: true,
-                        code: true,
-                        claro_cursusbundle_session_event: {
+                        claro_planned_object: {
                             select: {
-                                uuid: true,
-                                claro_planned_object: {
+                                start_date: true,
+                                end_date: true,
+                                claro__location: {
                                     select: {
-                                        start_date: true,
-                                        end_date: true,
-                                        claro__location: {
-                                            select: {
-                                                name: true,
-                                            },
-                                        },
+                                        name: true,
                                     },
                                 },
-                                former22_event: {
-                                    select: {
-                                        fees: true,
-                                    },
-                                },
+                            },
+                        },
+                        claro_cursusbundle_course_session: {
+                            select: {
+                                code: true,
+                            },
+                        },
+                        former22_event: {
+                            select: {
+                                fees: true,
                             },
                         },
                     },
                 },
             },
             where: {
-                uuid: courseId,
-                claro_cursusbundle_course_session: {
-                    some: {
+                claro_user: {
+                    uuid: userId,
+                },
+                claro_cursusbundle_session_event: {
+                    claro_cursusbundle_course_session: {
                         start_date: {
                             gte: new Date(`${year}-01-01 00:00:00`),
                             lt: new Date(`${year + 1}-01-01 00:00:00`),
                         },
-                        claro_cursusbundle_course_session_user: {
-                            some: {
-                                claro_user: {
-                                    uuid: userId,
-                                },
-                            },
+                        claro_cursusbundle_course: {
+                            uuid: courseId,
                         },
                     },
                 },
+            },
+        })
+
+        const course = await prisma.claro_cursusbundle_course.findUnique({
+            select: {
+                course_name: true,
+            },
+            where: {
+                uuid: courseId,
             },
         })
 
@@ -171,12 +175,6 @@ createService(
                 uuid: userId,
             },
         })
-        const events = course.claro_cursusbundle_course_session.reduce(
-            (a, s) => [...a, ...s.claro_cursusbundle_session_event],
-            []
-        )
-
-        //console.log('PLANNED OBJECT', events[0])
 
         const content = fs.readFileSync(path.resolve(contractTemplateFilesDest, template.fileStoredName), 'binary')
         const zip = new PizZip(content)
@@ -192,31 +190,43 @@ createService(
             FORMATEUR_NOM: `${user.first_name} ${user.last_name}`,
             FORMATEUR_ORGANISATION: user.user_organization[0]?.claro__organization.name || 'Indéterminé',
             COURS_NOM: course.course_name,
-            SESSION_CODE: course.claro_cursusbundle_course_session.map((s) => s.code),
-            SEANCE_DATE: events.map((e) =>
+            SESSION_CODE: subscriptions.reduce(
+                (a, s) => [
+                    ...a,
+                    a.indexOf(s.claro_cursusbundle_session_event.claro_cursusbundle_course_session.code) >= 0
+                        ? ''
+                        : s.claro_cursusbundle_session_event.claro_cursusbundle_course_session.code,
+                ],
+                []
+            ),
+            SEANCE_DATE: subscriptions.map((s) =>
                 Intl.DateTimeFormat('fr-CH', {
                     timeZone: 'Europe/Zurich',
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
-                }).format(e.claro_planned_object.start_date)
+                }).format(s.claro_cursusbundle_session_event.claro_planned_object.start_date)
             ),
-            SEANCE_LIEU: events.map((e) => e.claro_planned_object?.claro__location?.name || ''),
-            SEANCE_HEURE_DEBUT: events.map((e) =>
+            SEANCE_LIEU: subscriptions.map(
+                (s) => s.claro_cursusbundle_session_event.claro_planned_object?.claro__location?.name || ''
+            ),
+            SEANCE_HEURE_DEBUT: subscriptions.map((s) =>
                 Intl.DateTimeFormat('fr-CH', {
                     timeZone: 'Europe/Zurich',
                     hour: '2-digit',
                     minute: '2-digit',
-                }).format(e.claro_planned_object.start_date)
+                }).format(s.claro_cursusbundle_session_event.claro_planned_object.start_date)
             ),
-            SEANCE_HEURE_FIN: events.map((e) =>
+            SEANCE_HEURE_FIN: subscriptions.map((s) =>
                 Intl.DateTimeFormat('fr-CH', {
                     timeZone: 'Europe/Zurich',
                     hour: '2-digit',
                     minute: '2-digit',
-                }).format(e.claro_planned_object.end_date)
+                }).format(s.claro_cursusbundle_session_event.claro_planned_object.end_date)
             ),
-            SEANCE_HONORAIRE: events.map((e) => (e.former22_event?.fees || 0).toFixed(2)),
+            SEANCE_HONORAIRE: subscriptions.map((s) =>
+                (s.claro_cursusbundle_session_event.former22_event?.fees || 0).toFixed(2)
+            ),
         })
 
         const docxBuf = doc.getZip().generate({
