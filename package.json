@@ -62,7 +62,7 @@
     "js-yaml": "4.1.0",
     "libreoffice-convert": "1.4.1",
     "luxon": "3.2.1",
-    "mailgun.js": "8.0.6",
+    "mailgun.js": "8.1.0",
     "morgan": "1.10.0",
     "multer": "1.4.5-lts.1",
     "nanoid": "4.0.0",
