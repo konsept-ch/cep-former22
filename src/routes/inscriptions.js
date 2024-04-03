@@ -965,9 +965,32 @@ createService(
                     cancellationId,
                 }
 
+                if (
+                    (await prisma.former22_invoice_item.count({
+                        where: {
+                            OR: [
+                                { inscriptionId: invoiceItem.inscriptionId },
+                                { cancellationId: invoiceItem.cancellationId },
+                            ],
+                        },
+                    })) > 0
+                ) {
+                    res.status(400).json({
+                        message: 'Une facture est déjà liée à cette inscription',
+                    })
+                    return {
+                        entityName: 'Inscription',
+                        entityId: req.params.inscriptionId,
+                        actionName: getLogDescriptions.inscription({
+                            originalStatus: currentInscriptionStatus,
+                            newStatus,
+                        }),
+                    }
+                }
+
                 let alreadyCreated = false
 
-                if (mainOrganizationExtra.billingMode === 'Groupée') {
+                if (!alreadyCreated && mainOrganizationExtra.billingMode === 'Groupée') {
                     const invoice = await prisma.former22_manual_invoice.findFirst({
                         select: {
                             id: true,
