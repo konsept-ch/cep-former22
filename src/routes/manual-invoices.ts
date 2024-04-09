@@ -261,7 +261,7 @@ createService(
                     where: {
                         claro_cursusbundle_course_session: {
                             start_date: {
-                                gte: new Date('2023-01-01'),
+                                gte: new Date('2024-01-01'),
                             },
                         },
                     },
@@ -477,7 +477,7 @@ createService(
                         },
                         claro_cursusbundle_course_session: {
                             start_date: {
-                                gte: new Date('2023-01-01'),
+                                gte: new Date('2024-01-01'),
                             },
                         },
                     },
