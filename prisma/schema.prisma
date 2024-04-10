@@ -1145,7 +1145,6 @@ model claro_cursusbundle_course_session_user {
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120FA76ED395")
   former22_invoice                  former22_invoice[]
   former22_invoice_item             former22_invoice_item[]
-  former22_tutor                    former22_tutor?
 
   @@unique([session_id, user_id], map: "training_session_unique_user")
   @@index([session_id], map: "IDX_80B4120F613FECDF")
@@ -3377,6 +3376,7 @@ model claro_user {
   claro_workspace_requirements                                                                                                claro_workspace_requirements[]
   former22_manual_invoice_former22_manual_invoice_selectedUserIdToclaro_user                                                  former22_manual_invoice[]                        @relation("former22_manual_invoice_selectedUserIdToclaro_user")
   former22_manual_invoice                                                                                                     former22_manual_invoice[]
+  former22_tutor                                                                                                              former22_tutor?
   hevinci_ability_progress                                                                                                    hevinci_ability_progress[]
   hevinci_competency_progress                                                                                                 hevinci_competency_progress[]
   hevinci_competency_progress_log                                                                                             hevinci_competency_progress_log[]
@@ -5763,12 +5763,12 @@ model claro_log {
 }
 
 model former22_tutor {
-  id                                     Int                                    @id @default(autoincrement())
-  inscriptionId                          Int                                    @unique(map: "inscriptionId")
-  json                                   Json
-  claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tutor_inscription")
+  id         Int        @id @default(autoincrement())
+  userId     Int        @unique(map: "userId")
+  json       Json
+  claro_user claro_user @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_tutor_user")
 
-  @@index([inscriptionId], map: "tutor_inscription")
+  @@index([userId], map: "tutor_user")
 }
 
 model ujm_paper {

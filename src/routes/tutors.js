@@ -9,30 +9,21 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const tutors = await prisma.claro_cursusbundle_course_session_user.findMany({
+        const users = await prisma.claro_user.findMany({
             select: {
                 uuid: true,
-                claro_cursusbundle_course_session: {
+                first_name: true,
+                last_name: true,
+                user_organization: {
                     select: {
-                        course_name: true,
-                    },
-                },
-                claro_user: {
-                    select: {
-                        first_name: true,
-                        last_name: true,
-                        user_organization: {
+                        claro__organization: {
                             select: {
-                                claro__organization: {
-                                    select: {
-                                        name: true,
-                                    },
-                                },
-                            },
-                            where: {
-                                is_main: true,
+                                name: true,
                             },
                         },
+                    },
+                    where: {
+                        is_main: true,
                     },
                 },
                 former22_tutor: {
@@ -42,19 +33,23 @@ createService(
                 },
             },
             where: {
-                registration_type: 'tutor',
+                is_removed: false,
+                claro_cursusbundle_course_session_user: {
+                    some: {
+                        registration_type: 'tutor',
+                    },
+                },
             },
         })
 
         res.json(
-            tutors.map((tutor) => ({
-                id: tutor.uuid,
-                organization: tutor.claro_user.user_organization[0].claro__organization.name,
-                session: tutor.claro_cursusbundle_course_session.course_name,
-                firstname: tutor.claro_user.first_name,
-                lastname: tutor.claro_user.last_name,
-                ...(tutor.former22_tutor
-                    ? tutor.former22_tutor.json
+            users.map((user) => ({
+                id: user.uuid,
+                organization: user.user_organization[0].claro__organization.name,
+                firstname: user.first_name,
+                lastname: user.last_name,
+                ...(user.former22_tutor
+                    ? user.former22_tutor.json
                     : {
                           address: '',
                           email: '',
@@ -63,17 +58,21 @@ createService(
                           cert: false,
                           title: '',
                           accreditations: '',
+                          titles: [],
                           skills: [],
                           training: '',
                           roles: [],
-                          domain: null,
+                          domains: [],
                           cat: false,
                           ps: false,
                           fsm: false,
                           cursus: false,
                           status: null,
                           dates: '',
-                          administrative: [],
+                          expertise: '',
+                          course: '',
+                          pitch: '',
+                          scenario: '',
                           links: '',
                           educational: '',
                       }),
@@ -88,7 +87,7 @@ createService(
     'put',
     '/:uuid',
     async (req, res) => {
-        await prisma.claro_cursusbundle_course_session_user.update({
+        await prisma.claro_user.update({
             data: {
                 former22_tutor: {
                     upsert: {
