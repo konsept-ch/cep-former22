@@ -271,7 +271,7 @@ createService(
                     ({ inscriptionId, inscriptionStatus }) =>
                         inscriptionId === uuid &&
                         (inscriptionStatus == null ||
-                            [STATUSES.ANNULEE_FACTURABLE, STATUSES.NON_PARTICIPATION].includes(
+                            [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(
                                 inscriptionStatus as any
                             ))
                 )
