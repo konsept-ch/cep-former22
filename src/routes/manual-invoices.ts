@@ -366,7 +366,7 @@ createService(
                                 postalAddressCode ? `${postalAddressCode} ` : ''
                             }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
                             customClientEmail: organization?.email ?? '',
-                            selectedUserUuid: '',
+                            selectedUserUuid: null,
                             customClientTitle: '',
                             customClientFirstname: '',
                             customClientLastname: '',
@@ -572,7 +572,7 @@ createService(
                     customClientLastname: '',
                     courseYear: now.getFullYear(),
                     invoiceDate: now.toISOString(),
-                    selectedUserUuid: '',
+                    selectedUserUuid: null,
                     concerns: '',
                     codeCompta: '',
                     status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
