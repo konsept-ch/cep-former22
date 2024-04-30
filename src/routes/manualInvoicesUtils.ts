@@ -30,7 +30,7 @@ export type InvoiceData = {
         inscriptionUuid?: string
         cancellationId?: number
     }[]
-    selectedUserUuid: string
+    selectedUserUuid: string | null
     concerns: string
     codeCompta: string
     status: { value: invoiceStatusesKeys; label: invoiceStatusesValues }
