@@ -285,6 +285,15 @@ createService(
                 claro_cursusbundle_course_session: { course_name: sessionName, price: sessionPrice },
                 claro_user: { first_name, last_name, user_organization },
             } of inscriptions) {
+                if (
+                    (await prisma.former22_invoice_item.count({
+                        where: {
+                            OR: [{ inscriptionId: id }, { cancellationId: id }],
+                        },
+                    })) > 0
+                )
+                    continue
+
                 const mainOrganization = user_organization[0]?.claro__organization
 
                 const organization = organizationsAdditionalData.find(
