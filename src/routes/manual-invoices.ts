@@ -512,6 +512,15 @@ createService(
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
                         i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
                 ) {
+                    if (
+                        (await prisma.former22_invoice_item.count({
+                            where: {
+                                OR: [{ inscriptionId: i.id }, { cancellationId: i.id }],
+                            },
+                        })) > 0
+                    )
+                        continue
+
                     const inscription: any = await prisma.claro_cursusbundle_course_session_user.findUnique({
                         select: {
                             id: true,
@@ -534,6 +543,7 @@ createService(
                             uuid: i.inscriptionId,
                         },
                     })
+
                     inscriptions.push(inscription)
                 }
             }
