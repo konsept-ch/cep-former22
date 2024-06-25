@@ -230,6 +230,8 @@ createService(
     '/direct',
     async (req: Request, res: Response) => {
         try {
+            const startYear = new Date('2024-01-01')
+
             const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
 
             const inscriptions = (
@@ -261,24 +263,63 @@ createService(
                     where: {
                         claro_cursusbundle_course_session: {
                             start_date: {
-                                gte: new Date('2024-01-01'),
+                                gte: startYear,
                             },
                         },
                     },
                 })
-            ).filter(({ uuid }) =>
-                inscriptionsAdditionalData.some(
-                    ({ inscriptionId, inscriptionStatus }) =>
-                        inscriptionId === uuid &&
-                        (inscriptionStatus == null ||
-                            [
-                                STATUSES.ANNULEE_FACTURABLE,
-                                STATUSES.NON_PARTICIPATION,
-                                STATUSES.PARTICIPATION,
-                                STATUSES.PARTICIPATION_PARTIELLE,
-                            ].includes(inscriptionStatus as any))
-                )
             )
+                .concat(
+                    (
+                        await prisma.claro_cursusbundle_course_session_cancellation.findMany({
+                            select: {
+                                id: true,
+                                uuid: true,
+                                inscription_uuid: true,
+                                claro_cursusbundle_course_session: {
+                                    select: {
+                                        course_name: true,
+                                        price: true,
+                                    },
+                                },
+                                claro_user: {
+                                    select: {
+                                        first_name: true,
+                                        last_name: true,
+                                        user_organization: {
+                                            where: {
+                                                is_main: true,
+                                            },
+                                            select: {
+                                                claro__organization: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            where: {
+                                claro_cursusbundle_course_session: {
+                                    start_date: {
+                                        gte: startYear,
+                                    },
+                                },
+                            },
+                        })
+                    ).map((c) => ({ ...c, uuid: c.inscription_uuid }))
+                )
+                .filter(({ uuid }) =>
+                    inscriptionsAdditionalData.some(
+                        ({ inscriptionId, inscriptionStatus }) =>
+                            inscriptionId === uuid &&
+                            (inscriptionStatus == null ||
+                                [
+                                    STATUSES.ANNULEE_FACTURABLE,
+                                    STATUSES.NON_PARTICIPATION,
+                                    STATUSES.PARTICIPATION,
+                                    STATUSES.PARTICIPATION_PARTIELLE,
+                                ].includes(inscriptionStatus as any))
+                    )
+                )
 
             const organizationsAdditionalData = await prisma.former22_organization.findMany()
 
@@ -287,6 +328,7 @@ createService(
                 uuid: inscriptionUuid,
                 claro_cursusbundle_course_session: { course_name: sessionName, price: sessionPrice },
                 claro_user: { first_name, last_name, user_organization },
+                inscription_uuid,
             } of inscriptions) {
                 if (
                     (await prisma.former22_invoice_item.count({
@@ -394,7 +436,7 @@ createService(
                                     price: config.price, // Prix TTC (coût affiché sur le site Claroline)
                                     amount: '1',
                                     vatCode: { value: 'EXONERE', label: 'EXONERE' },
-                                    inscriptionId: id,
+                                    ...(inscription_uuid ? { cancellationId: id } : { inscriptionId: id }),
                                 },
                             ],
                         },
