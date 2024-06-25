@@ -329,7 +329,7 @@ createService(
                 claro_cursusbundle_course_session: { course_name: sessionName, price: sessionPrice },
                 claro_user: { first_name, last_name, user_organization },
                 inscription_uuid,
-            } of inscriptions) {
+            } of inscriptions as any) {
                 if (
                     (await prisma.former22_invoice_item.count({
                         where: {
@@ -402,7 +402,7 @@ createService(
                         postalAddressDepartment,
                         // postalAddressDepartmentCode,
                         postalAddressLocality,
-                    } = { ...mainOrganization, ...organization }
+                    } = { ...mainOrganization, ...organization } as any
 
                     await createInvoice({
                         invoiceData: {
