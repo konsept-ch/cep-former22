@@ -3377,6 +3377,7 @@ model claro_user {
   former22_manual_invoice_former22_manual_invoice_selectedUserIdToclaro_user                                                  former22_manual_invoice[]                        @relation("former22_manual_invoice_selectedUserIdToclaro_user")
   former22_manual_invoice                                                                                                     former22_manual_invoice[]
   former22_tutor                                                                                                              former22_tutor?
+  former22_user                                                                                                               former22_user?
   hevinci_ability_progress                                                                                                    hevinci_ability_progress[]
   hevinci_competency_progress                                                                                                 hevinci_competency_progress[]
   hevinci_competency_progress_log                                                                                             hevinci_competency_progress_log[]
@@ -5391,11 +5392,12 @@ model former22_log {
 }
 
 model former22_user {
-  userId           String   @id @db.VarChar(255)
+  id               Int        @id @default(autoincrement())
   shouldReceiveSms Boolean?
-  colorCode        String?  @db.VarChar(255)
+  colorCode        String?    @db.VarChar(255)
   cfNumber         Int?
-  user_id          Int
+  user_id          Int        @unique(map: "user_id")
+  claro_user       claro_user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_user")
 }
 
 model former22_organization {
