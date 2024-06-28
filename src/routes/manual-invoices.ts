@@ -67,6 +67,11 @@ createService(
                         uuid: true,
                         first_name: true,
                         last_name: true,
+                        former22_user: {
+                            select: {
+                                cfNumber: true,
+                            },
+                        },
                     },
                 },
                 claro__organization: {
@@ -139,18 +144,11 @@ createService(
             },
         })
 
-        const usersAdditionalData = await prisma.former22_user.findMany({
-            select: {
-                userId: true,
-                cfNumber: true,
-            },
-        })
-
         res.json(
             invoices.map(
                 ({
                     uuid,
-                    claro_user: { uuid: userUuid, first_name: firstName, last_name: lastName },
+                    claro_user: { uuid: userUuid, first_name: firstName, last_name: lastName, former22_user },
                     claro__organization: { uuid: organizationUuid, name: organizationName, former22_organization },
                     claro_user_former22_manual_invoice_selectedUserIdToclaro_user,
                     customClientTitle,
@@ -168,7 +166,7 @@ createService(
                         uuid: userUuid,
                         firstName,
                         lastName,
-                        cfNumber: usersAdditionalData.find(({ userId }) => userId === userUuid)?.cfNumber,
+                        cfNumber: former22_user?.cfNumber,
                     },
                     clientNumber: former22_organization?.clientNumber,
                     selectedUserUuid: claro_user_former22_manual_invoice_selectedUserIdToclaro_user?.uuid,

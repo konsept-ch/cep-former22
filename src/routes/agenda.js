@@ -9,114 +9,30 @@ createService(
     'get',
     '/',
     async (_req, res) => {
-        const roomsPrisma = await prisma.claro_location_room.findMany({
-            select: {
-                event_name: true,
-                uuid: true,
-                claro__location: {
-                    select: {
-                        name: true,
-                    },
-                },
-            },
-        })
-
-        if (roomsPrisma) {
-            const rooms = roomsPrisma.map(({ event_name, uuid, claro__location }) => ({
-                name: event_name,
-                id: uuid,
-                location: claro__location,
-            }))
-
-            const eventsPrisma = await prisma.claro_planned_object.findMany({
+        const rooms = (
+            await prisma.claro_location_room.findMany({
                 select: {
-                    entity_name: true,
-                    start_date: true,
-                    end_date: true,
-                    description: true,
+                    event_name: true,
+                    uuid: true,
                     claro__location: {
                         select: {
                             name: true,
                         },
                     },
-                    claro_user: {
-                        select: {
-                            first_name: true,
-                            last_name: true,
-                            mail: true,
-                        },
-                    },
-                    claro_location_room: {
-                        select: {
-                            uuid: true,
-                            event_name: true,
-                            description: true,
-                            capacity: true,
-                        },
-                    },
-                    claro_cursusbundle_session_event: {
-                        select: {
-                            claro_cursusbundle_session_event_user: {
-                                include: {
-                                    claro_user: {
-                                        select: {
-                                            first_name: true,
-                                            last_name: true,
-                                        },
-                                    },
-                                },
-                            },
-                            claro_cursusbundle_course_session: {
-                                select: {
-                                    max_users: true,
-                                    claro_cursusbundle_course: {
-                                        select: {
-                                            uuid: true,
-                                        },
-                                    },
-                                    claro_cursusbundle_course_session_user: {
-                                        where: {
-                                            validated: true,
-                                            registration_type: 'learner',
-                                        },
-                                        select: {
-                                            uuid: true,
-                                        },
-                                    },
-                                    claro_cursusbundle_session_event: {
-                                        include: {
-                                            claro_planned_object: {
-                                                select: {
-                                                    entity_name: true,
-                                                    start_date: true,
-                                                    claro__location: {
-                                                        select: {
-                                                            name: true,
-                                                        },
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
                 },
             })
+        ).map(({ event_name, uuid, claro__location }) => ({
+            name: event_name,
+            id: uuid,
+            location: claro__location,
+        }))
 
+        if (rooms.length > 0) {
             // TODO: use foreign key for courses instead of additional request
             const coursesFormer22Data = await prisma.former22_course.findMany({
                 select: {
                     courseId: true,
                     coordinator: true, // TODO: use user uuid to save coordinator, perhaps foreign key
-                },
-            })
-
-            const usersFormer22Data = await prisma.former22_user.findMany({
-                select: {
-                    userId: true,
-                    colorCode: true,
                 },
             })
 
@@ -135,10 +51,92 @@ createService(
                             },
                         },
                     },
+                    former22_user: {
+                        select: {
+                            colorCode: true,
+                        },
+                    },
                 },
             })
 
-            const events = eventsPrisma.map(
+            const events = (
+                await prisma.claro_planned_object.findMany({
+                    select: {
+                        entity_name: true,
+                        start_date: true,
+                        end_date: true,
+                        description: true,
+                        claro__location: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                        claro_user: {
+                            select: {
+                                first_name: true,
+                                last_name: true,
+                                mail: true,
+                            },
+                        },
+                        claro_location_room: {
+                            select: {
+                                uuid: true,
+                                event_name: true,
+                                description: true,
+                                capacity: true,
+                            },
+                        },
+                        claro_cursusbundle_session_event: {
+                            select: {
+                                claro_cursusbundle_session_event_user: {
+                                    include: {
+                                        claro_user: {
+                                            select: {
+                                                first_name: true,
+                                                last_name: true,
+                                            },
+                                        },
+                                    },
+                                },
+                                claro_cursusbundle_course_session: {
+                                    select: {
+                                        max_users: true,
+                                        claro_cursusbundle_course: {
+                                            select: {
+                                                uuid: true,
+                                            },
+                                        },
+                                        claro_cursusbundle_course_session_user: {
+                                            where: {
+                                                validated: true,
+                                                registration_type: 'learner',
+                                            },
+                                            select: {
+                                                uuid: true,
+                                            },
+                                        },
+                                        claro_cursusbundle_session_event: {
+                                            include: {
+                                                claro_planned_object: {
+                                                    select: {
+                                                        entity_name: true,
+                                                        start_date: true,
+                                                        claro__location: {
+                                                            select: {
+                                                                name: true,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                })
+            ).map(
                 ({
                     entity_name,
                     start_date,
@@ -168,18 +166,18 @@ createService(
                             ?.filter(({ claro_planned_object }) => claro_planned_object.entity_name !== entity_name)
                             ?.map(({ claro_planned_object }) => claro_planned_object.entity_name)
 
-                    const coordinator = coursesFormer22Data.find(
+                    const coordinatorFullname = coursesFormer22Data.find(
                         ({ courseId }) =>
                             courseId ===
                             claro_cursusbundle_session_event?.claro_cursusbundle_course_session
                                 ?.claro_cursusbundle_course?.uuid
                     )?.coordinator
 
-                    const coordinatorUuid = allUsers.find(
+                    const coordinator = allUsers.find(
                         ({ first_name, last_name, claro_user_role }) =>
-                            `${first_name} ${last_name}` === coordinator &&
+                            `${first_name} ${last_name}` === coordinatorFullname &&
                             claro_user_role.some(({ claro_role: { translation_key } }) => translation_key === 'admin')
-                    )?.uuid
+                    )
 
                     return {
                         ...rest,
@@ -214,9 +212,8 @@ createService(
                                     ({ claro_planned_object: { claro__location } }) => claro__location?.name === 'CEP'
                                 )?.claro_planned_object?.entity_name === entity_name,
                         creator: { firstName, lastName, email },
-                        coordinator,
-                        coordinatorColorCode: usersFormer22Data.find(({ userId }) => userId === coordinatorUuid)
-                            ?.colorCode,
+                        coordinator: coordinatorFullname,
+                        coordinatorColorCode: coordinator?.former22_user.colorCode,
                     }
                 }
             )

@@ -74,18 +74,14 @@ export const createInvoice = async ({
     const creator = await prisma.claro_user.findUnique({
         select: {
             uuid: true,
+            former22_user: {
+                select: {
+                    cfNumber: true,
+                },
+            },
         },
         where: {
             mail: typeof cfEmail === 'string' ? cfEmail : cfEmail?.join(),
-        },
-    })
-
-    const cf = await prisma.former22_user.findUnique({
-        select: {
-            cfNumber: true,
-        },
-        where: {
-            userId: creator?.uuid,
         },
     })
 
@@ -95,7 +91,7 @@ export const createInvoice = async ({
     const { uuid } = await prisma.former22_manual_invoice.create({
         data: {
             uuid: uuidv4(),
-            number: `${`${courseYear}`.slice(-2)}${`${cf?.cfNumber}`.padStart(
+            number: `${`${courseYear}`.slice(-2)}${`${creator?.former22_user?.cfNumber}`.padStart(
                 2,
                 '0'
             )}${`${invoiceNumberForCurrentYear}`.padStart(4, '0')}`,

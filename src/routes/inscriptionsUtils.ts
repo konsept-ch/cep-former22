@@ -213,6 +213,11 @@ export const fetchInscriptionsWithStatuses = async (
                                         is_main: true,
                                     },
                                 },
+                                former22_user: {
+                                    select: {
+                                        shouldReceiveSms: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -280,7 +285,6 @@ export const fetchInscriptionsWithStatuses = async (
         const inscriptionsAdditionalData = await prisma.former22_inscription.findMany({
             include: { former22_attestation: true, former22_organization: true },
         })
-        const usersAdditionalData = await prisma.former22_user.findMany()
         const allOrganizations = await prisma.claro__organization.findMany()
         const items = await prisma.former22_invoice_item.findMany({
             select: {
@@ -324,11 +328,6 @@ export const fetchInscriptionsWithStatuses = async (
                                                 inscriptionId === (inscription as any).inscription_uuid
                                         )
                                       : null
-
-                                  const { shouldReceiveSms } =
-                                      usersAdditionalData.find(
-                                          ({ userId }) => userId === (inscription as any).claro_user.uuid
-                                      ) ?? {}
 
                                   const { coordinator, codeCategory, theme, targetAudience } =
                                       coursesAdditionalData.get(courseData.uuid) ?? {}
@@ -393,7 +392,8 @@ export const fetchInscriptionsWithStatuses = async (
                                               phone: (inscription as any).claro_user.phone,
                                           }),
                                           userId: (inscription as any).claro_user.uuid,
-                                          shouldReceiveSms,
+                                          shouldReceiveSms: (inscription as any).claro_user.former22_user
+                                              ?.shouldReceiveSms,
                                           hierarchy: formatOrganizationsHierarchy(
                                               allOrganizations,
                                               userMainOrganization
@@ -484,9 +484,6 @@ export const fetchInscriptionsWithStatuses = async (
 
                 if (allPendingInscriptionsOnCourseLevel) {
                     fetchedPendingLearners = allPendingInscriptionsOnCourseLevel.map((inscription) => {
-                        const { shouldReceiveSms } =
-                            usersAdditionalData.find(({ userId }) => userId === inscription.claro_user.uuid) ?? {}
-
                         const userMainOrganization = (inscription as any).claro_user.user_organization[0]
                             ?.claro__organization
 
@@ -520,7 +517,7 @@ export const fetchInscriptionsWithStatuses = async (
                                 phone: inscription.claro_user.phone,
                                 phoneForSms: parsePhoneForSms({ phone: inscription.claro_user.phone }),
                                 userId: inscription.claro_user.uuid,
-                                shouldReceiveSms,
+                                shouldReceiveSms: inscription.claro_user.former22_user?.shouldReceiveSms,
                                 hierarchy: formatOrganizationsHierarchy(allOrganizations, userMainOrganization),
                                 organization: userMainOrganization?.name,
                                 organizationId: userMainOrganization?.uuid,

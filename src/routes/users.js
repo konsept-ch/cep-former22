@@ -10,77 +10,71 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const users = await prisma.claro_user.findMany({
-            where: {
-                is_removed: false,
-            },
-            select: {
-                id: true,
-                uuid: true,
-                first_name: true,
-                last_name: true,
-                mail: true,
-                claro_user_role: {
-                    select: {
-                        claro_role: {
-                            select: {
-                                translation_key: true,
-                            },
-                        },
-                    },
-                },
-                user_organization: {
-                    where: {
-                        is_main: true,
-                    },
-                    select: {
-                        claro__organization: {
-                            select: {
-                                name: true,
-                            },
-                        },
-                    },
-                },
-                phone: true,
-            },
-        })
-
-        const usersSettings = await prisma.former22_user.findMany()
         const professionFacetsValues = await getProfessionFacetsValues()
 
-        const enrichedUsersData = users.map((current) => {
-            const currentUserSettings = usersSettings.find(({ userId }) => userId === current.uuid)
-            const currentUserProfession = getUserProfession({
-                userId: current.id,
+        const users = (
+            await prisma.claro_user.findMany({
+                select: {
+                    id: true,
+                    uuid: true,
+                    first_name: true,
+                    last_name: true,
+                    mail: true,
+                    claro_user_role: {
+                        select: {
+                            claro_role: {
+                                select: {
+                                    translation_key: true,
+                                },
+                            },
+                        },
+                    },
+                    user_organization: {
+                        select: {
+                            claro__organization: {
+                                select: {
+                                    name: true,
+                                },
+                            },
+                        },
+                        where: {
+                            is_main: true,
+                        },
+                    },
+                    former22_user: {
+                        select: {
+                            shouldReceiveSms: true,
+                            colorCode: true,
+                            cfNumber: true,
+                        },
+                    },
+                    phone: true,
+                },
+                where: {
+                    is_removed: false,
+                },
+            })
+        ).map((user) => {
+            const profession = getUserProfession({
+                userId: user.id,
                 professionFacetsValues,
             })
 
-            let enrichedUser = {
-                id: current.uuid,
-                firstName: current.first_name,
-                lastName: current.last_name,
-                email: current.mail,
-                mainOrganizationName: current['user_organization'][0]?.['claro__organization'].name,
-                phone: current.phone,
-                phoneForSms: parsePhoneForSms({ phone: current.phone }),
-                roles: current.claro_user_role.map(({ claro_role: { translation_key } }) => translation_key),
+            return {
+                id: user.uuid,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                email: user.mail,
+                mainOrganizationName: user['user_organization'][0]?.['claro__organization'].name,
+                phone: user.phone,
+                phoneForSms: parsePhoneForSms({ phone: user.phone }),
+                roles: user.claro_user_role.map(({ claro_role: { translation_key } }) => translation_key),
+                ...(profession ? { profession } : {}),
+                ...user.former22_user,
             }
-
-            if (currentUserSettings) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { userId, ...settings } = currentUserSettings
-
-                enrichedUser = { ...enrichedUser, ...settings }
-            }
-
-            if (currentUserProfession) {
-                enrichedUser = { ...enrichedUser, profession: currentUserProfession }
-            }
-
-            return enrichedUser
         })
 
-        res.json(enrichedUsersData)
+        res.json(users)
     },
     null,
     usersRouter
@@ -90,29 +84,27 @@ createService(
     'put',
     '/:userId',
     async (req, res) => {
-        const { userId } = req.params
-        const { shouldReceiveSms, colorCode, cfNumber } = req.body
-
-        await prisma.former22_user.upsert({
-            where: { userId },
-            update: { shouldReceiveSms, colorCode, cfNumber },
-            create: { shouldReceiveSms, colorCode, cfNumber, userId },
-        })
-
-        res.json("L'utilisateur a été modifié")
-
-        const [{ first_name, last_name }] = await prisma.claro_user.findMany({
-            where: {
-                uuid: req.params.userId,
-            },
+        const user = await prisma.claro_user.update({
             select: {
                 first_name: true,
                 last_name: true,
             },
+            data: {
+                former22_user: {
+                    upsert: {
+                        create: req.body,
+                        update: req.body,
+                    },
+                },
+            },
+            where: {
+                uuid: req.params.userId,
+            },
         })
 
-        const userFullName = `${first_name} ${last_name}`
+        res.json("L'utilisateur a été modifié")
 
+        const userFullName = `${user.first_name} ${user.last_name}`
         return {
             entityName: userFullName,
             entityId: req.params.userId,
@@ -130,7 +122,7 @@ createService(
     'get',
     '/admins',
     async (req, res) => {
-        const usersPrisma = await prisma.claro_user.findMany({
+        const users = await prisma.claro_user.findMany({
             where: {
                 OR: [
                     {
@@ -167,7 +159,7 @@ createService(
             },
         })
 
-        res.json(usersPrisma)
+        res.json(users)
     },
     null,
     usersRouter
