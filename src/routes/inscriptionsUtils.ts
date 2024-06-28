@@ -254,6 +254,11 @@ export const fetchInscriptionsWithStatuses = async (
                                         is_main: true,
                                     },
                                 },
+                                former22_user: {
+                                    select: {
+                                        shouldReceiveSms: true,
+                                    },
+                                },
                             },
                         },
                         claro_cursusbundle_course_session: {
@@ -458,6 +463,11 @@ export const fetchInscriptionsWithStatuses = async (
                             },
                             claro_user: {
                                 include: {
+                                    former22_user: {
+                                        select: {
+                                            shouldReceiveSms: true,
+                                        },
+                                    },
                                     user_organization: {
                                         select: {
                                             is_main: true,
