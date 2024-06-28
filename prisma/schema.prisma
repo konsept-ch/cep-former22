@@ -5395,6 +5395,7 @@ model former22_user {
   shouldReceiveSms Boolean?
   colorCode        String?  @db.VarChar(255)
   cfNumber         Int?
+  user_id          Int
 }
 
 model former22_organization {
