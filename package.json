@@ -19,7 +19,7 @@
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
-    "fk:users": "node ./scripts/users.js",
+    "fk:sessions": "node ./scripts/sessions.js",
     "invoices:migrate": "node ./scripts/invoices.js",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",

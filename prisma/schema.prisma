@@ -5376,6 +5376,7 @@ model former22_session {
   areInvitesSent  Boolean?
   sessionFormat   String?  @db.Text
   sessionLocation String?  @db.Text
+  session_id      Int
 }
 
 model former22_log {
