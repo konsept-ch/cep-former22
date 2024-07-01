@@ -237,9 +237,9 @@ createService(
                     const fullCoursesData = courses.map(({ former22_course, ...course }) => ({
                         ...course,
                         ...former22_course,
-                        sessions: course.claro_cursusbundle_course_session.map((session) => ({
+                        sessions: course.claro_cursusbundle_course_session.map(({ former22_session, ...session }) => ({
                             ...session,
-                            ...session.former22_session,
+                            ...former22_session,
                             inscriptions: session.claro_cursusbundle_course_session_user
                                 .map((inscription) => ({
                                     ...inscription,
