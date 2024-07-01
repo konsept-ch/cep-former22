@@ -59,6 +59,15 @@ createService(
                         },
                     },
                 },
+                former22_session: {
+                    select: {
+                        sessionName: true,
+                        startDate: true,
+                        areInvitesSent: true,
+                        sessionFormat: true,
+                        sessionLocation: true,
+                    },
+                },
             },
         })
         const coursesAdditionalData = await prisma.former22_course.findMany({
@@ -72,16 +81,8 @@ createService(
                 },
             },
         })
-        const sessionsAdditionalData = await prisma.former22_session.findMany({
-            where: {
-                sessionId: {
-                    in: sessions.map((s) => s.uuid),
-                },
-            },
-        })
 
         const fullSessionsData = sessions.map((session) => {
-            const sessionAdditionalData = sessionsAdditionalData.find(({ sessionId }) => sessionId === session.uuid)
             const courseAdditionalData = coursesAdditionalData.find(
                 ({ courseId }) => courseId === session.claro_cursusbundle_course.uuid
             )
@@ -104,7 +105,7 @@ createService(
                 availables: session.max_users - session.claro_cursusbundle_course_session_user.length,
                 occupation: session.claro_cursusbundle_course_session_user.length,
                 category: courseAdditionalData?.codeCategory,
-                ...sessionAdditionalData,
+                ...session.former22_session,
             }
         })
 
