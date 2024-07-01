@@ -28,32 +28,24 @@ createService(
         }))
 
         if (rooms.length > 0) {
-            // TODO: use foreign key for courses instead of additional request
-            const coursesFormer22Data = await prisma.former22_course.findMany({
-                select: {
-                    courseId: true,
-                    coordinator: true, // TODO: use user uuid to save coordinator, perhaps foreign key
-                },
-            })
-
             // TODO: foreign keys
             const allUsers = await prisma.claro_user.findMany({
                 select: {
                     uuid: true,
                     first_name: true,
                     last_name: true,
-                    claro_user_role: {
-                        select: {
-                            claro_role: {
-                                select: {
-                                    translation_key: true,
-                                },
-                            },
-                        },
-                    },
                     former22_user: {
                         select: {
                             colorCode: true,
+                        },
+                    },
+                },
+                where: {
+                    claro_user_role: {
+                        some: {
+                            claro_role: {
+                                translation_key: 'admin',
+                            },
                         },
                     },
                 },
@@ -103,7 +95,11 @@ createService(
                                         max_users: true,
                                         claro_cursusbundle_course: {
                                             select: {
-                                                uuid: true,
+                                                former22_course: {
+                                                    select: {
+                                                        coordinator: true,
+                                                    },
+                                                },
                                             },
                                         },
                                         claro_cursusbundle_course_session_user: {
@@ -166,17 +162,12 @@ createService(
                             ?.filter(({ claro_planned_object }) => claro_planned_object.entity_name !== entity_name)
                             ?.map(({ claro_planned_object }) => claro_planned_object.entity_name)
 
-                    const coordinatorFullname = coursesFormer22Data.find(
-                        ({ courseId }) =>
-                            courseId ===
-                            claro_cursusbundle_session_event?.claro_cursusbundle_course_session
-                                ?.claro_cursusbundle_course?.uuid
-                    )?.coordinator
+                    const coordinatorFullname =
+                        claro_cursusbundle_session_event?.claro_cursusbundle_course_session?.claro_cursusbundle_course
+                            ?.former22_course?.coordinator
 
                     const coordinator = allUsers.find(
-                        ({ first_name, last_name, claro_user_role }) =>
-                            `${first_name} ${last_name}` === coordinatorFullname &&
-                            claro_user_role.some(({ claro_role: { translation_key } }) => translation_key === 'admin')
+                        ({ first_name, last_name }) => `${first_name} ${last_name}` === coordinatorFullname
                     )
 
                     return {

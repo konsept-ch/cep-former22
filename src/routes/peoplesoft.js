@@ -136,17 +136,6 @@ createService(
                     }
 
                     const courses = await prisma.claro_cursusbundle_course.findMany({
-                        where: {
-                            hidden: false,
-                            claro_cursusbundle_course_session: {
-                                some: {
-                                    hidden: false,
-                                    claro_cursusbundle_course_session_user: {
-                                        some: registrationConditions,
-                                    },
-                                },
-                            },
-                        },
                         select: {
                             uuid: true,
                             code: true,
@@ -217,28 +206,37 @@ createService(
                                     },
                                 },
                             },
+                            former22_course: {
+                                select: {
+                                    typeStage: true,
+                                    teachingMethod: true,
+                                    codeCategory: true,
+                                    isRecurrent: true,
+                                    theme: true,
+                                    // note: we don't send coordinator and responsible to peoplesoft
+                                    coordinator: false,
+                                    responsible: false,
+                                },
+                            },
                         },
-                    })
-
-                    const coursesAdditionalData = await prisma.former22_course.findMany({
-                        select: {
-                            courseId: true,
-                            typeStage: true,
-                            teachingMethod: true,
-                            codeCategory: true,
-                            isRecurrent: true,
-                            theme: true,
-                            // note: we don't send coordinator and responsible to peoplesoft
-                            coordinator: false,
-                            responsible: false,
+                        where: {
+                            hidden: false,
+                            claro_cursusbundle_course_session: {
+                                some: {
+                                    hidden: false,
+                                    claro_cursusbundle_course_session_user: {
+                                        some: registrationConditions,
+                                    },
+                                },
+                            },
                         },
                     })
 
                     const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
 
-                    const fullCoursesData = courses.map((course) => ({
+                    const fullCoursesData = courses.map(({ former22_course, ...course }) => ({
                         ...course,
-                        ...coursesAdditionalData.find(({ courseId }) => courseId === course.uuid),
+                        ...former22_course,
                         sessions: course.claro_cursusbundle_course_session.map((session) => ({
                             ...session,
                             ...session.former22_session,

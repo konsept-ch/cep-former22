@@ -29,6 +29,11 @@ createService(
                 claro_cursusbundle_course: {
                     select: {
                         uuid: true,
+                        former22_course: {
+                            select: {
+                                codeCategory: true,
+                            },
+                        },
                     },
                 },
                 claro_cursusbundle_session_event: {
@@ -70,23 +75,8 @@ createService(
                 },
             },
         })
-        const coursesAdditionalData = await prisma.former22_course.findMany({
-            select: {
-                courseId: true,
-                codeCategory: true,
-            },
-            where: {
-                courseId: {
-                    in: sessions.map((s) => s.claro_cursusbundle_course.uuid),
-                },
-            },
-        })
 
         const fullSessionsData = sessions.map((session) => {
-            const courseAdditionalData = coursesAdditionalData.find(
-                ({ courseId }) => courseId === session.claro_cursusbundle_course.uuid
-            )
-
             const startDate = Math.min(
                 ...session.claro_cursusbundle_session_event.map((e) => new Date(e.claro_planned_object.start_date))
             )
@@ -104,7 +94,7 @@ createService(
                 isUsedForQuota: session.used_by_quotas,
                 availables: session.max_users - session.claro_cursusbundle_course_session_user.length,
                 occupation: session.claro_cursusbundle_course_session_user.length,
-                category: courseAdditionalData?.codeCategory,
+                category: session.claro_cursusbundle_course.former22_course?.codeCategory,
                 ...session.former22_session,
             }
         })
@@ -336,28 +326,30 @@ createService(
         const { sessionId } = req.params
         const { onlyUpdate, ...payload } = req.body
 
-        await prisma.former22_session.upsert({
-            where: { sessionId },
-            update: { ...payload },
-            create: { sessionId, ...payload },
-        })
+        const { claro_cursusbundle_course_session_user: learners } =
+            await prisma.claro_cursusbundle_course_session.update({
+                select: {
+                    claro_cursusbundle_course_session_user: {
+                        where: { registration_type: 'learner' },
+                        select: { uuid: true, claro_user: { select: { mail: true } } },
+                    },
+                },
+                data: {
+                    former22_session: {
+                        upsert: {
+                            create: payload,
+                            update: payload,
+                        },
+                    },
+                },
+                where: {
+                    uuid: sessionId,
+                },
+            })
 
         if (onlyUpdate) {
             res.json(true)
         } else {
-            const { claro_cursusbundle_course_session_user: learners } =
-                await prisma.claro_cursusbundle_course_session.findUnique({
-                    where: {
-                        uuid: sessionId,
-                    },
-                    select: {
-                        claro_cursusbundle_course_session_user: {
-                            where: { registration_type: 'learner' },
-                            select: { uuid: true, claro_user: { select: { mail: true } } },
-                        },
-                    },
-                })
-
             const templateForSessionInvites = await prisma.former22_template.findFirst({
                 where: { isUsedForSessionInvites: true },
             })
