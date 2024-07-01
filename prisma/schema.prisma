@@ -5362,6 +5362,7 @@ model former22_course {
   baseRate       Float?   @db.Float
   isRecurrent    Boolean? @default(false)
   goals          String?  @db.Text
+  course_id      Int
 }
 
 model former22_error_report {
