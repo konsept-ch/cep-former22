@@ -22,14 +22,26 @@ createService(
                 session_days: true,
                 description: true,
                 slug: true,
+                former22_course: {
+                    select: {
+                        coordinator: true,
+                        responsible: true,
+                        typeStage: true,
+                        teachingMethod: true,
+                        codeCategory: true,
+                        theme: true,
+                        targetAudience: true,
+                        billingMode: true,
+                        pricingType: true,
+                        baseRate: true,
+                        isRecurrent: true,
+                        goals: true,
+                    },
+                },
             },
         })
 
-        const coursesFormer22Data = await prisma.former22_course.findMany()
-
         const fullCoursesData = courses.map((course) => {
-            const courseAdditionalData = coursesFormer22Data.find(({ courseId }) => courseId === course.uuid)
-
             return {
                 id: course.uuid,
                 name: course.course_name,
@@ -41,7 +53,7 @@ createService(
                 duration: course.session_days,
                 description: course.description,
                 slug: course.slug,
-                ...courseAdditionalData,
+                ...course.former22_course,
             }
         })
 
@@ -162,20 +174,22 @@ createService(
         const { courseId } = req.params
         const { newData } = req.body
 
-        await prisma.former22_course.upsert({
-            where: { courseId },
-            update: newData,
-            create: { ...newData, courseId },
-        })
-
-        res.json('Le cours a été modifié')
-
-        const currentCourse = await prisma.claro_cursusbundle_course.findUnique({
-            where: { uuid: courseId },
+        const currentCourse = await prisma.claro_cursusbundle_course.update({
             select: {
                 course_name: true,
             },
+            data: {
+                former22_course: {
+                    upsert: {
+                        create: newData,
+                        update: newData,
+                    },
+                },
+            },
+            where: { uuid: courseId },
         })
+
+        res.json('Le cours a été modifié')
 
         return {
             entityName: currentCourse.course_name,

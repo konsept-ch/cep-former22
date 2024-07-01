@@ -170,7 +170,6 @@ createService(
         const { emailTemplateId, selectedAttestationTemplateUuid, shouldSendSms, status: newStatus, remark } = req.body
 
         const currentInscription = await prisma.claro_cursusbundle_course_session_user.findUnique({
-            where: { uuid: req.params.inscriptionId },
             select: {
                 id: true,
                 uuid: true,
@@ -190,6 +189,11 @@ createService(
                                 course_name: true,
                                 session_days: true,
                                 session_hours: true,
+                                former22_course: {
+                                    select: {
+                                        goals: true,
+                                    },
+                                },
                             },
                         },
                         claro_cursusbundle_course_session_user: {
@@ -258,6 +262,7 @@ createService(
                     },
                 },
             },
+            where: { uuid: req.params.inscriptionId },
         })
 
         const user = currentInscription.claro_user
@@ -266,10 +271,10 @@ createService(
             course_name: sessionName,
             price: sessionPrice,
             claro_cursusbundle_course: {
-                uuid: courseUuid,
                 course_name: courseName,
                 session_days: courseDurationDays,
                 session_hours: courseDurationHours,
+                former22_course,
             },
             claro_cursusbundle_course_session_user: tutors,
             claro_cursusbundle_session_event: sessionDates,
@@ -426,13 +431,6 @@ createService(
                     linebreaks: true,
                 })
 
-                const additionalCourseData = await prisma.former22_course.findUnique({
-                    where: { courseId: courseUuid },
-                    select: {
-                        goals: true,
-                    },
-                })
-
                 const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
 
                 doc.render({
@@ -451,7 +449,7 @@ createService(
                             )
                         )
                         .join(', '),
-                    OBJECTIFS: additionalCourseData.goals?.split('\n').map((goal) => ({ OBJECTIF: goal })) ?? '',
+                    OBJECTIFS: former22_course.goals?.split('\n').map((goal) => ({ OBJECTIF: goal })) ?? '',
                     FORMATEURS:
                         tutors
                             ?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`)
