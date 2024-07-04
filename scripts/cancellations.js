@@ -6,9 +6,10 @@ const cancellations = await prisma.claro_cursusbundle_course_session_cancellatio
 
 const map = new Map()
 
-for (const i of cancellations) map.set(i.inscription_uuid, [...(map.get(i.inscription_uuid) || []), i.id])
+for (const i of cancellations) {
+    map.set(i.inscription_uuid, map.get(i.inscription_uuid) ? [...map.get(i.inscription_uuid), i.id] : [i.id])
+}
 
-let counter = 0
 for (const [uuid, ids] of map) {
     if (ids.length < 2) continue
     if (
@@ -22,7 +23,7 @@ for (const [uuid, ids] of map) {
     )
         continue
 
-    counter = counter + 1
+    await prisma.claro_cursusbundle_course_session_cancellation.deleteMany({
+        where: { id: { in: ids.slice(1) } },
+    })
 }
-
-console.log(`Removed = ${counter}`)
