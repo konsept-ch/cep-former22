@@ -264,6 +264,9 @@ createService(
                                 gte: startYear,
                             },
                         },
+                        former22_invoice_item: {
+                            none: {},
+                        },
                     },
                 })
             )
@@ -301,6 +304,9 @@ createService(
                                         gte: startYear,
                                     },
                                 },
+                                former22_invoice_item: {
+                                    none: {},
+                                },
                             },
                         })
                     ).map((c) => ({ ...c, uuid: c.inscription_uuid }))
@@ -328,15 +334,6 @@ createService(
                 claro_user: { first_name, last_name, user_organization },
                 inscription_uuid,
             } of inscriptions as any) {
-                if (
-                    (await prisma.former22_invoice_item.count({
-                        where: {
-                            OR: [{ inscriptionId: id }, { cancellationId: id }],
-                        },
-                    })) > 0
-                )
-                    continue
-
                 const mainOrganization = user_organization[0]?.claro__organization
 
                 const organization = organizationsAdditionalData.find(
@@ -532,6 +529,9 @@ createService(
                                 gte: new Date('2024-01-01'),
                             },
                         },
+                        former22_invoice_item: {
+                            none: {},
+                        },
                     },
                 })
             ).filter(({ uuid }) => {
@@ -552,16 +552,7 @@ createService(
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
                         i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
                 ) {
-                    if (
-                        (await prisma.former22_invoice_item.count({
-                            where: {
-                                OR: [{ inscriptionId: i.id }, { cancellationId: i.id }],
-                            },
-                        })) > 0
-                    )
-                        continue
-
-                    const inscription: any = await prisma.claro_cursusbundle_course_session_user.findUnique({
+                    const inscription: any = await prisma.claro_cursusbundle_course_session_user.findFirst({
                         select: {
                             id: true,
                             uuid: true,
@@ -581,10 +572,17 @@ createService(
                         },
                         where: {
                             uuid: i.inscriptionId,
+                            claro_cursusbundle_course_session: {
+                                start_date: {
+                                    gte: new Date('2024-01-01'),
+                                },
+                            },
+                            former22_invoice_item: {
+                                none: {},
+                            },
                         },
                     })
-
-                    inscriptions.push(inscription)
+                    if (inscription) inscriptions.push(inscription)
                 }
             }
 
