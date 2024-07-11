@@ -188,10 +188,7 @@ export const fetchInscriptionsWithStatuses = async (
                         },
                     },
                 },
-                claro_cursusbundle_course_session_user: !shouldFetchCancellations && {
-                    where: shouldFetchTutors
-                        ? { registration_type: REGISTRATION_TYPES.TUTOR }
-                        : { registration_type: REGISTRATION_TYPES.LEARNER },
+                claro_cursusbundle_course_session_user: {
                     select: {
                         id: true,
                         uuid: true,
@@ -234,55 +231,9 @@ export const fetchInscriptionsWithStatuses = async (
                             },
                         },
                     },
-                },
-                claro_cursusbundle_course_session_cancellation: shouldFetchCancellations && {
-                    select: {
-                        registration_date: true,
-                        id: true,
-                        uuid: true,
-                        inscription_uuid: true,
-                        claro_user: {
-                            select: {
-                                first_name: true,
-                                last_name: true,
-                                mail: true,
-                                username: true,
-                                phone: true,
-                                uuid: true,
-                                user_organization: {
-                                    select: {
-                                        is_main: true,
-                                        claro__organization: {
-                                            include: {
-                                                claro_cursusbundle_quota: true,
-                                                former22_organization: {
-                                                    select: {
-                                                        clientNumber: true,
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                    where: {
-                                        is_main: true,
-                                    },
-                                },
-                                former22_user: {
-                                    select: {
-                                        shouldReceiveSms: true,
-                                    },
-                                },
-                            },
-                        },
-                        claro_cursusbundle_course_session: {
-                            select: {
-                                uuid: true,
-                                start_date: true,
-                                course_name: true,
-                                quota_days: true,
-                                used_by_quotas: true,
-                            },
-                        },
+                    where: {
+                        registration_type: shouldFetchTutors ? REGISTRATION_TYPES.TUTOR : REGISTRATION_TYPES.LEARNER,
+                        cancelled: shouldFetchCancellations,
                     },
                 },
             },
@@ -315,7 +266,6 @@ export const fetchInscriptionsWithStatuses = async (
             const fetchedInscriptions = sessions.flatMap(
                 ({
                     claro_cursusbundle_course_session_user: inscriptions,
-                    claro_cursusbundle_course_session_cancellation: cancellations,
                     claro_cursusbundle_course: courseData,
                     course_name,
                     quota_days,
@@ -323,18 +273,12 @@ export const fetchInscriptionsWithStatuses = async (
                     start_date,
                     uuid: sessionUuid,
                 }: any) =>
-                    inscriptions?.length > 0 || cancellations?.length > 0
-                        ? (shouldFetchCancellations ? cancellations : inscriptions).map((inscription: any) => {
+                    inscriptions.length > 0
+                        ? inscriptions.map((inscription: any) => {
                               try {
                                   const inscriptionStatusForId = inscriptionsAdditionalData.find(
                                       ({ inscriptionId }) => inscriptionId === inscription.uuid
                                   )
-                                  const inscriptionStatusForIdWhenCancellation = shouldFetchCancellations
-                                      ? inscriptionsAdditionalData.find(
-                                            ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
-                                        )
-                                      : null
-
                                   const { coordinator, codeCategory, theme, targetAudience } =
                                       courseData.former22_course ?? {}
 
@@ -347,10 +291,7 @@ export const fetchInscriptionsWithStatuses = async (
                                   const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
 
                                   const derivedStatus = deriveInscriptionStatus({
-                                      savedStatus: (shouldFetchCancellations
-                                          ? inscriptionStatusForIdWhenCancellation
-                                          : inscriptionStatusForId
-                                      )?.inscriptionStatus as StatusesValues,
+                                      savedStatus: inscriptionStatusForId?.inscriptionStatus as StatusesValues,
                                       transformedStatus: transformFlagsToStatus({
                                           validated: inscription.validated,
                                           registrationType: shouldFetchCancellations
@@ -419,10 +360,8 @@ export const fetchInscriptionsWithStatuses = async (
                                               : '',
                                       organizationClientNumber:
                                           userMainOrganization?.former22_organization?.clientNumber,
-                                      invoiceNumber: (shouldFetchCancellations
-                                          ? items.find((i) => i.cancellationId === inscription.id)
-                                          : items.find((i) => i.inscriptionId === inscription.id)
-                                      )?.former22_manual_invoice.number,
+                                      invoiceNumber: items.find((i) => i.inscriptionId === inscription.id)
+                                          ?.former22_manual_invoice.number,
                                   }
                               } catch (error) {
                                   console.error(error)

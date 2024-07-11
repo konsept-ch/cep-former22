@@ -19,7 +19,7 @@
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
-    "clean:cancellations": "node ./scripts/cancellations.js",
+    "cancellations:migrate": "node ./scripts/cancellations.js",
     "invoices:migrate": "node ./scripts/invoices.js",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",
