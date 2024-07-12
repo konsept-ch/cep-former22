@@ -547,8 +547,6 @@ createService(
             for (const i of inscriptionMap.values()) {
                 if (
                     !alreadyAdded.has(i.uuid) &&
-                    i.organizationId &&
-                    i.organizationId === organizationId &&
                     (i.inscriptionStatus === STATUSES.PARTICIPATION ||
                         i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
                 ) {
@@ -575,6 +573,14 @@ createService(
                             claro_cursusbundle_course_session: {
                                 start_date: {
                                     gte: new Date('2024-01-01'),
+                                },
+                            },
+                            claro_user: {
+                                user_organization: {
+                                    some: {
+                                        oganization_id: organizationId,
+                                        is_main: true,
+                                    },
                                 },
                             },
                             former22_invoice_item: {
