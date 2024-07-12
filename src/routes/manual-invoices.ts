@@ -455,7 +455,6 @@ createService(
     'post',
     '/grouped',
     async (req: Request, res: Response) => {
-        // Get all organizations by billing mode
         const organizationMap = (
             await prisma.former22_organization.findMany({
                 select: {
@@ -480,124 +479,86 @@ createService(
                         },
                     },
                 },
-                where: {
-                    billingMode: 'Groupée',
-                },
             })
         ).reduce((map, o) => map.set(o.organizationId, o), new Map())
         const inscriptionMap = (await prisma.former22_inscription.findMany()).reduce(
             (map, i) => map.set(i.inscriptionId, i),
             new Map()
         )
-
-        const mappedInscriptions = new Map()
-
-        const now = new Date()
-
-        // create all invoices by organizations
-        for (const organizationId of organizationMap.keys()) {
-            const inscriptions = (
-                await prisma.claro_cursusbundle_course_session_user.findMany({
-                    select: {
-                        id: true,
-                        uuid: true,
-                        status: true,
-                        claro_cursusbundle_course_session: {
-                            select: {
-                                course_name: true,
-                                price: true,
-                            },
-                        },
-                        claro_user: {
-                            select: {
-                                first_name: true,
-                                last_name: true,
-                            },
+        const sessionUsers = (
+            await prisma.claro_cursusbundle_course_session_user.findMany({
+                select: {
+                    id: true,
+                    uuid: true,
+                    status: true,
+                    claro_cursusbundle_course_session: {
+                        select: {
+                            course_name: true,
+                            price: true,
                         },
                     },
-                    where: {
-                        claro_user: {
+                    claro_user: {
+                        select: {
+                            first_name: true,
+                            last_name: true,
                             user_organization: {
-                                some: {
-                                    oganization_id: organizationId,
+                                select: {
+                                    oganization_id: true,
+                                },
+                                where: {
                                     is_main: true,
                                 },
                             },
                         },
-                        claro_cursusbundle_course_session: {
-                            start_date: {
-                                gte: new Date('2024-01-01'),
+                    },
+                },
+                where: {
+                    claro_user: {
+                        user_organization: {
+                            some: {
+                                claro__organization: {
+                                    former22_organization: {
+                                        billingMode: 'Groupée',
+                                    },
+                                },
+                                is_main: true,
                             },
-                        },
-                        former22_invoice_item: {
-                            none: {},
                         },
                     },
-                })
-            ).filter(({ uuid }) => {
-                const i: any = inscriptionMap.get(uuid)
-                return (
-                    i &&
-                    (i.inscriptionStatus === STATUSES.PARTICIPATION ||
-                        i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
-                )
+                    claro_cursusbundle_course_session: {
+                        start_date: {
+                            gte: new Date('2024-01-01'),
+                        },
+                    },
+                    former22_invoice_item: {
+                        none: {},
+                    },
+                },
             })
-            const alreadyAdded = inscriptions.reduce((map, i) => map.set(i.uuid, i), new Map())
+        ).filter(({ uuid }) => {
+            const i: any = inscriptionMap.get(uuid)
+            return (
+                i &&
+                (i.inscriptionStatus === STATUSES.PARTICIPATION ||
+                    i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
+            )
+        })
 
-            for (const i of inscriptionMap.values()) {
-                if (
-                    !alreadyAdded.has(i.uuid) &&
-                    i.organizationId &&
-                    i.organizationId === organizationId &&
-                    (i.inscriptionStatus === STATUSES.PARTICIPATION ||
-                        i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
-                ) {
-                    const inscription: any = await prisma.claro_cursusbundle_course_session_user.findFirst({
-                        select: {
-                            id: true,
-                            uuid: true,
-                            status: true,
-                            claro_cursusbundle_course_session: {
-                                select: {
-                                    course_name: true,
-                                    price: true,
-                                },
-                            },
-                            claro_user: {
-                                select: {
-                                    first_name: true,
-                                    last_name: true,
-                                },
-                            },
-                        },
-                        where: {
-                            uuid: i.inscriptionId,
-                            claro_cursusbundle_course_session: {
-                                start_date: {
-                                    gte: new Date('2024-01-01'),
-                                },
-                            },
-                            former22_invoice_item: {
-                                none: {},
-                            },
-                        },
-                    })
-                    if (inscription) inscriptions.push(inscription)
-                }
-            }
+        const now = new Date()
+        const mappedInscriptions = new Map()
 
-            const getParentWithQuota: any = (id: any) => {
-                if (id == null) return null
-                const orga: any = organizationMap.get(id)
-                return orga.claro__organization.claro_cursusbundle_quota ? id : getParentWithQuota(orga.parent_id)
+        for (const inscription of sessionUsers) {
+            const organizationId = inscription.claro_user.user_organization[0].oganization_id
+
+            let parentWithQuota = organizationId
+            for (; parentWithQuota != null; ) {
+                const orga: any = organizationMap.get(parentWithQuota).claro__organization
+                if (orga.claro_cursusbundle_quota) break
+                parentWithQuota = orga.parent_id
             }
-            const parentWithQuota = getParentWithQuota(organizationId) ?? organizationId
             const parentUseQuota = parentWithQuota === null ? 0 : 0.5
-
-            for (const inscription of inscriptions) {
-                const key = inscription.status === 3 ? parentWithQuota + parentUseQuota : organizationId
-                mappedInscriptions.set(key, [...(mappedInscriptions.get(key) ?? []), inscription])
-            }
+            const key = inscription.status === 3 ? (parentWithQuota ?? organizationId) + parentUseQuota : organizationId
+            mappedInscriptions.set(key, [...(mappedInscriptions.get(key) ?? []), inscription])
         }
 
         for (const [key, inscriptions] of mappedInscriptions) {
