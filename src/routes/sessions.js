@@ -166,6 +166,11 @@ createService(
                 claro_cursusbundle_course: {
                     select: {
                         course_name: true,
+                        former22_course: {
+                            select: {
+                                coordinator: true,
+                            },
+                        },
                     },
                 },
                 code: true,
@@ -238,6 +243,11 @@ createService(
                 courseName,
                 sessionCode,
                 eventDates: events.map(({ claro_planned_object: { start_date } }) => start_date),
+                coordinator:
+                    sessionPresenceList.claro_cursusbundle_course.former22_course?.coordinator
+                        .split(/\s+/)
+                        .map((w) => w[0].toUpperCase())
+                        .join('') || '',
                 learners: getNamesByType({
                     inscriptions: inscriptions.filter(
                         ({ uuid, validated, registration_type, status, claro_user }) =>
