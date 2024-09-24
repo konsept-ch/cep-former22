@@ -146,7 +146,6 @@ createService(
                             plainDescription: true,
                             claro_cursusbundle_course_session: {
                                 where: {
-                                    hidden: false,
                                     claro_cursusbundle_course_session_user: {
                                         some: registrationConditions,
                                     },
