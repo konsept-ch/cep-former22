@@ -228,7 +228,7 @@ createService(
     '/direct',
     async (req: Request, res: Response) => {
         try {
-            const startYear = new Date('2024-01-01')
+            const startYear = new Date(`${new Date().getFullYear()}-01-01`)
 
             const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
 
@@ -260,6 +260,9 @@ createService(
                     },
                     where: {
                         claro_cursusbundle_course_session: {
+                            claro_cursusbundle_course: {
+                                generateInvoice: true,
+                            },
                             start_date: {
                                 gte: startYear,
                             },
@@ -300,6 +303,9 @@ createService(
                             },
                             where: {
                                 claro_cursusbundle_course_session: {
+                                    claro_cursusbundle_course: {
+                                        generateInvoice: true,
+                                    },
                                     start_date: {
                                         gte: startYear,
                                     },
@@ -455,6 +461,8 @@ createService(
     'post',
     '/grouped',
     async (req: Request, res: Response) => {
+        const now = new Date()
+
         const organizationMap = (
             await prisma.former22_organization.findMany({
                 select: {
@@ -526,8 +534,11 @@ createService(
                         },
                     },
                     claro_cursusbundle_course_session: {
+                        claro_cursusbundle_course: {
+                            generateInvoice: true,
+                        },
                         start_date: {
-                            gte: new Date('2024-01-01'),
+                            gte: new Date(`${now.getFullYear()}-01-01`),
                         },
                     },
                     former22_invoice_item: {
@@ -544,7 +555,6 @@ createService(
             )
         })
 
-        const now = new Date()
         const mappedInscriptions = new Map()
 
         for (const inscription of sessionUsers) {
