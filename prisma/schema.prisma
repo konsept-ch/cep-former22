@@ -958,6 +958,7 @@ model claro_cursusbundle_course {
   hideSessions                                                                  Boolean
   resource_id                                                                   Int?
   session_hours                                                                 Float                                          @default(0)
+  generateInvoice                                                               Boolean                                        @default(false)
   claro_user                                                                    claro_user?                                    @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_3359D34961220EA6")
   claro_cursusbundle_course                                                     claro_cursusbundle_course?                     @relation("claro_cursusbundle_courseToclaro_cursusbundle_course_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3359D349727ACA70")
   other_claro_cursusbundle_course                                               claro_cursusbundle_course[]                    @relation("claro_cursusbundle_courseToclaro_cursusbundle_course_parent_id")
@@ -1143,12 +1144,12 @@ model claro_cursusbundle_course_session_user {
   validated                         Boolean
   status                            Int
   remark                            String                            @db.LongText
+  cancelled                         Boolean
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120F613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120FA76ED395")
   former22_invoice                  former22_invoice[]
   former22_invoice_item             former22_invoice_item[]
 
-  @@unique([session_id, user_id], map: "training_session_unique_user")
   @@index([session_id], map: "IDX_80B4120F613FECDF")
   @@index([user_id], map: "IDX_80B4120FA76ED395")
 }
