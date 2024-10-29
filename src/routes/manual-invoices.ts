@@ -261,7 +261,7 @@ createService(
                     where: {
                         claro_cursusbundle_course_session: {
                             claro_cursusbundle_course: {
-                                generateInvoice: true,
+                                generateInvoice: false,
                             },
                             start_date: {
                                 gte: startYear,
@@ -304,7 +304,7 @@ createService(
                             where: {
                                 claro_cursusbundle_course_session: {
                                     claro_cursusbundle_course: {
-                                        generateInvoice: true,
+                                        generateInvoice: false,
                                     },
                                     start_date: {
                                         gte: startYear,
@@ -535,7 +535,7 @@ createService(
                     },
                     claro_cursusbundle_course_session: {
                         claro_cursusbundle_course: {
-                            generateInvoice: true,
+                            generateInvoice: false,
                         },
                         start_date: {
                             gte: new Date(`${now.getFullYear()}-01-01`),

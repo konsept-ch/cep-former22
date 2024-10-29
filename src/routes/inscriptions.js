@@ -189,6 +189,7 @@ createService(
                                 course_name: true,
                                 session_days: true,
                                 session_hours: true,
+                                generateInvoice: true,
                                 former22_course: {
                                     select: {
                                         goals: true,
@@ -881,6 +882,18 @@ createService(
                 }
             } else {
                 // TODO throw error?
+            }
+
+            if (session.claro_cursusbundle_course.generateInvoice) {
+                res.json({ isInvoiceCreated: false })
+                return {
+                    entityName: 'Inscription',
+                    entityId: req.params.inscriptionId,
+                    actionName: getLogDescriptions.inscription({
+                        originalStatus: currentInscriptionStatus,
+                        newStatus,
+                    }),
+                }
             }
 
             let organization = mainOrganization
