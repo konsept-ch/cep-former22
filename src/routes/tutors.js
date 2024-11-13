@@ -68,7 +68,6 @@ createService(
                           fsm: false,
                           cursus: false,
                           status: null,
-                          dates: '',
                           course: '',
                           pitch: '',
                           scenario: '',
