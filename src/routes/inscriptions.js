@@ -349,22 +349,6 @@ createService(
                     method: 'delete',
                 })
 
-                /*await prisma.claro_cursusbundle_course_session_user.delete({
-                    where: {
-                        uuid: currentInscription.uuid,
-                    },
-                })*/
-
-                await prisma.claro_cursusbundle_course_session_cancellation.create({
-                    data: {
-                        uuid: uuidv4(),
-                        user_id: user.id,
-                        session_id: session.id,
-                        inscription_uuid: currentInscription.uuid,
-                        registration_date: new Date(),
-                    },
-                })
-
                 const cancellation = await prisma.claro_cursusbundle_course_session_cancellation.findFirst({
                     select: {
                         id: true,
