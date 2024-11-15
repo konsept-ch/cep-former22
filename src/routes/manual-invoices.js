@@ -358,7 +358,6 @@ createService(
                 inscription_uuid,
             } of inscriptions) {
                 const mainOrganization = user_organization[0]?.claro__organization
-                if (!mainOrganization) console.log('HELLO', user_organization)
 
                 const organization = organizationsAdditionalData.find(
                     ({ organizationUuid }) => organizationUuid === mainOrganization.uuid
