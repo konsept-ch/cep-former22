@@ -94,7 +94,7 @@ createService(
             if (currentAuth === 'Access Denied.') {
                 respondToPeopleSoft(res, "Votre token n'existe pas dans Claroline")
             } else {
-                const isAdmin = currentAuth[0]?.permissions.edit && currentAuth[0]?.permissions.edit
+                const isAdmin = currentAuth[0]?.permissions.edit
 
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")

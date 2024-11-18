@@ -3,7 +3,7 @@ import { customAlphabet } from 'nanoid'
 
 import { prisma } from '..'
 import { sendEmail } from '../sendEmail'
-import { checkAuth, createService, delay } from '../utils'
+import { checkAuth, createService } from '../utils'
 
 const nanoid = customAlphabet('1234567890', 6)
 
@@ -41,8 +41,6 @@ createService(
     'post',
     '/checkCodeAndToken',
     async (req, res) => {
-        await delay(50)
-
         const email = req.body.email?.trim()
         const token = req.body.token?.trim()
         const code = req.body.code?.trim()

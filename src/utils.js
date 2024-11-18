@@ -1,18 +1,13 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { app, prisma } from '.'
-import { callApi } from './callApi'
 import { winstonLogger } from './winston'
-import { NextFunction, Request, Response, Router } from 'express'
 
 export const attestationTemplateFilesDest = '/data/uploads/attestation-templates'
 export const contractTemplateFilesDest = '/data/uploads/contract-templates'
 export const contractFilesDest = '/data/uploads/contracts'
 
-// for testing/development purposes only
-export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
-
-export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }: any) => {
+export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVisible, isDateVisible }) => {
     const date = dateObject ?? (dateString ? new Date(dateString) : new Date())
     const getDay = () => (date.getDate() < 10 ? `0${date.getDate()}` : date.getDate())
     const getMonth = () => {
@@ -58,29 +53,34 @@ export const LOG_TYPES = {
 
 // TODO: named params
 export const createService = (
-    method: keyof Router,
-    url: string,
-    handlerFunction: any,
-    logHelper: any,
-    router: Router = app,
-    middlewareFunction = (req: Request, res: Response, next: NextFunction) => {
+    method,
+    url,
+    handlerFunction,
+    logHelper,
+    router = app,
+    middlewareFunction = (req, res, next) => {
         next()
     }
 ) => {
-    ;(router as any)[method](url, middlewareFunction, async (req: Request, res: Response) => {
+    router[method](url, middlewareFunction, async (req, res) => {
         let logId
         try {
             if (logHelper) {
-                const userDetails = (await callApi({
-                    req,
-                    path: 'user/find',
-                    params: `filters[email]=${req.headers['x-login-email-address']}`,
-                })) as { name: string; email: string }
+                const email = req.headers['x-login-email-address']
+                const user = await prisma.claro_user.findUnique({
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                    },
+                    where: {
+                        mail: email,
+                    },
+                })
 
                 const log = await prisma.former22_log.create({
                     data: {
                         logId: uuidv4(),
-                        userEmail: `${userDetails.name} <${userDetails.email}>`,
+                        userEmail: `${user.first_name.trim()} ${user.last_name.trim()} <${email}>`,
                         entityType: logHelper.entityType,
                         // dateAndTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
                         dateAndTime: new Date(),
@@ -101,7 +101,7 @@ export const createService = (
 
             const logPayload = await handlerFunction(req, res)
 
-            if (logHelper) {
+            if (logHelper && logPayload) {
                 await prisma.former22_log.update({
                     where: { id: logId },
                     data: {
@@ -112,9 +112,7 @@ export const createService = (
                     },
                 })
             }
-        } catch (error: any) {
-            // eslint-disable-next-line no-console
-            console.error(error)
+        } catch (error) {
             winstonLogger.error(
                 `${req.method} request to ${req.originalUrl} failed. IP: ${req.ip} Response code: ${
                     error.status || 500
@@ -143,24 +141,22 @@ export const createService = (
 }
 
 export const getLogDescriptions = {
-    formation: ({ isUpdatedDetails }: { isUpdatedDetails: boolean }) =>
-        isUpdatedDetails ? `Updated course details` : 'Updated description',
-    inscription: ({ originalStatus, newStatus }: { originalStatus: string; newStatus: string }) =>
-        `Changed status from "${originalStatus}" to "${newStatus}"`,
-    user: ({ shouldReceiveSms, fullName }: { shouldReceiveSms: boolean; fullName: string }) =>
+    formation: ({ isUpdatedDetails }) => (isUpdatedDetails ? `Updated course details` : 'Updated description'),
+    inscription: ({ originalStatus, newStatus }) => `Changed status from "${originalStatus}" to "${newStatus}"`,
+    user: ({ shouldReceiveSms, fullName }) =>
         shouldReceiveSms ? `${fullName} will receive SMSes` : `${fullName} will not receive SMSes`,
 }
 
-export const addHours = ({ numOfHours, oldDate }: { numOfHours: number; oldDate: Date }) =>
-    new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
+export const addHours = ({ numOfHours, oldDate }) => new Date(oldDate.getTime() + numOfHours * 60 * 60 * 1000)
 
-export const checkAuth = async ({ email, code, token }: { email: string; code: string; token: string }) => {
+export const checkAuth = async ({ email, code, token }) => {
     const authPair = await prisma.former22_auth_codes.findUnique({
         where: { email },
         select: {
             code: true,
         },
     })
+    if (process.env.NODE_ENV === 'production' && authPair?.code !== code) return false
 
     const userApiToken = await prisma.claro_api_token.findMany({
         where: { claro_user: { mail: email } },
@@ -200,8 +196,7 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
         },
     })
 
-    const doesCodeMatch = process.env.NODE_ENV !== 'production' || authPair?.code === code
-    const doesMatchingAdminUnlockedTokenExist =
+    return (
         userApiToken.find(
             (apiToken) =>
                 apiToken.token === token &&
@@ -211,20 +206,18 @@ export const checkAuth = async ({ email, code, token }: { email: string; code: s
                         group.claro_group.claro_group_role.some((role) => role.claro_role.translation_key === 'admin')
                     ))
         ) != null
-
-    return doesCodeMatch && doesMatchingAdminUnlockedTokenExist
+    )
 }
 
 export const mapStatusToValidationType = {
-    '0': 'En attente',
-    '1': 'Refusée par RH',
-    '2': 'Validée par RH',
-    '3': 'Validée sur quota par RH',
-    '4': 'Annulé',
-} as const
-export type ValidationTypesKeys = keyof typeof mapStatusToValidationType
+    0: 'En attente',
+    1: 'Refusée par RH',
+    2: 'Validée par RH',
+    3: 'Validée sur quota par RH',
+    4: 'Annulé',
+}
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req, res, next) => {
     if (
         !['x-login-email-address', 'x-login-email-code', 'x-login-token'].every((property) =>
             Object.hasOwn(req.headers, property)
@@ -234,9 +227,9 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         return
     }
 
-    const email = (req.headers['x-login-email-address'] as string).trim()
-    const code = (req.headers['x-login-email-code'] as string).trim()
-    const token = (req.headers['x-login-token'] as string).trim()
+    const email = req.headers['x-login-email-address'].trim()
+    const code = req.headers['x-login-email-code'].trim()
+    const token = req.headers['x-login-token'].trim()
     const isAuthenticated = await checkAuth({ email, code, token })
 
     if (isAuthenticated) {
