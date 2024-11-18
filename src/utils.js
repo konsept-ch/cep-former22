@@ -67,7 +67,7 @@ export const createService = (
         try {
             if (logHelper) {
                 const email = req.headers['x-login-email-address']
-                const user = await prisma.claro_user({
+                const user = await prisma.claro_user.findUnique({
                     select: {
                         first_name: true,
                         last_name: true,
