@@ -960,13 +960,11 @@ createService(
                 cancellationId,
             }
 
+            const invoiceInscriptionId = invoiceItem.inscriptionId || invoiceItem.cancellationId
             if (
                 (await prisma.former22_invoice_item.count({
                     where: {
-                        OR: [
-                            { inscriptionId: invoiceItem.inscriptionId },
-                            { cancellationId: invoiceItem.cancellationId },
-                        ],
+                        OR: [{ inscriptionId: invoiceInscriptionId }, { cancellationId: invoiceInscriptionId }],
                     },
                 })) > 0
             ) {
