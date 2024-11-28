@@ -304,13 +304,90 @@ createService(
             }),
         })
 
-        const arePrevAndNextStatusesPartOfSameLockGroup = lockGroups.some(
-            (lockGroup) => lockGroup.includes(currentInscriptionStatus) && lockGroup.includes(newStatus)
-        )
-
-        if (finalStatuses.includes(currentInscriptionStatus) && !arePrevAndNextStatusesPartOfSameLockGroup) {
+        if (
+            finalStatuses.includes(currentInscriptionStatus) &&
+            !lockGroups.some(
+                (lockGroup) => lockGroup.includes(currentInscriptionStatus) && lockGroup.includes(newStatus)
+            )
+        ) {
             res.status(500).json('Ce statut ne peut pas être modifié')
 
+            return {
+                entityName: 'Inscription',
+                entityId: req.params.inscriptionId,
+                actionName: getLogDescriptions.inscription({
+                    originalStatus: currentInscriptionStatus,
+                    newStatus,
+                }),
+            }
+        }
+
+        let organization = mainOrganization
+        let organizationExtra = mainOrganizationExtra
+        let invoiceType = { value: 'Directe', label: invoiceTypesFromPrisma.Directe }
+        let config = null
+
+        if (newStatus === STATUSES.NON_PARTICIPATION) {
+            config = {
+                concerns: 'Absence non annoncée',
+                unit: { value: 'part.', label: 'part.' },
+                reason: 'Non_participation',
+                price: `${sessionPrice}`,
+            }
+        }
+        if (newStatus === STATUSES.ANNULEE_FACTURABLE) {
+            config = {
+                concerns: 'Annulation ou report hors-délai',
+                unit: { value: 'forfait(s)', label: 'forfait(s)' },
+                reason: 'Annulation',
+                price: '50',
+            }
+        }
+
+        if (
+            (mainOrganizationExtra?.billingMode === 'Directe' || mainOrganizationExtra?.billingMode === 'Groupée') &&
+            [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
+        ) {
+            if (mainOrganizationExtra.billingMode === 'Groupée') {
+                invoiceType = { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e }
+
+                if (currentInscription.status === 3) {
+                    const parentWithQuota = await getParentWithQuota(mainOrganization)
+                    if (parentWithQuota) {
+                        organization = parentWithQuota
+                        organizationExtra = await prisma.former22_organization.findUnique({
+                            where: { organizationUuid: parentWithQuota.uuid },
+                        })
+                        invoiceType = { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
+                    }
+                }
+            }
+
+            config = {
+                unit: { value: 'part.', label: 'part.' },
+                reason: 'Participation',
+                price: `${sessionPrice}`,
+            }
+        }
+
+        if (
+            config !== null &&
+            (await prisma.former22_invoice_item.count({
+                where: {
+                    OR: [
+                        { inscriptionId: currentInscription.id },
+                        {
+                            claro_cursusbundle_course_session_cancellation: {
+                                inscription_uuid: req.params.inscriptionId,
+                            },
+                        },
+                    ],
+                },
+            })) > 0
+        ) {
+            res.status(400).json({
+                message: 'Une facture est déjà liée à cette inscription',
+            })
             return {
                 entityName: 'Inscription',
                 entityId: req.params.inscriptionId,
@@ -340,49 +417,6 @@ createService(
                     content: smsContent.replace(/<br\s*\/?>/gi, '\n'),
                 })
             }
-        }
-
-        let cancellationId = null
-
-        if (statusesForAnnulation.includes(newStatus)) {
-            await callApi({
-                req,
-                path: `cursus_session/${session.uuid}/users/learner`,
-                params: { 'ids[0]': currentInscription.uuid },
-                method: 'delete',
-            })
-
-            const cancellation = await prisma.claro_cursusbundle_course_session_cancellation.findFirst({
-                select: {
-                    id: true,
-                },
-                where: {
-                    inscription_uuid: currentInscription.uuid,
-                },
-            })
-
-            cancellationId = cancellation?.id
-        }
-
-        await prisma.former22_inscription.upsert({
-            where: { inscriptionId: req.params.inscriptionId },
-            update: { inscriptionStatus: newStatus, updatedAt: new Date(), ...(remark ? { remark } : {}) },
-            create: {
-                inscriptionStatus: newStatus,
-                inscriptionId: req.params.inscriptionId,
-                ...(remark ? { remark } : {}),
-            },
-        })
-
-        if (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus))) {
-            await prisma.former22_inscription.update({
-                where: {
-                    inscriptionId: req.params.inscriptionId,
-                },
-                data: {
-                    organizationId: mainOrganizationExtra.id,
-                },
-            })
         }
 
         if (selectedAttestationTemplateUuid && selectedAttestationTemplateUuid !== 'no-attestation') {
@@ -869,6 +903,49 @@ createService(
             }
         }
 
+        let cancellationId = null
+
+        if (statusesForAnnulation.includes(newStatus)) {
+            await callApi({
+                req,
+                path: `cursus_session/${session.uuid}/users/learner`,
+                params: { 'ids[0]': currentInscription.uuid },
+                method: 'delete',
+            })
+
+            const cancellation = await prisma.claro_cursusbundle_course_session_cancellation.findFirst({
+                select: {
+                    id: true,
+                },
+                where: {
+                    inscription_uuid: currentInscription.uuid,
+                },
+            })
+
+            cancellationId = cancellation?.id
+        }
+
+        await prisma.former22_inscription.upsert({
+            where: { inscriptionId: req.params.inscriptionId },
+            update: { inscriptionStatus: newStatus, updatedAt: new Date(), ...(remark ? { remark } : {}) },
+            create: {
+                inscriptionStatus: newStatus,
+                inscriptionId: req.params.inscriptionId,
+                ...(remark ? { remark } : {}),
+            },
+        })
+
+        if (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus))) {
+            await prisma.former22_inscription.update({
+                where: {
+                    inscriptionId: req.params.inscriptionId,
+                },
+                data: {
+                    organizationId: mainOrganizationExtra.id,
+                },
+            })
+        }
+
         if (session.claro_cursusbundle_course.generateInvoice) {
             res.json({ isInvoiceCreated: false })
             return {
@@ -878,54 +955,6 @@ createService(
                     originalStatus: currentInscriptionStatus,
                     newStatus,
                 }),
-            }
-        }
-
-        let organization = mainOrganization
-        let organizationExtra = mainOrganizationExtra
-        let invoiceType = { value: 'Directe', label: invoiceTypesFromPrisma.Directe }
-        let config = null
-
-        if (newStatus === STATUSES.NON_PARTICIPATION) {
-            config = {
-                concerns: 'Absence non annoncée',
-                unit: { value: 'part.', label: 'part.' },
-                reason: 'Non_participation',
-                price: `${sessionPrice}`,
-            }
-        }
-        if (newStatus === STATUSES.ANNULEE_FACTURABLE) {
-            config = {
-                concerns: 'Annulation ou report hors-délai',
-                unit: { value: 'forfait(s)', label: 'forfait(s)' },
-                reason: 'Annulation',
-                price: '50',
-            }
-        }
-
-        if (
-            (mainOrganizationExtra?.billingMode === 'Directe' || mainOrganizationExtra?.billingMode === 'Groupée') &&
-            [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(newStatus)
-        ) {
-            if (mainOrganizationExtra.billingMode === 'Groupée') {
-                invoiceType = { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e }
-
-                if (currentInscription.status === 3) {
-                    const parentWithQuota = await getParentWithQuota(mainOrganization)
-                    if (parentWithQuota) {
-                        organization = parentWithQuota
-                        organizationExtra = await prisma.former22_organization.findUnique({
-                            where: { organizationUuid: parentWithQuota.uuid },
-                        })
-                        invoiceType = { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
-                    }
-                }
-            }
-
-            config = {
-                unit: { value: 'part.', label: 'part.' },
-                reason: 'Participation',
-                price: `${sessionPrice}`,
             }
         }
 
@@ -958,27 +987,6 @@ createService(
                 vatCode: { value: 'EXONERE', label: 'EXONERE' },
                 inscriptionId: cancellationId ? null : currentInscription.id,
                 cancellationId,
-            }
-
-            const invoiceInscriptionId = invoiceItem.inscriptionId || invoiceItem.cancellationId
-            if (
-                (await prisma.former22_invoice_item.count({
-                    where: {
-                        OR: [{ inscriptionId: invoiceInscriptionId }, { cancellationId: invoiceInscriptionId }],
-                    },
-                })) > 0
-            ) {
-                res.status(400).json({
-                    message: 'Une facture est déjà liée à cette inscription',
-                })
-                return {
-                    entityName: 'Inscription',
-                    entityId: req.params.inscriptionId,
-                    actionName: getLogDescriptions.inscription({
-                        originalStatus: currentInscriptionStatus,
-                        newStatus,
-                    }),
-                }
             }
 
             let alreadyCreated = false
@@ -1030,7 +1038,7 @@ createService(
                         },
                         customClientAddress,
                         customClientEmail: organization.email,
-                        selectedUserUuid: '',
+                        selectedUserUuid: null,
                         customClientTitle: '',
                         customClientFirstname: '',
                         customClientLastname: '',
