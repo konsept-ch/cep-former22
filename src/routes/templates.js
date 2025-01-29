@@ -6,12 +6,11 @@ import { deserializeStatuses, getTemplatePreviews, serializeStatuses } from './t
 
 export const templatesRouter = Router()
 
-// templates preview START
 createService(
     'get',
-    '/previews',
+    '/:templateId/previews/:sessionId/:inscriptionId',
     async (req, res) => {
-        const { templateId, sessionId, inscriptionId } = req.query
+        const { templateId, sessionId, inscriptionId } = req.params
 
         const previews = await getTemplatePreviews({ templateId, sessionId, inscriptionId })
 
@@ -23,12 +22,10 @@ createService(
 
 createService(
     'get',
-    '/previews/massUpdate',
+    '/:templateId',
     async (req, res) => {
-        const { templateId } = req.query
-
         const template = await prisma.former22_template.findUnique({
-            where: { templateId },
+            where: { templateId: req.params.templateId },
         })
 
         res.json(template ?? "Le modèle n'a pas été trouvé")
@@ -36,9 +33,7 @@ createService(
     null,
     templatesRouter
 )
-// templates preview END
 
-// templates START
 createService(
     'get',
     '/',
@@ -126,4 +121,29 @@ createService(
     { entityType: LOG_TYPES.TEMPLATE },
     templatesRouter
 )
-// templates END
+
+createService(
+    'post',
+    '/:templateId/invite',
+    async (req, res) => {
+        await prisma.former22_template.updateMany({
+            data: { isUsedForSessionInvites: false },
+            where: { isUsedForSessionInvites: true },
+        })
+
+        await prisma.former22_template.update({
+            data: { isUsedForSessionInvites: true },
+            where: { templateId: req.params.templateId },
+        })
+
+        res.json('Le modèle a été modifié')
+
+        return {
+            entityName: req.body.title,
+            entityId: req.params.templateId,
+            actionName: `Invite updated ${req.body.title}`,
+        }
+    },
+    { entityType: LOG_TYPES.TEMPLATE },
+    templatesRouter
+)

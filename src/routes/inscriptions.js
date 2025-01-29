@@ -419,7 +419,7 @@ createService(
             }
         }
 
-        if (selectedAttestationTemplateUuid && selectedAttestationTemplateUuid !== 'no-attestation') {
+        if (selectedAttestationTemplateUuid) {
             const attestation = await prisma.former22_attestation.findUnique({
                 where: {
                     uuid: selectedAttestationTemplateUuid,

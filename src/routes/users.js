@@ -102,7 +102,9 @@ createService(
             },
         })
 
-        res.json("L'utilisateur a été modifié")
+        res.json({
+            message: "L'utilisateur a été modifié",
+        })
 
         const userFullName = `${user.first_name} ${user.last_name}`
         return {
