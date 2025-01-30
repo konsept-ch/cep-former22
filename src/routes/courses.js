@@ -67,11 +67,12 @@ createService(
     'get',
     '/by-slug/:slug',
     async (req, res) => {
-        const [courseDetails] = await prisma.claro_cursusbundle_course.findMany({
+        const courseDetails = await prisma.claro_cursusbundle_course.findFirst({
             where: { slug: req.params.slug },
         })
 
-        res.json(courseDetails ?? "Le cours n'a pas été trouvé")
+        if (courseDetails) res.json(courseDetails)
+        else res.status(404).json({ message: "Le cours n'a pas été trouvé" })
     },
     null,
     coursesRouter
@@ -81,15 +82,20 @@ createService(
     'put',
     '/save-by-id/:id',
     async (req, res) => {
-        const courseDetails = await prisma.claro_cursusbundle_course.update({
+        const course = await prisma.claro_cursusbundle_course.update({
+            select: {
+                course_name: true,
+            },
             where: { uuid: req.params.id },
             data: { ...req.body },
         })
 
-        res.json(courseDetails ?? "Le cours n'a pas été sauvegardé")
+        res.json({
+            message: 'Le cours a été modifié',
+        })
 
         return {
-            entityName: courseDetails.course_name,
+            entityName: course.course_name,
             entityId: req.params.id,
             actionName: getLogDescriptions.formation({ isUpdatedDetails: false }),
         }
@@ -189,7 +195,9 @@ createService(
             where: { uuid: courseId },
         })
 
-        res.json('Le cours a été modifié')
+        res.json({
+            message: 'Le cours a été modifié',
+        })
 
         return {
             entityName: currentCourse.course_name,

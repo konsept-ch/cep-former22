@@ -22,13 +22,37 @@ createService(
 
 createService(
     'get',
-    '/:templateId',
+    '/minimum',
+    async (req, res) => {
+        const templates = (
+            await prisma.former22_template.findMany({
+                select: {
+                    templateId: true,
+                    title: true,
+                    descriptionText: true,
+                    statuses: true,
+                },
+            })
+        ).map((template) => ({
+            ...template,
+            statuses: deserializeStatuses(template.statuses),
+        }))
+
+        res.json(templates)
+    },
+    null,
+    templatesRouter
+)
+
+createService(
+    'get',
+    '/:templateId([0-9a-f]{18,19}$)',
     async (req, res) => {
         const template = await prisma.former22_template.findUnique({
             where: { templateId: req.params.templateId },
         })
 
-        res.json(template ?? "Le modèle n'a pas été trouvé")
+        res.json(template)
     },
     null,
     templatesRouter
@@ -55,21 +79,25 @@ createService(
     'post',
     '/',
     async (req, res) => {
+        const templateId = Date.now().toString(36) + Math.random().toString(36).slice(2)
         await prisma.former22_template.create({
             data: {
-                templateId: req.body.templateId,
-                title: req.body.title,
-                descriptionText: req.body.descriptionText,
-                emailSubject: req.body.emailSubject,
-                smsBody: req.body.smsBody,
-                emailBody: req.body.emailBody,
-                statuses: serializeStatuses(req.body.statuses),
-                isUsedForSessionInvites: req.body.isUsedForSessionInvites,
-                usedByEvaluation: req.body.usedByEvaluation,
+                templateId,
+                title: '',
+                descriptionText: '',
+                emailSubject: '',
+                smsBody: '',
+                emailBody: '',
+                statuses: '',
+                isUsedForSessionInvites: false,
+                usedByEvaluation: false,
             },
         })
 
-        res.json('Le modèle a été créé')
+        res.json({
+            templateId,
+            message: 'Le modèle a été créé',
+        })
 
         return {
             entityName: req.body.title,

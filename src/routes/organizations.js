@@ -116,7 +116,9 @@ createService(
             create: { ...newData, organizationId: id, organizationUuid },
         })
 
-        res.json("L'organisation a été modifié")
+        res.json({
+            message: "L'organisation a été modifié",
+        })
 
         return {
             entityName: organizationName,

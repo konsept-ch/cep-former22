@@ -15,7 +15,6 @@ createService(
     async (_req, res) => {
         const attestations = await prisma.former22_attestation.findMany({
             select: {
-                id: false,
                 uuid: true,
                 title: true,
                 description: true,
@@ -25,6 +24,24 @@ createService(
         })
 
         res.json(attestations ?? "Les attestations n'ont pas été trouvées")
+    },
+    null,
+    attestationsRouter
+)
+
+createService(
+    'get',
+    '/minimum',
+    async (_req, res) => {
+        const attestations = await prisma.former22_attestation.findMany({
+            select: {
+                uuid: true,
+                title: true,
+                description: true,
+            },
+        })
+
+        res.json(attestations)
     },
     null,
     attestationsRouter
@@ -49,9 +66,9 @@ createService(
                 actionName: 'Added an attestation',
             }
         } catch (error) {
-            console.error(error)
-
-            res.json("Erreur de création d'attestation")
+            res.json({
+                message: "Erreur de création d'attestation",
+            })
         }
     },
     { entityType: LOG_TYPES.ATTESTATION },

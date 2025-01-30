@@ -359,7 +359,9 @@ createService(
             })
 
         if (onlyUpdate) {
-            res.json(true)
+            res.json({
+                message: 'La session a été modifiée',
+            })
         } else {
             const templateForSessionInvites = await prisma.former22_template.findFirst({
                 where: { isUsedForSessionInvites: true },
@@ -391,11 +393,9 @@ createService(
 
                 const sentEmails = await Promise.allSettled(emailsToSend)
 
-                const data = sentEmails.map(({ value }) => value)
-
-                res.json(data ?? 'Aucun e-mail envoyé')
+                if (!sentEmails.map(({ value }) => value)) res.status(400).json({ message: 'Aucun e-mail envoyé' })
             } else {
-                res.json("Aucun modèle pour sessions invitées n'a été trouvé")
+                res.status(400).json("Aucun modèle pour sessions invitées n'a été trouvé")
             }
         }
 
