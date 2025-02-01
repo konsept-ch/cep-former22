@@ -55,7 +55,7 @@
     "db-migrate": "1.0.0-beta.18",
     "db-migrate-mysql": "^3.0.0",
     "debug": "4.3.4",
-    "docxtemplater": "3.34.0",
+    "docxtemplater": "3.57.1",
     "dotenv": "16.0.3",
     "express": "4.21.1",
     "form-data": "4.0.0",
