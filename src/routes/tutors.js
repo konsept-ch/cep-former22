@@ -34,11 +34,22 @@ createService(
             },
             where: {
                 is_removed: false,
-                claro_cursusbundle_course_session_user: {
-                    some: {
-                        registration_type: 'tutor',
+                OR: [
+                    {
+                        claro_user_group: {
+                            some: {
+                                group_id: 14,
+                            },
+                        },
                     },
-                },
+                    {
+                        claro_cursusbundle_course_session_user: {
+                            some: {
+                                registration_type: 'tutor',
+                            },
+                        },
+                    },
+                ],
             },
         })
 
