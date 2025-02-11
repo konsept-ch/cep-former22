@@ -322,10 +322,10 @@ export class EvaluationHelper {
                 )
                 const bodies = [
                     ...block.notes.map((n) => statistics[block.identifier][n].toString()),
-                    participantCount.toString(),
                     Object.values(statistics[block.identifier])
                         .reduce((sum, n) => sum + n, 0)
                         .toString(),
+                    participantCount.toString(),
                 ].map((body) => ({
                     text: body,
                     computed: this.calculateTextRectangle(body, {
