@@ -8,7 +8,7 @@ export const templatesRouter = Router()
 
 createService(
     'get',
-    '/:templateId([0-9a-z]{18,19})/previews/:sessionId/:inscriptionId',
+    '/:templateId([0-9a-z]{18,20})/previews/:sessionId/:inscriptionId',
     async (req, res) => {
         const { templateId, sessionId, inscriptionId } = req.params
 
@@ -46,7 +46,7 @@ createService(
 
 createService(
     'get',
-    '/:templateId([0-9a-z]{18,19}$)',
+    '/:templateId([0-9a-z]{18,20}$)',
     async (req, res) => {
         const template = await prisma.former22_template.findUnique({
             where: { templateId: req.params.templateId },
