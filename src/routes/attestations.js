@@ -23,7 +23,7 @@ createService(
             },
         })
 
-        res.json(attestations ?? "Les attestations n'ont pas été trouvées")
+        res.json(attestations)
     },
     null,
     attestationsRouter
@@ -84,6 +84,8 @@ createService(
 
         const { file: { originalname, filename } = {} } = req
 
+        console.log(req.file)
+
         try {
             await prisma.former22_attestation.update({
                 where: {
@@ -97,7 +99,9 @@ createService(
                 },
             })
 
-            res.json("L'attestation a été modifié")
+            res.json({
+                message: "L'attestation a été modifiée",
+            })
 
             return {
                 entityName: title,
@@ -107,7 +111,9 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.status(500).json("Erreur de modification d'attestation")
+            res.status(500).json({
+                message: "Erreur de modification d'attestation",
+            })
         }
     },
     { entityType: LOG_TYPES.ATTESTATION },
@@ -120,27 +126,6 @@ createService(
     '/:uuid',
     async (req, res) => {
         const { uuid } = req.params
-        const { shouldForceDelete } = req.query
-
-        if (!shouldForceDelete) {
-            const isAttestationUsed =
-                (
-                    await prisma.former22_attestation.findUnique({
-                        where: {
-                            uuid,
-                        },
-                        include: {
-                            former22_inscription: true,
-                        },
-                    })
-                )?.former22_inscription.length > 0
-
-            if (isAttestationUsed) {
-                res.status(400).json({ error: 'Attestation template is used and therefore cannot be deleted.' })
-
-                return {}
-            }
-        }
 
         try {
             const { title } = await prisma.former22_attestation.delete({
@@ -149,7 +134,9 @@ createService(
                 },
             })
 
-            res.json("L'attestation a été supprimé")
+            res.json({
+                message: "L'attestation a été supprimée",
+            })
 
             return {
                 entityName: title,
@@ -159,7 +146,7 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.status(500).json({ error: "Erreur de suppréssion d'attestation" })
+            res.status(500).json({ message: "Erreur de suppréssion d'attestation" })
 
             return {}
         }
