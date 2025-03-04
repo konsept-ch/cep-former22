@@ -137,10 +137,120 @@ createService(
         ).length
 
         const helper = await await EvaluationHelper.create()
-        helper.generate(participantCount, results, struct, session)
+        helper.generate(session.course_name, participantCount, results, struct)
 
         res.type('pdf')
         res.set('Content-disposition', `filename=${req.params.uuid}`)
+        res.send(Buffer.from(await helper.save(), 'binary'))
+    },
+    null,
+    evaluationsRouter
+    //authMiddleware
+)
+
+createService(
+    'get',
+    '/:year/:uuid/export',
+    async (req, res) => {
+        const year = req.params.year
+
+        const course = await prisma.claro_cursusbundle_course.findUnique({
+            select: {
+                id: true,
+                course_name: true,
+            },
+            where: {
+                uuid: req.params.uuid,
+            },
+        })
+
+        const evaluations = (
+            await prisma.former22_evaluation.findMany({
+                select: {
+                    former22_evaluation_template: {
+                        select: {
+                            id: true,
+                            struct: true,
+                        },
+                    },
+                    former22_evaluation_result: {
+                        select: {
+                            result: true,
+                        },
+                    },
+                    claro_cursusbundle_course_session: {
+                        select: {
+                            start_date: true,
+                            claro_cursusbundle_course: {
+                                select: {
+                                    course_name: true,
+                                },
+                            },
+                            claro_cursusbundle_course_session_user: {
+                                select: {
+                                    uuid: true,
+                                },
+                                where: {
+                                    registration_type: 'learner',
+                                },
+                            },
+                        },
+                    },
+                },
+                where: {
+                    claro_cursusbundle_course_session: {
+                        course_id: course.id,
+                    },
+                },
+            })
+        ).filter(
+            (evaluation) =>
+                Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', year: 'numeric' }).format(
+                    evaluation.claro_cursusbundle_course_session.start_date
+                ) === year
+        )
+
+        const { struct } = evaluations.reduce(
+            (context, evaluation) =>
+                (context.ids.includes(evaluation.former22_evaluation_template.id) && context) || {
+                    ids: [...context.ids, evaluation.former22_evaluation_template.id],
+                    struct: [...context.struct, ...evaluation.former22_evaluation_template.struct],
+                },
+            { ids: [], struct: [] }
+        )
+
+        const results = evaluations.reduce(
+            (result, evaluation) => [...result, ...evaluation.former22_evaluation_result],
+            []
+        )
+
+        const participantCount = (
+            await prisma.former22_inscription.findMany({
+                select: {
+                    inscriptionId: true,
+                },
+                where: {
+                    inscriptionId: {
+                        in: evaluations.reduce(
+                            (ids, evaluation) => [
+                                ...ids,
+                                ...evaluation.claro_cursusbundle_course_session.claro_cursusbundle_course_session_user.map(
+                                    (inscription) => inscription.uuid
+                                ),
+                            ],
+                            []
+                        ),
+                    },
+                    inscriptionStatus: STATUSES.PARTICIPATION,
+                },
+            })
+        ).length
+
+        const helper = await EvaluationHelper.create()
+        helper.generate(course.course_name, participantCount, results, struct)
+
+        res.type('pdf')
+        res.set('Content-disposition', `filename=${req.params.uuid}_course`)
         res.send(Buffer.from(await helper.save(), 'binary'))
     },
     null,
