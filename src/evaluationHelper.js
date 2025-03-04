@@ -245,7 +245,7 @@ export class EvaluationHelper {
         this.y += options.thickness
     }
 
-    generate(participantCount, results, struct, session) {
+    generate(title, participantCount, results, struct) {
         const statistics = results.reduce((acc, result) => {
             //eslint-disable-next-line no-plusplus
             for (const key in result.result) if (acc[key]) ++acc[key][result.result[key]]
@@ -274,7 +274,7 @@ export class EvaluationHelper {
         })
 
         this.moveDown(24)
-        this.drawText(session.course_name, {
+        this.drawText(title, {
             x: 0,
             y: this.y,
             size: 24,
