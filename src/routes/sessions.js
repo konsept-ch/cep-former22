@@ -76,30 +76,37 @@ createService(
             },
         })
 
-        const fullSessionsData = sessions.map((session) => {
-            const startDate = Math.min(
-                ...session.claro_cursusbundle_session_event.map((e) => new Date(e.claro_planned_object.start_date))
-            )
+        res.json(
+            sessions.map((session) => {
+                const startDate = Math.min(
+                    ...session.claro_cursusbundle_session_event.map((e) => new Date(e.claro_planned_object.start_date)),
+                    session.start_date
+                )
 
-            return {
-                id: session.uuid,
-                name: session.course_name,
-                code: session.code,
-                hidden: session.hidden,
-                startDate,
-                fees: session.claro_cursusbundle_session_event.reduce((a, e) => a + (e.former22_event?.fees || 0), 0),
-                created: session.createdAt,
-                updated: session.updatedAt,
-                quotaDays: session.quota_days,
-                isUsedForQuota: session.used_by_quotas,
-                availables: session.max_users - session.claro_cursusbundle_course_session_user.length,
-                occupation: session.claro_cursusbundle_course_session_user.length,
-                category: session.claro_cursusbundle_course.former22_course?.codeCategory,
-                ...session.former22_session,
-            }
-        })
-
-        res.json(fullSessionsData ?? 'Aucunes session trouvées')
+                return {
+                    id: session.uuid,
+                    name: session.course_name,
+                    code: session.code,
+                    hidden: session.hidden,
+                    startDate,
+                    year: Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', year: 'numeric' }).format(
+                        startDate
+                    ),
+                    fees: session.claro_cursusbundle_session_event.reduce(
+                        (a, e) => a + (e.former22_event?.fees || 0),
+                        0
+                    ),
+                    created: session.createdAt,
+                    updated: session.updatedAt,
+                    quotaDays: session.quota_days,
+                    isUsedForQuota: session.used_by_quotas,
+                    availables: session.max_users - session.claro_cursusbundle_course_session_user.length,
+                    occupation: session.claro_cursusbundle_course_session_user.length,
+                    category: session.claro_cursusbundle_course.former22_course?.codeCategory,
+                    ...session.former22_session,
+                }
+            })
+        )
     },
     null,
     sessionsRouter
