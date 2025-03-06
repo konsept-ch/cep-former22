@@ -41,23 +41,23 @@ createService(
             },
         })
 
-        const fullCoursesData = courses.map((course) => {
-            return {
-                id: course.uuid,
-                name: course.course_name,
-                code: course.code,
-                hidden: course.hidden,
-                price: course.price,
-                creationDate: course.createdAt,
-                lastModifiedDate: course.updatedAt,
-                duration: course.session_days,
-                description: course.description,
-                slug: course.slug,
-                ...course.former22_course,
-            }
-        })
-
-        res.json(fullCoursesData ?? 'Aucuns cours trouvés')
+        res.json(
+            courses.map((course) => {
+                return {
+                    id: course.uuid,
+                    name: course.course_name,
+                    code: course.code,
+                    hidden: course.hidden,
+                    price: course.price,
+                    creationDate: course.createdAt,
+                    lastModifiedDate: course.updatedAt,
+                    duration: course.session_days,
+                    description: course.description,
+                    slug: course.slug,
+                    ...course.former22_course,
+                }
+            })
+        )
     },
     null,
     coursesRouter
@@ -67,12 +67,12 @@ createService(
     'get',
     '/by-slug/:slug',
     async (req, res) => {
-        const courseDetails = await prisma.claro_cursusbundle_course.findFirst({
+        const course = await prisma.claro_cursusbundle_course.findFirst({
             where: { slug: req.params.slug },
         })
+        if (!course) return res.status(404).json({ message: "Le cours n'a pas été trouvé" })
 
-        if (courseDetails) res.json(courseDetails)
-        else res.status(404).json({ message: "Le cours n'a pas été trouvé" })
+        res.json(course)
     },
     null,
     coursesRouter
