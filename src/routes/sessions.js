@@ -31,7 +31,10 @@ createService(
                         uuid: true,
                         former22_course: {
                             select: {
+                                coordinator: true,
+                                responsible: true,
                                 codeCategory: true,
+                                theme: true,
                             },
                         },
                     },
@@ -103,6 +106,9 @@ createService(
                     availables: session.max_users - session.claro_cursusbundle_course_session_user.length,
                     occupation: session.claro_cursusbundle_course_session_user.length,
                     category: session.claro_cursusbundle_course.former22_course?.codeCategory,
+                    coordinator: session.claro_cursusbundle_course.former22_course?.coordinator,
+                    responsible: session.claro_cursusbundle_course.former22_course?.responsible,
+                    theme: session.claro_cursusbundle_course.former22_course?.theme,
                     ...session.former22_session,
                 }
             })

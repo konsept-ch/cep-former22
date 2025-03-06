@@ -20,7 +20,7 @@
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
     "clean:cancellations": "node ./scripts/cancellations.js",
-    "invoices:migrate": "node ./scripts/invoices.js",
+    "themes:migrate": "node ./scripts/themes.js",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",
     "schema": "prisma db pull && prisma generate",
