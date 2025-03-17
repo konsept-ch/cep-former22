@@ -131,7 +131,7 @@ export const parsePhoneForSms = ({ phone }: { phone: string | null }) => {
     }
 }
 
-const parseStringIfValidJson = ({ possiblyJsonString }) => {
+const parseStringIfValidJson = ({ possiblyJsonString }: any) => {
     try {
         return JSON.parse(possiblyJsonString)
     } catch (e) {
@@ -139,7 +139,7 @@ const parseStringIfValidJson = ({ possiblyJsonString }) => {
     }
 }
 
-export const getCustomFacetValues = async ({ customFieldName }) => {
+export const getCustomFacetValues = async ({ customFieldName }: any) => {
     const customFacets = await prisma.claro_field_facet.findMany({
         where: { name: { contains: customFieldName } },
     })
@@ -157,9 +157,9 @@ export const getCustomFacetValues = async ({ customFieldName }) => {
     return customFacetValues.flat()
 }
 
-export const getUserCustomFieldValue = ({ userId, customFacetValues }) => {
-    if (customFacetValues.some(({ user_id }) => user_id === userId)) {
-        const { field_value } = customFacetValues.find(({ user_id }) => user_id === userId)
+export const getUserCustomFieldValue = ({ userId, customFacetValues }: any) => {
+    if (customFacetValues.some(({ user_id }: any) => user_id === userId)) {
+        const { field_value } = customFacetValues.find(({ user_id }: any) => user_id === userId)
 
         const json = parseStringIfValidJson({ possiblyJsonString: field_value })
 
@@ -428,59 +428,59 @@ export const fetchInscriptionsWithStatuses = async (
                                               ? getOrganizationCode((inscription as any).claro_user.user_organization)
                                               : null,
                                           civility: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: civilityFacetValues,
                                           }),
                                           phoneNumber: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: phoneNumberFacetValues,
                                           }),
                                           birthDate: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: birthDateFacetValues,
                                           }),
                                           avsNumber: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: avsNumberFacetValues,
                                           }),
                                           companyName: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: companyNameFacetValues,
                                           }),
                                           serviceOrSectorInCompany: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: serviceOrSectorInCompanyFacetValues,
                                           }),
                                           workplaceAddress: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: workplaceAddressFacetValues,
                                           }),
                                           homeAddress: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: homeAddressFacetValues,
                                           }),
                                           additionalAddressInfo: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: additionalAddressInfoFacetValues,
                                           }),
                                           postalCode: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: postalCodeFacetValues,
                                           }),
                                           locality: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: localityFacetValues,
                                           }),
                                           employer: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: employerFacetValues,
                                           }),
                                           diplomaName: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: diplomaNameFacetValues,
                                           }),
                                           professionName: getUserCustomFieldValue({
-                                              userId: inscription.claro_user.id,
+                                              userId: (inscription as any).claro_user.id,
                                               customFacetValues: professionNameFacetValues,
                                           }),
                                       },
