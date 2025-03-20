@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:18-slim
+FROM node:18-bullseye-slim
 
 # use libreoffice for docx to pdf
 RUN apt update && apt install -y \
