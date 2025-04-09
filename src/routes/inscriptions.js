@@ -1,11 +1,8 @@
 import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import libre from 'libreoffice-convert'
-import util from 'util'
 
 import { prisma } from '..'
 import { callApi } from '../callApi'
-// import { MIDDLEWARE_URL } from '../credentialsConfig'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
 import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
@@ -21,10 +18,8 @@ import {
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 import { createInvoice } from './manualInvoicesUtils'
-import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 import { generateAttestation } from '../helpers/attestations'
-
-libre.convertAsync = util.promisify(libre.convert)
+import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 
 export const inscriptionsRouter = Router()
 
@@ -256,7 +251,7 @@ createService(
             where: { uuid: req.params.inscriptionId },
         })
         if (!currentInscription) {
-            res.json('Aucune inscription trouvée')
+            res.json({ error: 'Aucune inscription trouvée' })
             return
         }
 
