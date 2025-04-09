@@ -6,7 +6,7 @@ import { authMiddleware, createService } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { STATUSES } from './inscriptionsUtils'
 import { sendEmail } from '../sendEmail'
-import { EvaluationHelper } from '../evaluationHelper'
+import { EvaluationHelper } from '../helpers/evaluations'
 
 export const evaluationsRouter = Router()
 
