@@ -1,11 +1,7 @@
 import { Router } from 'express'
-import libre from 'libreoffice-convert'
-import util from 'util'
 
 import { prisma } from '..'
 import { createService } from '../utils'
-
-libre.convertAsync = util.promisify(libre.convert)
 
 export const eventsRouter = Router()
 
