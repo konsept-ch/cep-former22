@@ -30,6 +30,10 @@ export class EvaluationHelper {
         this.y = 0
     }
 
+    cleanText(text) {
+        return text.replaceAll(this.charset, ' ')
+    }
+
     gotoPage(index) {
         //eslint-disable-next-line no-plusplus
         for (let i = index - this.doc.getPageCount(); i >= 0; --i) this.doc.addPage(PageSizes.A4)
@@ -204,14 +208,16 @@ export class EvaluationHelper {
     }
 
     drawText(text, options) {
-        const computed = this.calculateTextRectangle(text, options)
-        this.drawSplittedText(this.splitText(text, computed))
+        const txt = this.cleanText(text)
+        const computed = this.calculateTextRectangle(txt, options)
+        this.drawSplittedText(this.splitText(txt, computed))
         this.y = options.y + computed.height
     }
 
     drawTextBlock(text, options) {
-        const computed = this.calculateTextRectangle(text, options)
-        const splittedText = this.splitText(text, computed)
+        const txt = this.cleanText(text)
+        const computed = this.calculateTextRectangle(txt, options)
+        const splittedText = this.splitText(txt, computed)
         const { x, y, width, background } = computed
         const height = computed.height + splittedText.reduce((s, l) => s + l.advance, 0)
 
