@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { prisma } from '..'
-import { createService } from '../utils'
+import { createService, yearMinusOne } from '../utils'
 
 export const agendaRouter = Router()
 
@@ -9,6 +9,7 @@ createService(
     'get',
     '/',
     async (_req, res) => {
+        const recentYear = yearMinusOne()
         const rooms = (
             await prisma.claro_location_room.findMany({
                 select: {
@@ -129,6 +130,11 @@ createService(
                                     },
                                 },
                             },
+                        },
+                    },
+                    where: {
+                        start_date: {
+                            gt: recentYear,
                         },
                     },
                 })
