@@ -19,6 +19,11 @@ function findGitDir(startDir) {
 }
 
 try {
+  // Skip entirely in CI environments
+  if (process.env.CI) {
+    console.log('husky: skipping install in CI');
+    process.exit(0);
+  }
   const gitDir = findGitDir(process.cwd());
   if (!gitDir) {
     console.log('husky: skipping install (no .git found)');
@@ -45,7 +50,8 @@ try {
       console.log('husky: module loaded but no install function, skipping');
     }
   } catch (e) {
-    if (e && e.code === 'MODULE_NOT_FOUND') {
+    // Handle both CommonJS and ESM missing-module error codes
+    if (e && (e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND')) {
       console.log('husky: not installed as a dependency, skipping');
     } else {
       throw e;

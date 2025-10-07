@@ -1,6 +1,6 @@
 {
   "name": "cep-former22-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "CEP Middleware server for PeopleSoft and Former22",
   "author": "konsept.ch",
   "license": "SEE LICENSE IN LICENSE.txt",
@@ -33,7 +33,7 @@
     "typescript:check": "tsc --noEmit",
     "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start",
     "ci:check": "npm run prettier:check && npm run eslint:check && npm run typescript:check",
-    "prepare": "node scripts/prepare-husky.js"
+    "prepare": "node scripts/prepare-husky.js || exit 0"
   },
   "dependencies": {
     "@prisma/client": "4.16.2",
