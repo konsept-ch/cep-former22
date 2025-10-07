@@ -94,10 +94,14 @@ generateEndpoints()
 app.use('/peoplesoft', peoplesoftRouter)
 
 app.get('/', (_req, res) => {
-    const peoplesoftRoutes = peoplesoftRouter.stack.map(({ route: { path, stack } }) => ({
-        path: `/peoplesoft${path}`,
-        method: stack[0].method,
-    }))
+    // Express router stack contains layers, some without a route; filter safely and avoid TS errors
+    const peoplesoftRoutes = (peoplesoftRouter.stack as any[])
+        .map((layer: any) => layer?.route)
+        .filter(Boolean)
+        .map((route: any) => ({
+            path: `/peoplesoft${route.path}`,
+            method: route.stack?.[0]?.method,
+        }))
 
     const SWAGGER_LINK = `<a href="${SWAGGER_UI_PATH}">${SWAGGER_UI_PATH} (Swagger - Former22 API documentation)</a>`
 
