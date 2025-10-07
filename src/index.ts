@@ -32,6 +32,10 @@ import { receptionRouter } from './routes/reception'
 import { contractsRouter } from './routes/contracts'
 import { tutorsRouter } from './routes/tutors'
 import { authMiddleware } from './utils'
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('../package.json')
 
 const { PrismaClient } = prismaClientPkg
 export const prisma = new PrismaClient()
@@ -55,7 +59,7 @@ const swaggerOptions = {
         openapi: '3.0.3',
         info: {
             title: 'Former22 API Documentation',
-            version: '1.0.0',
+            version: pkg.version,
         },
     },
     apis: ['./src/swaggerSchemas.yml', './src/routes/peoplesoft.js'], // files containing annotations as above
@@ -67,6 +71,7 @@ const swaggerUiOptions = {
     swaggerOptions: {
         url: SWAGGER_SCHEMA_PATH,
     },
+    customCss: `.swagger-ui::after { content: "Former22 v${pkg.version}"; position: fixed; bottom: 6px; right: 10px; font-size: 11px; color: #6c757d; opacity: 0.9; }`,
 }
 
 app.get(SWAGGER_SCHEMA_PATH, (_req, res) => {

@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { prisma } from '..'
 import { callApi } from '../callApi'
-import { createService, getLogDescriptions, LOG_TYPES, yearMinusOne } from '../utils'
+import { createService, getLogDescriptions, LOG_TYPES, yearMinusOne, isArchiveMode } from '../utils'
 
 export const coursesRouter = Router()
 
@@ -43,9 +43,7 @@ createService(
             where: {
                 claro_cursusbundle_course_session: {
                     some: {
-                        start_date: {
-                            gt: recentYear,
-                        },
+                        start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                     },
                 },
             },

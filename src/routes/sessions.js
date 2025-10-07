@@ -3,7 +3,7 @@ import { Router } from 'express'
 import { prisma } from '..'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, LOG_TYPES, yearMinusOne } from '../utils'
+import { createService, LOG_TYPES, yearMinusOne, isArchiveMode } from '../utils'
 import { deriveInscriptionStatus, getNamesByType, STATUSES, transformFlagsToStatus } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
@@ -79,15 +79,11 @@ createService(
                 },
             },
             where: {
-                start_date: {
-                    gt: recentYear,
-                },
+                start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                 claro_cursusbundle_session_event: {
                     every: {
                         claro_planned_object: {
-                            start_date: {
-                                gt: recentYear,
-                            },
+                            start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                         },
                     },
                 },
@@ -338,14 +334,10 @@ createService(
             },
             where: {
                 claro_planned_object: {
-                    start_date: {
-                        gt: recentYear,
-                    },
+                    start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                 },
                 claro_cursusbundle_course_session: {
-                    start_date: {
-                        gt: recentYear,
-                    },
+                    start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                 },
             },
         })

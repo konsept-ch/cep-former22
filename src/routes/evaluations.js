@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
-import { authMiddleware, createService, yearMinusOne } from '../utils'
+import { authMiddleware, createService, yearMinusOne, isArchiveMode } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { STATUSES } from './inscriptionsUtils'
 import { sendEmail } from '../sendEmail'
@@ -39,9 +39,7 @@ createService(
             },
             where: {
                 claro_cursusbundle_course_session: {
-                    start_date: {
-                        gt: recentYear,
-                    },
+                    start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                 },
             },
         })

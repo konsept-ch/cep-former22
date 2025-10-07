@@ -1,6 +1,6 @@
 {
   "name": "cep-former22-server",
-  "version": "1.0.0",
+  "version": "1.3.0.rex",
   "description": "CEP Middleware server for PeopleSoft and Former22",
   "author": "konsept.ch",
   "license": "SEE LICENSE IN LICENSE.txt",
@@ -13,9 +13,11 @@
   "main": "src/index.js",
   "scripts": {
     "postinstall": "prisma generate",
-    "start": "db-migrate up && pm2 start ecosystem.config.cjs && pm2 logs",
+    "start": "cross-env DOTENV_CONFIG_OVERRIDE=true node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate up && pm2 start ecosystem.config.cjs && pm2 logs",
+    "start:dev": "cross-env DOTENV_CONFIG_OVERRIDE=true node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate up && npm run ts-node",
+    "start:dev-win": "cross-env DOTENV_CONFIG_OVERRIDE=true node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate up && npm run ts-node",
     "start-prod": "db-migrate up && pm2 start ecosystem.config.cjs --env production && pm2 logs",
-    "ts-node": "node -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
+    "ts-node": "node -r dotenv/config -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
     "logs": "pm2 logs",
@@ -31,7 +33,7 @@
     "typescript:check": "tsc --noEmit",
     "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start",
     "ci:check": "npm run prettier:check && npm run eslint:check && npm run typescript:check",
-    "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""
+    "prepare": "node scripts/prepare-husky.js"
   },
   "dependencies": {
     "@prisma/client": "4.16.2",
@@ -71,7 +73,7 @@
     "pdf-lib": "^1.17.1",
     "pizzip": "3.1.4",
     "pm2": "5.4.0",
-    "prisma": "4.9.0",
+    "prisma": "4.16.2",
     "swagger-jsdoc": "7.0.0-rc.6",
     "swagger-ui-express": "4.6.0",
     "ts-node": "10.9.1",

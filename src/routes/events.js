@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { prisma } from '..'
-import { createService, yearMinusOne } from '../utils'
+import { createService, yearMinusOne, isArchiveMode } from '../utils'
 
 export const eventsRouter = Router()
 
@@ -72,15 +72,11 @@ createService(
                 where: {
                     claro_cursusbundle_course_session: {
                         every: {
-                            start_date: {
-                                gt: recentYear,
-                            },
+                            start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                             claro_cursusbundle_session_event: {
                                 every: {
                                     claro_planned_object: {
-                                        start_date: {
-                                            gt: recentYear,
-                                        },
+                                        start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                                     },
                                 },
                             },

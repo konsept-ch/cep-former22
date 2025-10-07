@@ -33,6 +33,13 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
 
 export const yearMinusOne = () => new Date(new Date().getFullYear() - 1, 0, 1)
 
+export const isArchiveMode = () => {
+    const v = (process.env.ARCHIVE_MODE || '').toString().trim().toLowerCase()
+    return v === '1' || v === 'true' || v === 'yes'
+}
+
+export const yearOp = () => (isArchiveMode() ? 'lt' : 'gt')
+
 export const LOG_STATUSES = {
     PENDING: 'Pending',
     COMPLETE: 'Complete',

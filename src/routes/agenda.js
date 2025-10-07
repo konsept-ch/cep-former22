@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { prisma } from '..'
-import { createService, yearMinusOne } from '../utils'
+import { createService, yearMinusOne, isArchiveMode } from '../utils'
 
 export const agendaRouter = Router()
 
@@ -52,8 +52,8 @@ createService(
                 },
             })
 
-            const events = (
-                await prisma.claro_planned_object.findMany({
+        const events = (
+            await prisma.claro_planned_object.findMany({
                     select: {
                         entity_name: true,
                         start_date: true,
@@ -133,9 +133,7 @@ createService(
                         },
                     },
                     where: {
-                        start_date: {
-                            gt: recentYear,
-                        },
+                        start_date: isArchiveMode() ? { lt: recentYear } : { gt: recentYear },
                     },
                 })
             ).map(
