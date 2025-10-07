@@ -52,8 +52,8 @@ createService(
                 },
             })
 
-        const events = (
-            await prisma.claro_planned_object.findMany({
+            const events = (
+                await prisma.claro_planned_object.findMany({
                     select: {
                         entity_name: true,
                         start_date: true,
