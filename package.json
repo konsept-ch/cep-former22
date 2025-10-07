@@ -1,6 +1,6 @@
 {
   "name": "cep-former22-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "CEP Middleware server for PeopleSoft and Former22",
   "author": "konsept.ch",
   "license": "SEE LICENSE IN LICENSE.txt",
