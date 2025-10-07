@@ -11,7 +11,7 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
-COPY ["package.json", "package-lock.json*", "prisma", "./"]
+COPY ["package.json", "package-lock.json*", "prisma", "scripts", "./"]
 
 RUN npm ci
 
