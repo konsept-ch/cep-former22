@@ -131,6 +131,11 @@ createService(
         const course = await prisma.claro_cursusbundle_course.findUnique({
             select: {
                 course_name: true,
+                former22_course: {
+                    select: {
+                        responsible: true,
+                    },
+                },
             },
             where: {
                 uuid: courseId,
@@ -189,6 +194,7 @@ createService(
             FORMATEUR_CIVILITE: user.claro_field_facet_value[0]?.field_value.replaceAll('"', '') || 'Indéterminé',
             FORMATEUR_NOM: `${user.first_name} ${user.last_name}`,
             FORMATEUR_ORGANISATION: user.user_organization[0]?.claro__organization.name || 'Indéterminé',
+            RESPRESENTANT_PRENOM_NOM: course.former22_course?.responsible || 'Indéterminé',
             COURS_NOM: course.course_name,
             SESSION_CODE: subscriptions.reduce(
                 (a, s) => [
