@@ -3,7 +3,7 @@ import { Router } from 'express'
 import { prisma } from '..'
 import { sendEmail } from '../sendEmail'
 import { sendSms } from '../sendSms'
-import { createService, LOG_TYPES, yearMinusOne } from '../utils'
+import { createService, LOG_TYPES } from '../utils'
 import { deriveInscriptionStatus, getNamesByType, STATUSES, transformFlagsToStatus } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 
@@ -13,7 +13,6 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const recentYear = yearMinusOne()
         const sessions = await prisma.claro_cursusbundle_course_session.findMany({
             select: {
                 uuid: true,
@@ -75,20 +74,6 @@ createService(
                         areInvitesSent: true,
                         sessionFormat: true,
                         sessionLocation: true,
-                    },
-                },
-            },
-            where: {
-                start_date: {
-                    gt: recentYear,
-                },
-                claro_cursusbundle_session_event: {
-                    every: {
-                        claro_planned_object: {
-                            start_date: {
-                                gt: recentYear,
-                            },
-                        },
                     },
                 },
             },
@@ -309,7 +294,6 @@ createService(
     'get',
     '/seances',
     async (req, res) => {
-        const recentYear = yearMinusOne()
         const seancesPrisma = await prisma.claro_cursusbundle_session_event.findMany({
             select: {
                 uuid: true,
@@ -333,18 +317,6 @@ createService(
                                 sessionLocation: true,
                             },
                         },
-                    },
-                },
-            },
-            where: {
-                claro_planned_object: {
-                    start_date: {
-                        gt: recentYear,
-                    },
-                },
-                claro_cursusbundle_course_session: {
-                    start_date: {
-                        gt: recentYear,
                     },
                 },
             },

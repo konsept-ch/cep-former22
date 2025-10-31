@@ -2,7 +2,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
-import { yearMinusOne } from '../utils'
 
 export const STATUSES = {
     A_TRAITER_PAR_RH: 'À traiter par RH',
@@ -165,7 +164,6 @@ const formatOrganizationsHierarchy = (allOrganizations: any, organization: any, 
 export const fetchInscriptionsWithStatuses = async (
     { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
 ) => {
-    const recentYear = yearMinusOne()
     try {
         const sessions: any = await prisma.claro_cursusbundle_course_session.findMany({
             select: {
@@ -286,11 +284,6 @@ export const fetchInscriptionsWithStatuses = async (
                             },
                         },
                     },
-                },
-            },
-            where: {
-                start_date: {
-                    gt: recentYear,
                 },
             },
         })

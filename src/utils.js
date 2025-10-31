@@ -31,8 +31,6 @@ export const formatDate = ({ dateString, dateObject, isTimeVisible, isFullTimeVi
     return [getDate(), getTime()].filter(Boolean).join(', ')
 }
 
-export const yearMinusOne = () => new Date(new Date().getFullYear() - 1, 0, 1)
-
 export const LOG_STATUSES = {
     PENDING: 'Pending',
     COMPLETE: 'Complete',

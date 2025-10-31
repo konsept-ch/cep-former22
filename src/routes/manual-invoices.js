@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Router } from 'express'
 
 import { prisma } from '..'
-import { createService, mapStatusToValidationType, yearMinusOne } from '../utils'
+import { createService, mapStatusToValidationType } from '../utils'
 import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 import { createInvoice } from './manualInvoicesUtils'
 import { STATUSES } from './inscriptionsUtils'
@@ -52,7 +52,6 @@ createService(
     'get',
     '/',
     async (_req, res) => {
-        const recentYear = yearMinusOne()
         const invoices = await prisma.former22_manual_invoice.findMany({
             select: {
                 uuid: true,
@@ -136,11 +135,6 @@ createService(
                 invoiceType: true,
                 reason: true,
                 codeCompta: true,
-            },
-            where: {
-                invoiceDate: {
-                    gt: recentYear,
-                },
             },
         })
 

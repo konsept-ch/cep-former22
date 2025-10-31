@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { prisma } from '..'
-import { createService, yearMinusOne } from '../utils'
+import { createService } from '../utils'
 
 export const eventsRouter = Router()
 
@@ -9,8 +9,6 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const recentYear = yearMinusOne()
-
         try {
             const contracts = await prisma.former22_contract.findMany({
                 select: {
@@ -64,24 +62,6 @@ createService(
                                 },
                                 where: {
                                     registration_type: 'tutor',
-                                },
-                            },
-                        },
-                    },
-                },
-                where: {
-                    claro_cursusbundle_course_session: {
-                        every: {
-                            start_date: {
-                                gt: recentYear,
-                            },
-                            claro_cursusbundle_session_event: {
-                                every: {
-                                    claro_planned_object: {
-                                        start_date: {
-                                            gt: recentYear,
-                                        },
-                                    },
                                 },
                             },
                         },

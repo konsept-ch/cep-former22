@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { prisma } from '..'
 import { callApi } from '../callApi'
-import { createService, getLogDescriptions, LOG_TYPES, yearMinusOne } from '../utils'
+import { createService, getLogDescriptions, LOG_TYPES } from '../utils'
 
 export const coursesRouter = Router()
 
@@ -10,7 +10,6 @@ createService(
     'get',
     '/',
     async (req, res) => {
-        const recentYear = yearMinusOne()
         const courses = await prisma.claro_cursusbundle_course.findMany({
             select: {
                 uuid: true,
@@ -37,15 +36,6 @@ createService(
                         baseRate: true,
                         isRecurrent: true,
                         goals: true,
-                    },
-                },
-            },
-            where: {
-                claro_cursusbundle_course_session: {
-                    some: {
-                        start_date: {
-                            gt: recentYear,
-                        },
                     },
                 },
             },
