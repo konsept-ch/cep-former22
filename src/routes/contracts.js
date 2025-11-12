@@ -51,36 +51,22 @@ createService(
             },
         })
 
-        let contract = await prisma.former22_contract.findFirst({
-            where: {
-                userId,
-                courseId,
-                year,
-            },
-        })
-
-        if (contract) {
-            if (contract.templateId !== template.uuid) {
-                await prisma.former22_contract.update({
-                    where: {
-                        id: contract.id,
-                    },
-                    data: {
-                        templateId: template.id,
-                    },
-                })
-            }
-        } else {
-            contract = await prisma.former22_contract.create({
+        const contract =
+            (await prisma.former22_contract.findFirst({
+                where: {
+                    userId,
+                    courseId,
+                    year,
+                },
+            })) ||
+            (await prisma.former22_contract.create({
                 data: {
                     uuid: uuidv4(),
                     userId,
                     courseId,
-                    templateId: template.id,
                     year,
                 },
-            })
-        }
+            }))
 
         const subscriptions = await prisma.claro_cursusbundle_session_event_user.findMany({
             select: {
@@ -244,7 +230,9 @@ createService(
 
         fs.writeFileSync(`${contractFilesDest}/${contract.uuid}.docx`, docxBuf)
 
-        res.json(true)
+        res.json({
+            message: 'Le contrat a été généré',
+        })
 
         return {
             entityName: 'Contract',

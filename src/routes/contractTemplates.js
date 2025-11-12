@@ -80,7 +80,9 @@ createService(
                 },
             })
 
-            res.json('Le contrat a été modifié')
+            res.json({
+                message: 'Le contrat a été modifié',
+            })
 
             return {
                 entityName: title,
@@ -90,7 +92,10 @@ createService(
         } catch (error) {
             console.error(error)
 
-            res.json('Erreur')
+            res.json({
+                message: 'Erreur de modification du modèle de contrat',
+                severity: 'error',
+            })
         }
     },
     { entityType: LOG_TYPES.CONTRACT_TEMPLATE },
@@ -104,24 +109,20 @@ createService(
     async (req, res) => {
         const { uuid } = req.params
 
-        try {
-            const { title } = await prisma.former22_contract_template.delete({
-                where: {
-                    uuid,
-                },
-            })
+        const { title } = await prisma.former22_contract_template.delete({
+            where: {
+                uuid,
+            },
+        })
 
-            res.json('Le contrat a été supprimé')
+        res.json({
+            message: 'Le contrat a été supprimé',
+        })
 
-            return {
-                entityName: title,
-                entityId: uuid,
-                actionName: 'Deleted an template contract',
-            }
-        } catch (error) {
-            console.error(error)
-
-            res.status(500).json({ error: 'Error' })
+        return {
+            entityName: title,
+            entityId: uuid,
+            actionName: 'Deleted an template contract',
         }
     },
     { entityType: LOG_TYPES.CONTRACT_TEMPLATE },
