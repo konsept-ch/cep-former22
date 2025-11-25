@@ -31,7 +31,9 @@ createService(
             html_body: `<h2>Code temporaire d'authentification</h2><p>${code}</p>`,
         })
 
-        res.json({ isCodeSendingSuccessful: true })
+        res.json({
+            message: 'Code de vérification envoyé',
+        })
     },
     null,
     authRouter
@@ -46,8 +48,13 @@ createService(
         const code = req.body.code?.trim()
 
         const isAuthenticated = await checkAuth({ email, code, token })
-
-        res.json({ areCodeAndTokenCorrect: isAuthenticated })
+        res.json({
+            message: isAuthenticated
+                ? 'Connexion réussie'
+                : "Votre token n'est pas trouvé dans Claroline ou n'est pas associé à votre compte, ou votre code e-mail n'est pas correct",
+            severity: isAuthenticated ? 'success' : 'error',
+            authenticated: isAuthenticated,
+        })
     },
     null,
     authRouter
