@@ -240,3 +240,9 @@ export const authMiddleware = async (req, res, next) => {
         // throw new Error('Incorrect token and code for this email')
     }
 }
+
+export const isArchiveMode = parseInt(process.env.ARCHIVE_MODE)
+
+export const yearMinusOne = () => new Date(new Date().getFullYear() - 1, 0, 1)
+
+export const buildArchiveCondition = (recentDate) => (isArchiveMode ? { lte: recentDate } : { gt: recentDate })

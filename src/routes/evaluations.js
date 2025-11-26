@@ -2,7 +2,7 @@ import { Router } from 'express'
 
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '..'
-import { authMiddleware, createService } from '../utils'
+import { authMiddleware, buildArchiveCondition, createService, yearMinusOne } from '../utils'
 import { getTemplatePreviews } from './templatesUtils'
 import { STATUSES } from './inscriptionsUtils'
 import { sendEmail } from '../sendEmail'
@@ -14,6 +14,7 @@ createService(
     'get',
     '/',
     async (req, res) => {
+        const recentYear = yearMinusOne()
         const evaluations = await prisma.former22_evaluation.findMany({
             select: {
                 uuid: true,
@@ -34,6 +35,11 @@ createService(
                             },
                         },
                     },
+                },
+            },
+            where: {
+                claro_cursusbundle_course_session: {
+                    start_date: buildArchiveCondition(recentYear),
                 },
             },
         })

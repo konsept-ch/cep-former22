@@ -2,6 +2,7 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { prisma } from '..'
+import { buildArchiveCondition, isArchiveMode, yearMinusOne } from '../utils'
 
 export const STATUSES = {
     A_TRAITER_PAR_RH: 'À traiter par RH',
@@ -164,6 +165,8 @@ const formatOrganizationsHierarchy = (allOrganizations: any, organization: any, 
 export const fetchInscriptionsWithStatuses = async (
     { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
 ) => {
+    const recentYear = yearMinusOne()
+
     try {
         const sessions: any = await prisma.claro_cursusbundle_course_session.findMany({
             select: {
@@ -190,8 +193,14 @@ export const fetchInscriptionsWithStatuses = async (
                 },
                 claro_cursusbundle_course_session_user: !shouldFetchCancellations && {
                     where: shouldFetchTutors
-                        ? { registration_type: REGISTRATION_TYPES.TUTOR }
-                        : { registration_type: REGISTRATION_TYPES.LEARNER },
+                        ? {
+                              registration_type: REGISTRATION_TYPES.TUTOR,
+                              registration_date: buildArchiveCondition(recentYear),
+                          }
+                        : {
+                              registration_type: REGISTRATION_TYPES.LEARNER,
+                              registration_date: buildArchiveCondition(recentYear),
+                          },
                     select: {
                         id: true,
                         uuid: true,
@@ -284,7 +293,13 @@ export const fetchInscriptionsWithStatuses = async (
                             },
                         },
                     },
+                    where: {
+                        registration_date: buildArchiveCondition(recentYear),
+                    },
                 },
+            },
+            where: {
+                start_date: buildArchiveCondition(recentYear),
             },
         })
 
@@ -497,10 +512,14 @@ export const fetchInscriptionsWithStatuses = async (
                                 },
                             },
                         },
+                        where: {
+                            registration_date: buildArchiveCondition(recentYear),
+                        },
                     }
                 )
 
                 if (allPendingInscriptionsOnCourseLevel) {
+                    const startYear = isArchiveMode ? recentYear.getFullYear() - 1 : new Date().getFullYear()
                     fetchedPendingLearners = allPendingInscriptionsOnCourseLevel.map((inscription: any) => {
                         const userMainOrganization = inscription.claro_user.user_organization[0]?.claro__organization
 
@@ -524,7 +543,7 @@ export const fetchInscriptionsWithStatuses = async (
                                 quotaDays: 0,
                                 isUsedForQuota: false,
                                 courseName: inscription.claro_cursusbundle_course.course_name,
-                                startYear: new Date().getFullYear(),
+                                startYear,
                             },
                             user: {
                                 firstName: inscription.claro_user.first_name,
