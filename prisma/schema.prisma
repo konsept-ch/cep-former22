@@ -243,8 +243,6 @@ model claro__organization {
   claro_cursusbundle_cursus_organizations claro_cursusbundle_cursus_organizations[]
   claro_cursusbundle_quota                claro_cursusbundle_quota?
   claro_user_administrator                claro_user_administrator[]
-  former22_manual_invoice                 former22_manual_invoice[]
-  former22_organization                   former22_organization?
   group_organization                      group_organization[]
   user_organization                       user_organization[]
   workspace_organization                  workspace_organization[]
@@ -1060,11 +1058,11 @@ model claro_cursusbundle_course_session {
   plainDescription                                                         String?                                          @db.VarChar(255)
   price                                                                    Float?
   priceDescription                                                         String?                                          @db.LongText
+  used_by_quotas                                                           Boolean
+  quota_days                                                               Float?                                           @default(0)
   hidden                                                                   Boolean                                          @default(false)
   auto_registration                                                        Boolean
   pending_registrations                                                    Boolean
-  used_by_quotas                                                           Boolean
-  quota_days                                                               Float?                                           @default(0)
   claro_cursus_sessions                                                    claro_cursus_sessions[]
   claro_cursusbundle_course                                                claro_cursusbundle_course                        @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_C5F56FDE591CC992")
   claro_user                                                               claro_user?                                      @relation(fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_C5F56FDE61220EA6")
@@ -1079,7 +1077,6 @@ model claro_cursusbundle_course_session {
   claro_cursusbundle_course_session_validators                             claro_cursusbundle_course_session_validators[]
   claro_cursusbundle_session_event                                         claro_cursusbundle_session_event[]
   claro_cursusbundle_session_event_set                                     claro_cursusbundle_session_event_set[]
-  former22_evaluation                                                      former22_evaluation?
 
   @@index([course_id], map: "IDX_C5F56FDE591CC992")
   @@index([creator_id], map: "IDX_C5F56FDE61220EA6")
@@ -1098,7 +1095,6 @@ model claro_cursusbundle_course_session_cancellation {
   inscription_uuid                  String                            @db.VarChar(36)
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CE57DCC1613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CE57DCC1A76ED395")
-  former22_invoice_item             former22_invoice_item[]
 
   @@index([session_id], map: "IDX_CE57DCC1613FECDF")
   @@index([user_id], map: "IDX_CE57DCC1A76ED395")
@@ -1142,8 +1138,6 @@ model claro_cursusbundle_course_session_user {
   remark                            String                            @db.LongText
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120F613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120FA76ED395")
-  former22_invoice                  former22_invoice[]
-  former22_invoice_item             former22_invoice_item[]
 
   @@unique([session_id, user_id], map: "training_session_unique_user")
   @@index([session_id], map: "IDX_80B4120F613FECDF")
@@ -2235,11 +2229,10 @@ model claro_message {
 }
 
 model claro_oauth_user {
-  id         Int         @id @default(autoincrement())
-  user_id    Int?
-  oauthId    String      @db.VarChar(255)
-  service    String      @db.VarChar(255)
-  claro_user claro_user? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E4539E82A76ED395")
+  id      Int    @id @default(autoincrement())
+  user_id Int?
+  oauthId String @db.VarChar(255)
+  service String @db.VarChar(255)
 
   @@index([user_id], map: "IDX_E4539E82A76ED395")
 }
@@ -2328,7 +2321,7 @@ model claro_planned_object {
   updatedAt                        DateTime?                         @db.DateTime(0)
   room_id                          Int?
   locationUrl                      String?                           @db.VarChar(255)
-  event_class                      String                            @db.VarChar(255)
+  event_class                      String                            @default("") @db.VarChar(255)
   claro_cursusbundle_session_event claro_cursusbundle_session_event?
   claro_event                      claro_event?
   claro_location_room              claro_location_room?              @relation(fields: [room_id], references: [id], onUpdate: NoAction, map: "FK_5F6CC1D754177093")
@@ -2340,46 +2333,6 @@ model claro_planned_object {
   @@index([room_id], map: "IDX_5F6CC1D754177093")
   @@index([creator_id], map: "IDX_5F6CC1D761220EA6")
   @@index([location_id], map: "IDX_5F6CC1D764D218E")
-}
-
-model claro_plannednotificationbundle_message {
-  id                                                   Int                                                    @id @default(autoincrement())
-  workspace_id                                         Int
-  title                                                String                                                 @db.VarChar(255)
-  content                                              String                                                 @db.LongText
-  uuid                                                 String                                                 @unique(map: "UNIQ_6897C1B7D17F50A6") @db.VarChar(36)
-  claro_workspace                                      claro_workspace                                        @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6897C1B782D40A1F")
-  claro_plannednotificationbundle_planned_notification claro_plannednotificationbundle_planned_notification[]
-
-  @@index([workspace_id], map: "IDX_6897C1B782D40A1F")
-}
-
-model claro_plannednotificationbundle_planned_notification {
-  id                                                        Int                                                         @id @default(autoincrement())
-  workspace_id                                              Int
-  message_id                                                Int
-  triggering_action                                         String                                                      @db.VarChar(255)
-  planned_interval                                          Int
-  by_mail                                                   Boolean
-  by_message                                                Boolean
-  uuid                                                      String                                                      @unique(map: "UNIQ_DB5DE453D17F50A6") @db.VarChar(36)
-  claro_plannednotificationbundle_message                   claro_plannednotificationbundle_message                     @relation(fields: [message_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DB5DE453537A1329")
-  claro_workspace                                           claro_workspace                                             @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DB5DE45382D40A1F")
-  claro_plannednotificationbundle_planned_notification_role claro_plannednotificationbundle_planned_notification_role[]
-
-  @@index([message_id], map: "IDX_DB5DE453537A1329")
-  @@index([workspace_id], map: "IDX_DB5DE45382D40A1F")
-}
-
-model claro_plannednotificationbundle_planned_notification_role {
-  plannednotification_id                               Int
-  role_id                                              Int
-  claro_role                                           claro_role                                           @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2A4A3832D60322AC")
-  claro_plannednotificationbundle_planned_notification claro_plannednotificationbundle_planned_notification @relation(fields: [plannednotification_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_2A4A3832EAB5688")
-
-  @@id([plannednotification_id, role_id])
-  @@index([role_id], map: "IDX_2A4A3832D60322AC")
-  @@index([plannednotification_id], map: "IDX_2A4A3832EAB5688")
 }
 
 model claro_planning {
@@ -2579,10 +2532,6 @@ model claro_resource_node {
   icap__bibliography_book_reference                                                    icap__bibliography_book_reference?
   icap__blog                                                                           icap__blog?
   icap__lesson                                                                         icap__lesson?
-  icap__socialmedia_comment                                                            icap__socialmedia_comment[]
-  icap__socialmedia_like                                                               icap__socialmedia_like[]
-  icap__socialmedia_note                                                               icap__socialmedia_note[]
-  icap__socialmedia_share                                                              icap__socialmedia_share[]
   icap__wiki                                                                           icap__wiki?
   innova_path                                                                          innova_path?
   innova_step                                                                          innova_step[]
@@ -2593,7 +2542,6 @@ model claro_resource_node {
   ujm_grid_item                                                                        ujm_grid_item[]
   ujm_hint                                                                             ujm_hint[]
   ujm_label                                                                            ujm_label[]
-  ujm_lti_resource                                                                     ujm_lti_resource?
   ujm_ordering_item                                                                    ujm_ordering_item[]
   ujm_proposal                                                                         ujm_proposal[]
   ujm_question_resource                                                                ujm_question_resource[]
@@ -2687,35 +2635,34 @@ model claro_resource_user_evaluation {
 }
 
 model claro_role {
-  id                                                                                              Int                                                         @id @default(autoincrement())
+  id                                                                                              Int                                  @id @default(autoincrement())
   workspace_id                                                                                    Int?
-  name                                                                                            String                                                      @unique(map: "UNIQ_317774715E237E06") @db.VarChar(255)
-  translation_key                                                                                 String                                                      @db.VarChar(255)
+  name                                                                                            String                               @unique(map: "UNIQ_317774715E237E06") @db.VarChar(255)
+  translation_key                                                                                 String                               @db.VarChar(255)
   is_read_only                                                                                    Boolean
   type                                                                                            Int
   personal_workspace_creation_enabled                                                             Boolean
-  uuid                                                                                            String                                                      @unique(map: "UNIQ_31777471D17F50A6") @db.VarChar(36)
+  uuid                                                                                            String                               @unique(map: "UNIQ_31777471D17F50A6") @db.VarChar(36)
   claro__open_badge_rule                                                                          claro__open_badge_rule[]
   claro_admin_tool_role                                                                           claro_admin_tool_role[]
   claro_announcement_roles                                                                        claro_announcement_roles[]
   claro_connection_message_role                                                                   claro_connection_message_role[]
-  claro_cursusbundle_course_session_claro_cursusbundle_course_session_tutor_role_idToclaro_role   claro_cursusbundle_course_session[]                         @relation("claro_cursusbundle_course_session_tutor_role_idToclaro_role")
-  claro_cursusbundle_course_session_claro_cursusbundle_course_session_learner_role_idToclaro_role claro_cursusbundle_course_session[]                         @relation("claro_cursusbundle_course_session_learner_role_idToclaro_role")
+  claro_cursusbundle_course_session_claro_cursusbundle_course_session_tutor_role_idToclaro_role   claro_cursusbundle_course_session[]  @relation("claro_cursusbundle_course_session_tutor_role_idToclaro_role")
+  claro_cursusbundle_course_session_claro_cursusbundle_course_session_learner_role_idToclaro_role claro_cursusbundle_course_session[]  @relation("claro_cursusbundle_course_session_learner_role_idToclaro_role")
   claro_facet_role                                                                                claro_facet_role[]
   claro_general_facet_preference                                                                  claro_general_facet_preference[]
   claro_group_role                                                                                claro_group_role[]
   claro_home_tab_roles                                                                            claro_home_tab_roles[]
   claro_log                                                                                       claro_log[]
   claro_panel_facet_role                                                                          claro_panel_facet_role[]
-  claro_plannednotificationbundle_planned_notification_role                                       claro_plannednotificationbundle_planned_notification_role[]
   claro_resource_rights                                                                           claro_resource_rights[]
-  claro_workspace_claro_role_workspace_idToclaro_workspace                                        claro_workspace?                                            @relation("claro_role_workspace_idToclaro_workspace", fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3177747182D40A1F")
+  claro_workspace_claro_role_workspace_idToclaro_workspace                                        claro_workspace?                     @relation("claro_role_workspace_idToclaro_workspace", fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3177747182D40A1F")
   claro_role_options                                                                              claro_role_options?
-  claro_team_claro_roleToclaro_team_team_manager_role                                             claro_team?                                                 @relation("claro_roleToclaro_team_team_manager_role")
-  claro_team_claro_roleToclaro_team_role_id                                                       claro_team?                                                 @relation("claro_roleToclaro_team_role_id")
+  claro_team_claro_roleToclaro_team_team_manager_role                                             claro_team?                          @relation("claro_roleToclaro_team_team_manager_role")
+  claro_team_claro_roleToclaro_team_role_id                                                       claro_team?                          @relation("claro_roleToclaro_team_role_id")
   claro_tool_rights                                                                               claro_tool_rights[]
   claro_user_role                                                                                 claro_user_role[]
-  claro_workspace_claro_roleToclaro_workspace_default_role_id                                     claro_workspace[]                                           @relation("claro_roleToclaro_workspace_default_role_id")
+  claro_workspace_claro_roleToclaro_workspace_default_role_id                                     claro_workspace[]                    @relation("claro_roleToclaro_workspace_default_role_id")
   claro_workspace_registration_queue                                                              claro_workspace_registration_queue[]
   claro_workspace_requirements                                                                    claro_workspace_requirements[]
   claro_workspace_shortcuts                                                                       claro_workspace_shortcuts[]
@@ -3330,7 +3277,6 @@ model claro_user {
   claro_log_security_claro_log_security_doer_idToclaro_user                                                                   claro_log_security[]                             @relation("claro_log_security_doer_idToclaro_user")
   claro_log_security_claro_log_security_target_idToclaro_user                                                                 claro_log_security[]                             @relation("claro_log_security_target_idToclaro_user")
   claro_message                                                                                                               claro_message[]
-  claro_oauth_user                                                                                                            claro_oauth_user[]
   claro_object_lock                                                                                                           claro_object_lock[]
   claro_ordered_tool                                                                                                          claro_ordered_tool[]
   claro_planned_object                                                                                                        claro_planned_object[]
@@ -3365,8 +3311,6 @@ model claro_user {
   claro_workspace_recent                                                                                                      claro_workspace_recent[]
   claro_workspace_registration_queue                                                                                          claro_workspace_registration_queue[]
   claro_workspace_requirements                                                                                                claro_workspace_requirements[]
-  former22_manual_invoice_former22_manual_invoice_selectedUserIdToclaro_user                                                  former22_manual_invoice[]                        @relation("former22_manual_invoice_selectedUserIdToclaro_user")
-  former22_manual_invoice                                                                                                     former22_manual_invoice[]
   hevinci_ability_progress                                                                                                    hevinci_ability_progress[]
   hevinci_competency_progress                                                                                                 hevinci_competency_progress[]
   hevinci_competency_progress_log                                                                                             hevinci_competency_progress_log[]
@@ -3379,11 +3323,6 @@ model claro_user {
   icap__blog_member                                                                                                           icap__blog_member[]
   icap__blog_post                                                                                                             icap__blog_post[]
   icap__notification_user_parameters                                                                                          icap__notification_user_parameters[]
-  icap__socialmedia_comment                                                                                                   icap__socialmedia_comment[]
-  icap__socialmedia_like                                                                                                      icap__socialmedia_like[]
-  icap__socialmedia_note                                                                                                      icap__socialmedia_note[]
-  icap__socialmedia_share                                                                                                     icap__socialmedia_share[]
-  icap__socialmedia_wall_item                                                                                                 icap__socialmedia_wall_item[]
   icap__wiki_contribution                                                                                                     icap__wiki_contribution[]
   icap__wiki_section                                                                                                          icap__wiki_section[]
   innova_path_progression                                                                                                     innova_path_progression[]
@@ -3625,13 +3564,13 @@ model claro_widget_simple {
 }
 
 model claro_workspace {
-  id                                                                                      Int                                                    @id @default(autoincrement())
+  id                                                                                      Int                                  @id @default(autoincrement())
   default_role_id                                                                         Int?
-  options_id                                                                              Int?                                                   @unique(map: "UNIQ_D90285453ADB05F1")
+  options_id                                                                              Int?                                 @unique(map: "UNIQ_D90285453ADB05F1")
   creator_id                                                                              Int?
-  entity_name                                                                             String                                                 @db.VarChar(255)
-  code                                                                                    String                                                 @unique(map: "UNIQ_D902854577153098") @db.VarChar(255)
-  slug                                                                                    String                                                 @unique(map: "UNIQ_D9028545989D9B62") @db.VarChar(128)
+  entity_name                                                                             String                               @db.VarChar(255)
+  code                                                                                    String                               @unique(map: "UNIQ_D902854577153098") @db.VarChar(255)
+  slug                                                                                    String                               @unique(map: "UNIQ_D9028545989D9B62") @db.VarChar(128)
   isModel                                                                                 Boolean
   self_registration                                                                       Boolean
   registration_validation                                                                 Boolean
@@ -3640,23 +3579,23 @@ model claro_workspace {
   disabled_notifications                                                                  Boolean
   showProgression                                                                         Boolean
   archived                                                                                Boolean
-  uuid                                                                                    String                                                 @unique(map: "UNIQ_D9028545D17F50A6") @db.VarChar(36)
-  poster                                                                                  String?                                                @db.VarChar(255)
-  thumbnail                                                                               String?                                                @db.VarChar(255)
-  description                                                                             String?                                                @db.LongText
-  accessible_from                                                                         DateTime?                                              @db.DateTime(0)
-  accessible_until                                                                        DateTime?                                              @db.DateTime(0)
-  access_code                                                                             String?                                                @db.VarChar(255)
-  allowed_ips                                                                             String?                                                @db.LongText
-  contactEmail                                                                            String?                                                @db.VarChar(255)
-  createdAt                                                                               DateTime?                                              @db.DateTime(0)
-  updatedAt                                                                               DateTime?                                              @db.DateTime(0)
-  hidden                                                                                  Boolean                                                @default(false)
-  successCondition                                                                        String?                                                @db.LongText
+  uuid                                                                                    String                               @unique(map: "UNIQ_D9028545D17F50A6") @db.VarChar(36)
+  poster                                                                                  String?                              @db.VarChar(255)
+  thumbnail                                                                               String?                              @db.VarChar(255)
+  description                                                                             String?                              @db.LongText
+  accessible_from                                                                         DateTime?                            @db.DateTime(0)
+  accessible_until                                                                        DateTime?                            @db.DateTime(0)
+  access_code                                                                             String?                              @db.VarChar(255)
+  allowed_ips                                                                             String?                              @db.LongText
+  contactEmail                                                                            String?                              @db.VarChar(255)
+  createdAt                                                                               DateTime?                            @db.DateTime(0)
+  updatedAt                                                                               DateTime?                            @db.DateTime(0)
+  hidden                                                                                  Boolean                              @default(false)
+  successCondition                                                                        String?                              @db.LongText
   claro__open_badge_badge_class                                                           claro__open_badge_badge_class[]
   claro__open_badge_rule                                                                  claro__open_badge_rule[]
-  claro_cursusbundle_course_claro_cursusbundle_course_workspace_idToclaro_workspace       claro_cursusbundle_course[]                            @relation("claro_cursusbundle_course_workspace_idToclaro_workspace")
-  claro_cursusbundle_course_claro_cursusbundle_course_workspace_model_idToclaro_workspace claro_cursusbundle_course[]                            @relation("claro_cursusbundle_course_workspace_model_idToclaro_workspace")
+  claro_cursusbundle_course_claro_cursusbundle_course_workspace_idToclaro_workspace       claro_cursusbundle_course[]          @relation("claro_cursusbundle_course_workspace_idToclaro_workspace")
+  claro_cursusbundle_course_claro_cursusbundle_course_workspace_model_idToclaro_workspace claro_cursusbundle_course[]          @relation("claro_cursusbundle_course_workspace_model_idToclaro_workspace")
   claro_cursusbundle_course_session                                                       claro_cursusbundle_course_session[]
   claro_cursusbundle_cursus                                                               claro_cursusbundle_cursus[]
   claro_event                                                                             claro_event[]
@@ -3666,29 +3605,26 @@ model claro_workspace {
   claro_log_connect_workspace                                                             claro_log_connect_workspace[]
   claro_log_functionnal                                                                   claro_log_functionnal[]
   claro_ordered_tool                                                                      claro_ordered_tool[]
-  claro_plannednotificationbundle_message                                                 claro_plannednotificationbundle_message[]
-  claro_plannednotificationbundle_planned_notification                                    claro_plannednotificationbundle_planned_notification[]
   claro_resource_node                                                                     claro_resource_node[]
-  claro_role_claro_role_workspace_idToclaro_workspace                                     claro_role[]                                           @relation("claro_role_workspace_idToclaro_workspace")
+  claro_role_claro_role_workspace_idToclaro_workspace                                     claro_role[]                         @relation("claro_role_workspace_idToclaro_workspace")
   claro_scheduled_task                                                                    claro_scheduled_task[]
   claro_task                                                                              claro_task[]
   claro_team                                                                              claro_team[]
   claro_team_parameters                                                                   claro_team_parameters?
   claro_transfer_export                                                                   claro_transfer_export[]
   claro_transfer_import                                                                   claro_transfer_import[]
-  claro_user_claro_user_workspace_idToclaro_workspace                                     claro_user?                                            @relation("claro_user_workspace_idToclaro_workspace")
+  claro_user_claro_user_workspace_idToclaro_workspace                                     claro_user?                          @relation("claro_user_workspace_idToclaro_workspace")
   claro_widget_instance_config                                                            claro_widget_instance_config[]
-  claro_role_claro_roleToclaro_workspace_default_role_id                                  claro_role?                                            @relation("claro_roleToclaro_workspace_default_role_id", fields: [default_role_id], references: [id], onUpdate: NoAction, map: "FK_D9028545248673E9")
-  claro_workspace_options_claro_workspace_options_idToclaro_workspace_options             claro_workspace_options?                               @relation("claro_workspace_options_idToclaro_workspace_options", fields: [options_id], references: [id], onUpdate: NoAction, map: "FK_D90285453ADB05F1")
-  claro_user_claro_userToclaro_workspace_creator_id                                       claro_user?                                            @relation("claro_userToclaro_workspace_creator_id", fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_D902854561220EA6")
+  claro_role_claro_roleToclaro_workspace_default_role_id                                  claro_role?                          @relation("claro_roleToclaro_workspace_default_role_id", fields: [default_role_id], references: [id], onUpdate: NoAction, map: "FK_D9028545248673E9")
+  claro_workspace_options_claro_workspace_options_idToclaro_workspace_options             claro_workspace_options?             @relation("claro_workspace_options_idToclaro_workspace_options", fields: [options_id], references: [id], onUpdate: NoAction, map: "FK_D90285453ADB05F1")
+  claro_user_claro_userToclaro_workspace_creator_id                                       claro_user?                          @relation("claro_userToclaro_workspace_creator_id", fields: [creator_id], references: [id], onUpdate: NoAction, map: "FK_D902854561220EA6")
   claro_workspace_evaluation                                                              claro_workspace_evaluation[]
   claro_workspace_favourite                                                               claro_workspace_favourite[]
-  claro_workspace_options_claro_workspaceToclaro_workspace_options_workspace_id           claro_workspace_options?                               @relation("claro_workspaceToclaro_workspace_options_workspace_id")
+  claro_workspace_options_claro_workspaceToclaro_workspace_options_workspace_id           claro_workspace_options?             @relation("claro_workspaceToclaro_workspace_options_workspace_id")
   claro_workspace_recent                                                                  claro_workspace_recent[]
   claro_workspace_registration_queue                                                      claro_workspace_registration_queue[]
   claro_workspace_requirements                                                            claro_workspace_requirements[]
   claro_workspace_shortcuts                                                               claro_workspace_shortcuts[]
-  ujm_ltiapp_workspace                                                                    ujm_ltiapp_workspace[]
   workspace_organization                                                                  workspace_organization[]
 
   @@index([default_role_id], map: "IDX_D9028545248673E9")
@@ -3811,183 +3747,168 @@ model claro_workspace_shortcuts {
 }
 
 model doctrine_clarolineagendabundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineannouncementbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineaudioplayerbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineauthenticationbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinebigbluebuttonbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineclacoformbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinecorebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinecursusbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinedropzonebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineforumbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinehistorybundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinehomebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinelinkbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinemessagebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineopenbadgebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
-}
-
-model doctrine_clarolineplannednotificationbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinerssbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinesamlbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinescormbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineslideshowbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinetagbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolineteambundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinethemebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_clarolinevideoplayerbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_hevincicompetencybundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_hevincifavouritebundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_hevinciurlbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_icapbibliographybundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_icapblogbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_icaplessonbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_icapnotificationbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
-}
-
-model doctrine_icapsocialmediabundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_icapwikibundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_innovapathbundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model doctrine_ujmexobundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
-}
-
-model doctrine_ujmltibundle_versions {
-  version     String    @id @db.VarChar(14)
-  executed_at DateTime? @db.DateTime(0)
+  version     String   @id @db.VarChar(14)
+  executed_at DateTime @db.DateTime(0)
 }
 
 model group_location {
@@ -4504,21 +4425,6 @@ model icap__notification_viewer {
   @@index([viewer_id], map: "viewer_idx")
 }
 
-model icap__socialmedia_like {
-  id                          Int                           @id @default(autoincrement())
-  resource_id                 Int?
-  user_id                     Int?
-  url                         String?                       @db.VarChar(255)
-  title                       String?                       @db.VarChar(255)
-  creation_date               DateTime                      @db.DateTime(0)
-  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7C98AD9089329D25")
-  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7C98AD90A76ED395")
-  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
-
-  @@index([resource_id], map: "IDX_7C98AD9089329D25")
-  @@index([user_id], map: "IDX_7C98AD90A76ED395")
-}
-
 model icap__wiki {
   id                                                        Int                  @id @default(autoincrement())
   root_id                                                   Int?                 @unique(map: "UNIQ_1FAD6B8179066886")
@@ -4995,42 +4901,6 @@ model ujm_label {
   @@index([interaction_matching_id], map: "IDX_C22A1EB5FAB79C10")
 }
 
-model ujm_lti_app {
-  id                   Int                    @id @default(autoincrement())
-  url                  String                 @db.LongText
-  title                String                 @db.VarChar(255)
-  appkey               String?                @db.LongText
-  secret               String?                @db.LongText
-  description          String?                @db.LongText
-  uuid                 String                 @unique(map: "UNIQ_EEDB962ED17F50A6") @db.VarChar(36)
-  ujm_lti_resource     ujm_lti_resource[]
-  ujm_ltiapp_workspace ujm_ltiapp_workspace[]
-}
-
-model ujm_lti_resource {
-  id                  Int                  @id @default(autoincrement())
-  openInNewTab        Boolean
-  ratio               Float?
-  uuid                String               @unique(map: "UNIQ_43618A03D17F50A6") @db.VarChar(36)
-  ltiApp_id           Int?
-  resourceNode_id     Int?                 @unique(map: "UNIQ_43618A03B87FAB32")
-  ujm_lti_app         ujm_lti_app?         @relation(fields: [ltiApp_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_43618A03A58375FA")
-  claro_resource_node claro_resource_node? @relation(fields: [resourceNode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_43618A03B87FAB32")
-
-  @@index([ltiApp_id], map: "IDX_43618A03A58375FA")
-}
-
-model ujm_ltiapp_workspace {
-  ltiapp_id       Int
-  workspace_id    Int
-  claro_workspace claro_workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7FB6D14282D40A1F")
-  ujm_lti_app     ujm_lti_app     @relation(fields: [ltiapp_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_7FB6D142A22F70CC")
-
-  @@id([ltiapp_id, workspace_id])
-  @@index([workspace_id], map: "IDX_7FB6D14282D40A1F")
-  @@index([ltiapp_id], map: "IDX_7FB6D142A22F70CC")
-}
-
 model ujm_object_question {
   id           Int           @id @default(autoincrement())
   question_id  Int?
@@ -5303,127 +5173,11 @@ model workspace_organization {
   @@index([workspace_id], map: "IDX_D212AD8082D40A1F")
 }
 
+// Legacy Former22 auth codes table used by /auth/sendCode
 model former22_auth_codes {
   email         String  @id @db.VarChar(255)
   code          String? @db.VarChar(255)
-  sendTimestamp BigInt?
-}
-
-model former22_template {
-  templateId              String   @id @db.VarChar(255)
-  title                   String?  @db.VarChar(255)
-  descriptionText         String?  @db.Text
-  emailSubject            String?  @db.Text
-  smsBody                 String?  @db.Text
-  emailBody               String?  @db.Text
-  statuses                String?  @db.Text
-  isUsedForSessionInvites Boolean?
-  usedByEvaluation        Boolean? @default(false)
-}
-
-model former22_inscription {
-  inscriptionId         String                 @id @db.VarChar(255)
-  inscriptionStatus     String?                @db.Text
-  updatedAt             DateTime?              @default(now()) @db.DateTime(0)
-  attestationId         Int?
-  organizationId        Int?
-  remark                String?                @db.Text
-  former22_organization former22_organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_inscription_organization")
-  former22_attestation  former22_attestation?  @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
-
-  @@index([attestationId], map: "inscription_index")
-  @@index([organizationId], map: "organization_index")
-}
-
-model former22_course {
-  courseId       String   @id @db.VarChar(255)
-  coordinator    String?  @db.Text
-  responsible    String?  @db.Text
-  typeStage      String?  @db.Text
-  teachingMethod String?  @db.Text
-  codeCategory   String?  @db.Text
-  theme          String?  @db.Text
-  targetAudience String?  @db.Text
-  billingMode    String?  @db.Text
-  pricingType    String?  @db.Text
-  baseRate       Float?   @db.Float
-  isRecurrent    Boolean? @default(false)
-  goals          String?  @db.Text
-}
-
-model former22_error_report {
-  errorId          String  @id @db.VarChar(255)
-  errorDescription String? @db.Text
-  errorDate        String? @db.Text
-}
-
-model former22_session {
-  sessionId       String   @id @db.VarChar(255)
-  sessionName     String?  @db.Text
-  startDate       String?  @db.VarChar(255)
-  areInvitesSent  Boolean?
-  sessionFormat   String?  @db.Text
-  sessionLocation String?  @db.Text
-}
-
-model former22_log {
-  id                Int       @id @default(autoincrement())
-  logId             String?   @db.VarChar(255)
-  userEmail         String?   @db.VarChar(255)
-  entityType        String?   @db.VarChar(255)
-  entityName        String?   @db.Text
-  entityId          String?   @db.VarChar(255)
-  actionDescription String?   @db.Text
-  actionStatus      String?   @db.VarChar(255)
-  actionName        String?   @db.Text
-  dateAndTime       DateTime? @default(now()) @db.DateTime(0)
-}
-
-model former22_user {
-  userId           String   @id @db.VarChar(255)
-  shouldReceiveSms Boolean?
-  colorCode        String?  @db.VarChar(255)
-  cfNumber         Int?
-}
-
-model former22_organization {
-  id                          Int                    @id @default(autoincrement())
-  organizationUuid            String                 @unique(map: "organizationUuid") @db.VarChar(36)
-  billingMode                 String?                @db.Text
-  dailyRate                   Float?                 @db.Float
-  flyersCount                 Int?
-  phone                       String?                @db.Text
-  addressTitle                String?                @db.Text
-  postalAddressCountry        String?                @db.Text
-  postalAddressCountryCode    String?                @db.Text
-  postalAddressCode           String?                @db.Text
-  postalAddressStreet         String?                @db.Text
-  postalAddressDepartment     String?                @db.Text
-  postalAddressDepartmentCode String?                @db.Text
-  postalAddressLocality       String?                @db.Text
-  organizationId              Int                    @unique(map: "organizationId")
-  clientNumber                Int?
-  email                       String?                @db.VarChar(255)
-  former22_inscription        former22_inscription[]
-  claro__organization         claro__organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_organization")
-
-  @@index([organizationId], map: "organization_index")
-}
-
-model former22_invoice {
-  id                                     Int                                    @id @default(autoincrement())
-  invoiceId                              String                                 @unique(map: "invoiceId") @db.VarChar(255)
-  inscriptionId                          Int
-  participantName                        String?                                @db.VarChar(255)
-  tutorsNames                            String?                                @db.VarChar(255)
-  courseName                             String?                                @db.VarChar(255)
-  sessionName                            String?                                @db.VarChar(255)
-  createdAt                              DateTime?                              @default(now()) @db.DateTime(0)
-  seances                                String?                                @db.Text
-  inscriptionStatus                      String?                                @db.Text
-  claro_cursusbundle_course_session_user claro_cursusbundle_course_session_user @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_inscription")
-
-  @@index([inscriptionId], map: "inscription_index")
+  sendTimestamp BigInt? @db.BigInt
 }
 
 model claro_home_tab_tool_shortcut {
@@ -5498,146 +5252,6 @@ model messenger_messages {
   @@index([delivered_at], map: "IDX_75EA56E016BA31DB")
 }
 
-model former22_attestation {
-  id                   Int                    @id @default(autoincrement())
-  uuid                 String                 @unique(map: "uuid") @db.VarChar(36)
-  title                String?                @default("Nouveau modèle d'attestation") @db.VarChar(255)
-  description          String?                @db.Text
-  fileStoredName       String?                @db.VarChar(255)
-  fileOriginalName     String?                @db.Text
-  former22_inscription former22_inscription[]
-}
-
-model former22_manual_invoice {
-  id                                                            Int                                 @id @default(autoincrement())
-  uuid                                                          String?                             @unique(map: "uuid") @db.VarChar(255)
-  organizationId                                                Int
-  creatorUserId                                                 Int
-  invoiceNumberForCurrentYear                                   Int
-  customClientEmail                                             String?                             @db.Text
-  customClientAddress                                           String?                             @db.Text
-  invoiceDate                                                   DateTime?                           @db.DateTime(0)
-  courseYear                                                    Int
-  createdAt                                                     DateTime                            @default(now()) @db.DateTime(0)
-  updatedAt                                                     DateTime                            @default(now()) @db.DateTime(0)
-  items                                                         Json?
-  selectedUserId                                                Int?
-  concerns                                                      String?                             @db.Text
-  status                                                        former22_manual_invoice_status
-  customClientTitle                                             String?                             @db.Text
-  customClientFirstname                                         String?                             @db.Text
-  customClientLastname                                          String?                             @db.Text
-  invoiceType                                                   former22_manual_invoice_invoiceType
-  reason                                                        former22_manual_invoice_reason
-  codeCompta                                                    String?                             @db.Text
-  former22_invoice_item                                         former22_invoice_item[]
-  claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user?                         @relation("former22_manual_invoice_selectedUserIdToclaro_user", fields: [selectedUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_selected_user")
-  claro_user                                                    claro_user                          @relation(fields: [creatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_creator_user")
-  claro__organization                                           claro__organization                 @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_manual_invoice_organization")
-
-  @@index([creatorUserId], map: "creator_user_index")
-  @@index([organizationId], map: "organization_index")
-  @@index([selectedUserId], map: "invoice_selected_user_index")
-}
-
-model doctrine_clarolinebookingbundle_versions {
-  version String @id @db.VarChar(255)
-}
-
-model icap__socialmedia_comment {
-  id                          Int                           @id @default(autoincrement())
-  resource_id                 Int?
-  user_id                     Int?
-  text                        String?                       @db.LongText
-  url                         String?                       @db.VarChar(255)
-  title                       String?                       @db.VarChar(255)
-  creation_date               DateTime                      @db.DateTime(0)
-  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6FC00C3089329D25")
-  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6FC00C30A76ED395")
-  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
-
-  @@index([resource_id], map: "IDX_6FC00C3089329D25")
-  @@index([user_id], map: "IDX_6FC00C30A76ED395")
-}
-
-model icap__socialmedia_note {
-  id                  Int                  @id @default(autoincrement())
-  resource_id         Int?
-  user_id             Int?
-  text                String?              @db.LongText
-  url                 String?              @db.VarChar(255)
-  title               String?              @db.VarChar(255)
-  creation_date       DateTime             @db.DateTime(0)
-  claro_resource_node claro_resource_node? @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F46173789329D25")
-  claro_user          claro_user?          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1F461737A76ED395")
-
-  @@index([resource_id], map: "IDX_1F46173789329D25")
-  @@index([user_id], map: "IDX_1F461737A76ED395")
-}
-
-model icap__socialmedia_share {
-  id                          Int                           @id @default(autoincrement())
-  resource_id                 Int?
-  user_id                     Int?
-  network                     String?                       @db.VarChar(255)
-  url                         String?                       @db.VarChar(255)
-  title                       String?                       @db.VarChar(255)
-  creation_date               DateTime                      @db.DateTime(0)
-  claro_resource_node         claro_resource_node?          @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4DB117C589329D25")
-  claro_user                  claro_user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_4DB117C5A76ED395")
-  icap__socialmedia_wall_item icap__socialmedia_wall_item[]
-
-  @@index([resource_id], map: "IDX_4DB117C589329D25")
-  @@index([user_id], map: "IDX_4DB117C5A76ED395")
-}
-
-model icap__socialmedia_wall_item {
-  id                        Int                        @id @default(autoincrement())
-  like_id                   Int?
-  share_id                  Int?
-  comment_id                Int?
-  user_id                   Int?
-  creation_date             DateTime                   @db.DateTime(0)
-  visible                   Boolean
-  icap__socialmedia_share   icap__socialmedia_share?   @relation(fields: [share_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC4202AE63FDB")
-  icap__socialmedia_like    icap__socialmedia_like?    @relation(fields: [like_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420859BFA32")
-  claro_user                claro_user?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420A76ED395")
-  icap__socialmedia_comment icap__socialmedia_comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_436BC420F8697D13")
-
-  @@index([share_id], map: "IDX_436BC4202AE63FDB")
-  @@index([like_id], map: "IDX_436BC420859BFA32")
-  @@index([user_id], map: "IDX_436BC420A76ED395")
-  @@index([comment_id], map: "IDX_436BC420F8697D13")
-}
-
-model former22_event {
-  eventId    String   @id @db.VarChar(255)
-  isFeesPaid Boolean? @default(false)
-  fees       Float?   @default(0) @db.Float
-}
-
-model former22_contract_template {
-  id                Int                 @id @default(autoincrement())
-  uuid              String              @unique(map: "uuid") @db.VarChar(36)
-  title             String?             @default("Nouveau modèle de contrat") @db.VarChar(255)
-  description       String?             @db.Text
-  fileStoredName    String?             @db.VarChar(255)
-  fileOriginalName  String?             @db.Text
-  former22_contract former22_contract[]
-}
-
-model former22_contract {
-  id                         Int                        @id @default(autoincrement())
-  uuid                       String                     @unique(map: "uuid") @db.VarChar(36)
-  userId                     String                     @db.VarChar(36)
-  courseId                   String                     @db.VarChar(36)
-  templateId                 Int
-  year                       Int
-  former22_contract_template former22_contract_template @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contract_template")
-
-  @@index([templateId], map: "fk_contract_template")
-}
-
 model migrations {
   id     Int      @id @default(autoincrement())
   name   String   @db.VarChar(255)
@@ -5648,61 +5262,6 @@ model migrations_state {
   key    String   @id @unique(map: "key") @db.VarChar(255)
   value  String   @db.Text
   run_on DateTime @db.DateTime(0)
-}
-
-model former22_evaluation_template {
-  id                  Int                   @id @default(autoincrement())
-  uuid                String                @unique(map: "uuid") @db.VarChar(36)
-  title               String?               @default("Nouveau modèle d'évaluation") @db.VarChar(255)
-  description         String?               @db.Text
-  struct              Json?
-  former22_evaluation former22_evaluation[]
-}
-
-model former22_evaluation {
-  id                                Int                               @id @default(autoincrement())
-  uuid                              String                            @unique(map: "uuid") @db.VarChar(36)
-  sessionId                         Int                               @unique(map: "sessionId")
-  templateId                        Int
-  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_claro_cursusbundle_course_session")
-  former22_evaluation_template      former22_evaluation_template      @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_former22_evaluation_template")
-  former22_evaluation_result        former22_evaluation_result[]
-
-  @@index([templateId], map: "template_index")
-  @@index([sessionId], map: "session_index")
-}
-
-model former22_evaluation_result {
-  id                  Int                 @id @default(autoincrement())
-  uuid                String              @unique(map: "uuid") @db.VarChar(36)
-  evaluationId        Int
-  result              Json?
-  former22_evaluation former22_evaluation @relation(fields: [evaluationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_result_evaluation")
-
-  @@index([evaluationId], map: "evaluation_index")
-}
-
-model former22_invoice_item {
-  id                                             Int                                             @id @default(autoincrement())
-  uuid                                           String                                          @db.VarChar(255)
-  invoiceId                                      Int
-  designation                                    String?                                         @db.Text
-  unit                                           String?                                         @db.Text
-  amount                                         String?                                         @db.Text
-  price                                          String?                                         @db.Text
-  vatCode                                        String?                                         @db.Text
-  createdAt                                      DateTime                                        @default(now()) @db.DateTime(0)
-  updatedAt                                      DateTime                                        @default(now()) @db.DateTime(0)
-  cancellationId                                 Int?
-  inscriptionId                                  Int?
-  number                                         String?                                         @db.Text
-  claro_cursusbundle_course_session_cancellation claro_cursusbundle_course_session_cancellation? @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_course_session_cancellation")
-  claro_cursusbundle_course_session_user         claro_cursusbundle_course_session_user?         @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
-  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
-
-  @@index([invoiceId], map: "invoice_index")
-  @@index([inscriptionId], map: "inscription_index")
-  @@index([cancellationId], map: "cancellation_index")
 }
 
 model claro_log {
@@ -5767,28 +5326,4 @@ model ujm_paper {
 
   @@index([user_id], map: "IDX_82972E4BA76ED395")
   @@index([exercise_id], map: "IDX_82972E4BE934951A")
-}
-
-enum former22_manual_invoice_reason {
-  Participation
-  P_nalit_          @map("Pénalité")
-  Annulation
-  Non_participation @map("Non-participation")
-}
-
-enum former22_manual_invoice_status {
-  En_pr_paration    @map("En préparation")
-  A_traiter         @map("A traiter")
-  Export_e          @map("Exportée")
-  Annul_e           @map("Annulée")
-  Envoy_e           @map("Envoyée")
-  Non_transmissible @map("Non transmissible")
-  Quotas
-}
-
-enum former22_manual_invoice_invoiceType {
-  Manuelle
-  Directe
-  Group_e  @map("Groupée")
-  Quota
 }

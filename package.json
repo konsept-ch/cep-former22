@@ -1,6 +1,6 @@
 {
   "name": "dgcs-former22-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CEP Middleware server for PeopleSoft and Former22",
   "author": "konsept.ch",
   "license": "SEE LICENSE IN LICENSE.txt",
@@ -13,8 +13,8 @@
   "main": "src/index.js",
   "scripts": {
     "postinstall": "prisma generate",
-    "start": "db-migrate up && pm2 start ecosystem.config.cjs && pm2 logs",
-    "start-prod": "db-migrate up && pm2 start ecosystem.config.cjs --env production && pm2 logs",
+    "start": "db-migrate up -d \"mysql://claroline:claroline@127.0.0.1:3307/claroline?multipleStatements=true\" && npm run ts-node",
+    "start-prod": "db-migrate up -d \"mysql://claroline:claroline@127.0.0.1:3307/claroline?multipleStatements=true\" && npm run ts-node",
     "ts-node": "node -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
@@ -30,6 +30,9 @@
     "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start",
     "ci:check": "npm run prettier:check && npm run eslint:check && npm run typescript:check",
     "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""
+  },
+  "prisma": {
+    "seed": "node --loader ts-node/esm prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "4.9.0",
