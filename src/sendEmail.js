@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 import FormData from 'form-data'
 import Mailgun from 'mailgun.js'
+import nodemailer from 'nodemailer'
 
 import {
     mailerHostUrl,
@@ -11,6 +12,9 @@ import {
     mailgunApiKey,
     mailgunDomain,
     mailgunWhitelist,
+    useMailhog,
+    mailhogHost,
+    mailhogPort,
 } from './credentialsConfig'
 
 const mailgun = new Mailgun(FormData)
@@ -34,6 +38,27 @@ export const sendEmail = async ({
     const destinations = typeof to === 'string' ? [to] : to?.flat()
     const destinationsCc = typeof cc === 'string' ? [cc] : cc?.flat()
     const destinationsBcc = typeof bcc === 'string' ? [bcc] : bcc?.flat()
+
+    if (useMailhog) {
+        // Use local MailHog SMTP so we don't call external services in development
+        const transporter = nodemailer.createTransport({
+            host: mailhogHost,
+            port: mailhogPort,
+            secure: false,
+        })
+
+        const mailhogResponse = await transporter.sendMail({
+            from,
+            to: destinations,
+            cc: destinationsCc,
+            bcc: destinationsBcc,
+            subject,
+            html: html_body,
+            headers: { 'X-Tag': tag },
+        })
+
+        return { emailResponse: mailhogResponse }
+    }
 
     const result = await fetch(`${mailerHostUrl}/api/v1/send/message`, {
         method: 'post',

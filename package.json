@@ -27,7 +27,8 @@
     "eslint:check": "eslint --ext .js,.jsx,.ts,.tsx . --report-unused-disable-directives",
     "eslint:fix": "eslint --ext .js,.jsx,.ts,.tsx . --fix",
     "typescript:check": "tsc --noEmit",
-    "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start",
+    "dev:middleware": "nodemon --watch src --watch prisma --ext ts,js,json --exec \"node -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --experimental-specifier-resolution=node ./bin/www.ts\"",
+    "start:local": "cross-env CLAROLINE_API_URL=http://localhost:8088/apiv2/ npm start",
     "ci:check": "npm run prettier:check && npm run eslint:check && npm run typescript:check",
     "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""
   },
@@ -69,6 +70,7 @@
     "multer": "1.4.5-lts.1",
     "nanoid": "4.0.0",
     "node-fetch": "3.3.0",
+    "nodemailer": "^6.9.8",
     "pdf-lib": "^1.17.1",
     "pizzip": "3.1.4",
     "pm2": "5.2.2",
@@ -90,6 +92,7 @@
     "eslint-plugin-import": "2.27.5",
     "husky": "8.0.3",
     "lint-staged": "13.1.0",
+    "nodemon": "^3.1.11",
     "prettier": "2.8.3"
   }
 }

@@ -21,16 +21,22 @@ export const generateEndpoints = () => {
         const { emailResponse } = await sendEmail({
             to: 'dan@konsept.ch',
             subject: "Rapport d'erreur de l'interface utilisateur",
-            html_body: `<h2>Date:${date}</h2><h2>Description:</h2><p><code>${req.body.errorDescription}</code></p>`,
+            html_body: `<h2>Date:${date}</h2><h2>Description:</h2><p><code>${req.body?.errorDescription}</code></p>`,
         })
 
-        await prisma.former22_error_report.create({
-            data: {
-                errorId: uuidv4(),
-                errorDescription: req.body.errorDescription,
-                errorDate: date,
-            },
-        })
+        // Prisma client might not expose this legacy table in some environments; fail silently if so
+        try {
+            await prisma?.former22_error_report?.create?.({
+                data: {
+                    errorId: uuidv4(),
+                    errorDescription: req.body?.errorDescription ?? 'no-description',
+                    errorDate: date,
+                },
+            })
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to persist error report, continuing anyway:', error?.message ?? error)
+        }
 
         res.json({ emailResponse })
     })

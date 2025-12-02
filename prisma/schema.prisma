@@ -243,6 +243,8 @@ model claro__organization {
   claro_cursusbundle_cursus_organizations claro_cursusbundle_cursus_organizations[]
   claro_cursusbundle_quota                claro_cursusbundle_quota?
   claro_user_administrator                claro_user_administrator[]
+  former22_organization                   former22_organization?
+  former22_manual_invoice                 former22_manual_invoice[]
   group_organization                      group_organization[]
   user_organization                       user_organization[]
   workspace_organization                  workspace_organization[]
@@ -1077,6 +1079,7 @@ model claro_cursusbundle_course_session {
   claro_cursusbundle_course_session_validators                             claro_cursusbundle_course_session_validators[]
   claro_cursusbundle_session_event                                         claro_cursusbundle_session_event[]
   claro_cursusbundle_session_event_set                                     claro_cursusbundle_session_event_set[]
+  former22_evaluation                                                      former22_evaluation?
 
   @@index([course_id], map: "IDX_C5F56FDE591CC992")
   @@index([creator_id], map: "IDX_C5F56FDE61220EA6")
@@ -1095,6 +1098,7 @@ model claro_cursusbundle_course_session_cancellation {
   inscription_uuid                  String                            @db.VarChar(36)
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CE57DCC1613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CE57DCC1A76ED395")
+  former22_invoice_item             former22_invoice_item[]
 
   @@index([session_id], map: "IDX_CE57DCC1613FECDF")
   @@index([user_id], map: "IDX_CE57DCC1A76ED395")
@@ -1138,6 +1142,7 @@ model claro_cursusbundle_course_session_user {
   remark                            String                            @db.LongText
   claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120F613FECDF")
   claro_user                        claro_user                        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_80B4120FA76ED395")
+  former22_invoice_item             former22_invoice_item[]
 
   @@unique([session_id, user_id], map: "training_session_unique_user")
   @@index([session_id], map: "IDX_80B4120F613FECDF")
@@ -2229,10 +2234,11 @@ model claro_message {
 }
 
 model claro_oauth_user {
-  id      Int    @id @default(autoincrement())
-  user_id Int?
-  oauthId String @db.VarChar(255)
-  service String @db.VarChar(255)
+  id         Int         @id @default(autoincrement())
+  user_id    Int?
+  oauthId    String      @db.VarChar(255)
+  service    String      @db.VarChar(255)
+  claro_user claro_user? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_E4539E82A76ED395")
 
   @@index([user_id], map: "IDX_E4539E82A76ED395")
 }
@@ -3277,6 +3283,7 @@ model claro_user {
   claro_log_security_claro_log_security_doer_idToclaro_user                                                                   claro_log_security[]                             @relation("claro_log_security_doer_idToclaro_user")
   claro_log_security_claro_log_security_target_idToclaro_user                                                                 claro_log_security[]                             @relation("claro_log_security_target_idToclaro_user")
   claro_message                                                                                                               claro_message[]
+  claro_oauth_user                                                                                                            claro_oauth_user[]
   claro_object_lock                                                                                                           claro_object_lock[]
   claro_ordered_tool                                                                                                          claro_ordered_tool[]
   claro_planned_object                                                                                                        claro_planned_object[]
@@ -3331,6 +3338,8 @@ model claro_user {
   ujm_share                                                                                                                   ujm_share[]
   user_location                                                                                                               user_location[]
   user_organization                                                                                                           user_organization[]
+  former22_manual_invoice_creator                                                                                             former22_manual_invoice[]                        @relation("former22_manual_invoice_creator")
+  former22_manual_invoice_selected                                                                                            former22_manual_invoice[]                        @relation("former22_manual_invoice_selected")
 
   @@index([administrative_code], map: "code_idx")
   @@index([is_enabled], map: "enabled_idx")
@@ -5173,11 +5182,10 @@ model workspace_organization {
   @@index([workspace_id], map: "IDX_D212AD8082D40A1F")
 }
 
-// Legacy Former22 auth codes table used by /auth/sendCode
 model former22_auth_codes {
   email         String  @id @db.VarChar(255)
   code          String? @db.VarChar(255)
-  sendTimestamp BigInt? @db.BigInt
+  sendTimestamp BigInt?
 }
 
 model claro_home_tab_tool_shortcut {
@@ -5326,4 +5334,268 @@ model ujm_paper {
 
   @@index([user_id], map: "IDX_82972E4BA76ED395")
   @@index([exercise_id], map: "IDX_82972E4BE934951A")
+}
+
+model former22_attestation {
+  id                   Int                    @id @default(autoincrement())
+  uuid                 String                 @unique(map: "uuid") @db.VarChar(36)
+  title                String?                @default("Nouveau mod??le d'attestation") @db.VarChar(255)
+  description          String?                @db.Text
+  fileStoredName       String?                @db.VarChar(255)
+  fileOriginalName     String?                @db.Text
+  former22_inscription former22_inscription[]
+}
+
+model former22_contract {
+  id                         Int                        @id @default(autoincrement())
+  uuid                       String                     @unique(map: "uuid") @db.VarChar(36)
+  userId                     String                     @db.VarChar(36)
+  courseId                   String                     @db.VarChar(36)
+  templateId                 Int
+  year                       Int
+  former22_contract_template former22_contract_template @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contract_template")
+
+  @@index([templateId], map: "fk_contract_template")
+}
+
+model former22_contract_template {
+  id                Int                 @id @default(autoincrement())
+  uuid              String              @unique(map: "uuid") @db.VarChar(36)
+  title             String?             @default("Nouveau mod??le de contrat") @db.VarChar(255)
+  description       String?             @db.Text
+  fileStoredName    String?             @db.VarChar(255)
+  fileOriginalName  String?             @db.Text
+  former22_contract former22_contract[]
+}
+
+model former22_course {
+  courseId       String   @id @db.VarChar(255)
+  coordinator    String?  @db.Text
+  responsible    String?  @db.Text
+  typeStage      String?  @db.Text
+  teachingMethod String?  @db.Text
+  codeCategory   String?  @db.Text
+  theme          String?  @db.Text
+  targetAudience String?  @db.Text
+  billingMode    String?  @db.Text
+  pricingType    String?  @db.Text
+  baseRate       Float?   @db.Float
+  isRecurrent    Boolean? @default(false)
+  goals          String?  @db.Text
+}
+
+model former22_error_report {
+  errorId          String  @id @db.VarChar(255)
+  errorDescription String? @db.Text
+  errorDate        String? @db.Text
+}
+
+model former22_evaluation {
+  id                                Int                               @id @default(autoincrement())
+  uuid                              String                            @unique(map: "uuid") @db.VarChar(36)
+  sessionId                         Int                               @unique(map: "sessionId")
+  templateId                        Int
+  claro_cursusbundle_course_session claro_cursusbundle_course_session @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_claro_cursusbundle_course_session")
+  former22_evaluation_template      former22_evaluation_template      @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_former22_evaluation_template")
+  former22_evaluation_result        former22_evaluation_result[]
+
+  @@index([sessionId], map: "session_index")
+  @@index([templateId], map: "template_index")
+}
+
+model former22_evaluation_result {
+  id                  Int                 @id @default(autoincrement())
+  uuid                String              @unique(map: "uuid") @db.VarChar(36)
+  evaluationId        Int
+  result              Json?
+  former22_evaluation former22_evaluation @relation(fields: [evaluationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_evaluation_result_evaluation")
+
+  @@index([evaluationId], map: "evaluation_index")
+}
+
+model former22_evaluation_template {
+  id                  Int                   @id @default(autoincrement())
+  uuid                String                @unique(map: "uuid") @db.VarChar(36)
+  title               String?               @default("Nouveau modèle d'évaluation") @db.VarChar(255)
+  description         String?               @db.Text
+  struct              Json?
+  former22_evaluation former22_evaluation[]
+}
+
+model former22_event {
+  eventId    String   @id @db.VarChar(255)
+  isFeesPaid Boolean? @default(false)
+  fees       Float?   @default(0) @db.Float
+}
+
+model former22_inscription {
+  inscriptionId         String                 @id @db.VarChar(255)
+  inscriptionStatus     String?                @db.Text
+  updatedAt             DateTime?              @default(now()) @db.DateTime(0)
+  attestationId         Int?
+  organizationId        Int?
+  remark                String?                @db.Text
+  former22_organization former22_organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_inscription_organization")
+  former22_attestation  former22_attestation?  @relation(fields: [attestationId], references: [id], onUpdate: NoAction, map: "fk_inscription_attestation")
+
+  @@index([attestationId], map: "inscription_index")
+  @@index([organizationId], map: "organization_index")
+}
+
+model former22_invoice {
+  id                Int       @id @default(autoincrement())
+  invoiceId         String    @unique(map: "invoiceId") @db.VarChar(255)
+  inscriptionId     Int
+  participantName   String?   @db.VarChar(255)
+  tutorsNames       String?   @db.VarChar(255)
+  courseName        String?   @db.VarChar(255)
+  sessionName       String?   @db.VarChar(255)
+  createdAt         DateTime? @default(now()) @db.DateTime(0)
+  seances           String?   @db.Text
+  inscriptionStatus String?   @db.Text
+
+  @@index([inscriptionId], map: "inscription_index")
+}
+
+model former22_invoice_item {
+  id                                             Int                                             @id @default(autoincrement())
+  uuid                                           String                                          @db.VarChar(255)
+  invoiceId                                      Int
+  designation                                    String?                                         @db.Text
+  unit                                           String?                                         @db.Text
+  amount                                         String?                                         @db.Text
+  price                                          String?                                         @db.Text
+  vatCode                                        String?                                         @db.Text
+  createdAt                                      DateTime                                        @default(now()) @db.DateTime(0)
+  updatedAt                                      DateTime                                        @default(now()) @db.DateTime(0)
+  cancellationId                                 Int?
+  inscriptionId                                  Int?
+  number                                         String?                                         @db.Text
+  claro_cursusbundle_course_session_cancellation claro_cursusbundle_course_session_cancellation? @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_course_session_cancellation")
+  claro_cursusbundle_course_session_user         claro_cursusbundle_course_session_user?         @relation(fields: [inscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_claro_cursusbundle_course_session_user")
+  former22_manual_invoice                        former22_manual_invoice                         @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_former22_invoice_item_former22_manual_invoice")
+
+  @@index([cancellationId], map: "cancellation_index")
+  @@index([inscriptionId], map: "inscription_index")
+  @@index([invoiceId], map: "invoice_index")
+}
+
+model former22_log {
+  id           Int       @id @default(autoincrement())
+  logId        String?   @db.VarChar(255)
+  userEmail    String?   @db.VarChar(255)
+  entityType   String?   @db.VarChar(255)
+  entityName   String?   @db.Text
+  entityId     String?   @db.VarChar(255)
+  actionStatus String?   @db.VarChar(255)
+  actionName   String?   @db.Text
+  dateAndTime  DateTime? @default(now()) @db.DateTime(0)
+}
+
+model former22_manual_invoice {
+  id                          Int                                 @id @default(autoincrement())
+  uuid                        String?                             @unique(map: "uuid") @db.VarChar(255)
+  organizationId              Int
+  creatorUserId               Int
+  invoiceNumberForCurrentYear Int
+  customClientEmail           String?                             @db.Text
+  customClientAddress         String?                             @db.Text
+  invoiceDate                 DateTime?                           @db.DateTime(0)
+  courseYear                  Int
+  createdAt                   DateTime                            @default(now()) @db.DateTime(0)
+  updatedAt                   DateTime                            @default(now()) @db.DateTime(0)
+  items                       Json?
+  selectedUserId              Int?
+  concerns                    String?                             @db.Text
+  status                      former22_manual_invoice_status
+  customClientTitle           String?                             @db.Text
+  customClientFirstname       String?                             @db.Text
+  customClientLastname        String?                             @db.Text
+  invoiceType                 former22_manual_invoice_invoiceType
+  reason                      former22_manual_invoice_reason
+  codeCompta                  String?                             @db.Text
+  former22_invoice_item       former22_invoice_item[]
+  claro_user                  claro_user                          @relation("former22_manual_invoice_creator", fields: [creatorUserId], references: [id], map: "fk_manual_invoice_creator_user")
+  claro__organization         claro__organization                 @relation(fields: [organizationId], references: [id], map: "fk_manual_invoice_organization")
+  claro_user_former22_manual_invoice_selectedUserIdToclaro_user claro_user? @relation("former22_manual_invoice_selected", fields: [selectedUserId], references: [id], map: "fk_invoice_selected_user")
+
+  @@index([creatorUserId], map: "creator_user_index")
+  @@index([selectedUserId], map: "invoice_selected_user_index")
+  @@index([organizationId], map: "organization_index")
+}
+
+model former22_organization {
+  id                          Int                    @id @default(autoincrement())
+  organizationUuid            String                 @unique(map: "organizationUuid") @db.VarChar(36)
+  billingMode                 String?                @db.Text
+  dailyRate                   Float?                 @db.Float
+  flyersCount                 Int?
+  phone                       String?                @db.Text
+  addressTitle                String?                @db.Text
+  postalAddressCountry        String?                @db.Text
+  postalAddressCountryCode    String?                @db.Text
+  postalAddressCode           String?                @db.Text
+  postalAddressStreet         String?                @db.Text
+  postalAddressDepartment     String?                @db.Text
+  postalAddressDepartmentCode String?                @db.Text
+  postalAddressLocality       String?                @db.Text
+  organizationId              Int                    @unique(map: "organizationId")
+  clientNumber                Int?
+  email                       String?                @db.VarChar(255)
+  former22_inscription        former22_inscription[]
+  claro__organization         claro__organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "FK_former22_org_claro_org")
+
+  @@index([organizationId], map: "organization_index")
+}
+
+model former22_session {
+  sessionId       String   @id @db.VarChar(255)
+  sessionName     String?  @db.Text
+  startDate       String?  @db.VarChar(255)
+  areInvitesSent  Boolean?
+  sessionFormat   String?  @db.Text
+  sessionLocation String?  @db.Text
+}
+
+model former22_template {
+  templateId              String   @id @db.VarChar(255)
+  title                   String?  @db.VarChar(255)
+  descriptionText         String?  @db.Text
+  emailSubject            String?  @db.Text
+  smsBody                 String?  @db.Text
+  emailBody               String?  @db.Text
+  statuses                String?  @db.Text
+  isUsedForSessionInvites Boolean?
+  usedByEvaluation        Boolean? @default(false)
+}
+
+model former22_user {
+  userId           String   @id @db.VarChar(255)
+  shouldReceiveSms Boolean?
+  colorCode        String?  @db.VarChar(255)
+  cfNumber         Int?
+}
+
+enum former22_manual_invoice_status {
+  En_pr_paration    @map("En préparation")
+  A_traiter         @map("A traiter")
+  Export_e          @map("Exportée")
+  Annul_e           @map("Annulée")
+  Envoy_e           @map("Envoyée")
+  Non_transmissible @map("Non transmissible")
+  Quotas
+}
+
+enum former22_manual_invoice_invoiceType {
+  Manuelle
+  Directe
+  Group_e  @map("Groupée")
+  Quota
+}
+
+enum former22_manual_invoice_reason {
+  Participation
+  P_nalit_          @map("Pénalité")
+  Annulation
+  Non_participation @map("Non-participation")
 }

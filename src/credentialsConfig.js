@@ -21,3 +21,7 @@ export const mailgunDomain = process.env.MAILGUN_DOMAIN ?? 'dgcs-dev.ch'
 export const mailgunWhitelist =
     process.env.MAILGUN_WHITELIST ??
     '@araspe.ch,@ilavigny.ch,@lerepuis.ch,@polouest.ch,@pragmaticmanagement.ch,@vd.educanet2.ch'
+
+export const useMailhog = process.env.USE_MAILHOG === 'true'
+export const mailhogHost = process.env.MAILHOG_HOST ?? '127.0.0.1'
+export const mailhogPort = Number(process.env.MAILHOG_PORT ?? '1025')
