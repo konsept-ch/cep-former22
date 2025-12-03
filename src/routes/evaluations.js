@@ -74,14 +74,25 @@ createService(
     'get',
     '/sessions',
     async (req, res) => {
+        const recentYear = yearMinusOne()
         const sessions = await prisma.claro_cursusbundle_course_session.findMany({
             select: {
                 uuid: true,
                 course_name: true,
             },
+            where: {
+                start_date: buildArchiveCondition(recentYear),
+                claro_cursusbundle_session_event: {
+                    every: {
+                        claro_planned_object: {
+                            start_date: buildArchiveCondition(recentYear),
+                        },
+                    },
+                },
+            },
         })
 
-        res.json(sessions ?? 'Aucunes session trouvées')
+        res.json(sessions)
     },
     null,
     evaluationsRouter,
