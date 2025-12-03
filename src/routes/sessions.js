@@ -55,6 +55,11 @@ createService(
                             },
                         },
                     },
+                    where: {
+                        claro_planned_object: {
+                            start_date: buildArchiveCondition(recentYear),
+                        },
+                    },
                 },
                 claro_cursusbundle_course_session_user: {
                     select: {
@@ -81,13 +86,6 @@ createService(
             },
             where: {
                 start_date: buildArchiveCondition(recentYear),
-                claro_cursusbundle_session_event: {
-                    every: {
-                        claro_planned_object: {
-                            start_date: buildArchiveCondition(recentYear),
-                        },
-                    },
-                },
             },
         })
 
