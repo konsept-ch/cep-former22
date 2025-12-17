@@ -13,10 +13,10 @@
   "main": "src/index.js",
   "scripts": {
     "postinstall": "prisma generate",
-    "start": "cross-env DOTENV_CONFIG_OVERRIDE=true node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate up && npm run ts-node-watch",
+    "start": "cross-env DOTENV_CONFIG_OVERRIDE=true node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate up && npm run ts-node",
     "start-prod": "db-migrate up && pm2 start ecosystem.config.cjs --env production && pm2 logs",
-    "ts-node-watch": "node --watch -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
-    "ts-node": "node -r ts-node/register/transpile-only --loader ts-node/esm/transpile-only --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
+    "ts-node-watch": "node --watch -r ./node_modules/ts-node/register/transpile-only --loader ./node_modules/ts-node/esm/transpile-only.mjs --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
+    "ts-node": "node -r ./node_modules/ts-node/register/transpile-only --loader ./node_modules/ts-node/esm/transpile-only.mjs --unhandled-rejections=strict --experimental-specifier-resolution=node ./bin/www.ts",
     "stop": "pm2 stop server",
     "monitor": "pm2 monit",
     "logs": "pm2 logs",

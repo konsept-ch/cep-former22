@@ -15,8 +15,6 @@ import {
 
 const mailgun = new Mailgun(FormData)
 
-const mailgunClient = mailgun.client({ username: 'api', key: mailgunApiKey, url: 'https://api.eu.mailgun.net' })
-
 const postalSuppressedDomains = mailgunWhitelist.split(',')
 
 export const sendEmail = async ({
@@ -65,7 +63,19 @@ export const sendEmail = async ({
                 destinationsBcc?.some((destination) => destination.includes(domain))
         )
     ) {
+        if (!mailgunApiKey) {
+            return {
+                emailResponse,
+                mailgunResult: 'MAILGUN_API_KEY is not set; skipping Mailgun send in this environment.',
+            }
+        }
+
         try {
+            const mailgunClient = mailgun.client({
+                username: 'api',
+                key: mailgunApiKey,
+                url: 'https://api.eu.mailgun.net',
+            })
             const mailgunResult = await mailgunClient.messages.create(mailgunDomain, {
                 from,
                 to: destinations,
