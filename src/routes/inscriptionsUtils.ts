@@ -166,6 +166,11 @@ export const fetchInscriptionsWithStatuses = async (
     { shouldFetchTutors, shouldFetchCancellations } = { shouldFetchTutors: false, shouldFetchCancellations: false }
 ) => {
     const recentYear = yearMinusOne()
+    const isInArchiveRange = (value: Date | string | null) => {
+        if (!value) return false
+        const date = value instanceof Date ? value : new Date(value)
+        return isArchiveMode ? date <= recentYear : date > recentYear
+    }
 
     try {
         const sessions: any = await prisma.claro_cursusbundle_course_session.findMany({
@@ -195,11 +200,9 @@ export const fetchInscriptionsWithStatuses = async (
                     where: shouldFetchTutors
                         ? {
                               registration_type: REGISTRATION_TYPES.TUTOR,
-                              registration_date: buildArchiveCondition(recentYear),
                           }
                         : {
                               registration_type: REGISTRATION_TYPES.LEARNER,
-                              registration_date: buildArchiveCondition(recentYear),
                           },
                     select: {
                         id: true,
@@ -293,13 +296,31 @@ export const fetchInscriptionsWithStatuses = async (
                             },
                         },
                     },
-                    where: {
-                        registration_date: buildArchiveCondition(recentYear),
-                    },
+                    where: {},
                 },
             },
             where: {
-                start_date: buildArchiveCondition(recentYear),
+                OR: [
+                    {
+                        start_date: buildArchiveCondition(recentYear),
+                    },
+                    {
+                        start_date: null,
+                        claro_cursusbundle_course_session_user: {
+                            some: {
+                                registration_date: buildArchiveCondition(recentYear),
+                            },
+                        },
+                    },
+                    {
+                        start_date: null,
+                        claro_cursusbundle_course_session_cancellation: {
+                            some: {
+                                registration_date: buildArchiveCondition(recentYear),
+                            },
+                        },
+                    },
+                ],
             },
         })
 
@@ -338,60 +359,133 @@ export const fetchInscriptionsWithStatuses = async (
                     start_date,
                     uuid: sessionUuid,
                 }: any) =>
-                    inscriptions?.length > 0 || cancellations?.length > 0
-                        ? (shouldFetchCancellations ? cancellations : inscriptions).map((inscription: any) => {
-                              try {
-                                  const inscriptionStatusForId = inscriptionsAdditionalData.find(
-                                      ({ inscriptionId }) => inscriptionId === inscription.uuid
-                                  )
-                                  const inscriptionStatusForIdWhenCancellation = shouldFetchCancellations
-                                      ? inscriptionsAdditionalData.find(
-                                            ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
-                                        )
-                                      : null
+                    (() => {
+                        const filteredInscriptions = start_date
+                            ? inscriptions
+                            : inscriptions?.filter(({ registration_date }: any) => isInArchiveRange(registration_date))
+                        const filteredCancellations = start_date
+                            ? cancellations
+                            : cancellations?.filter(({ registration_date }: any) => isInArchiveRange(registration_date))
 
-                                  const { coordinator, codeCategory, theme, targetAudience } =
-                                      courseData.former22_course ?? {}
+                        const itemsToMap = shouldFetchCancellations ? filteredCancellations : filteredInscriptions
 
-                                  const userMainOrganization = inscriptionStatusForId?.former22_organization
-                                      ? allOrganizations.find(
-                                            (o) => o.id === inscriptionStatusForId.former22_organization?.organizationId
-                                        )
-                                      : inscription.claro_user.user_organization[0]?.claro__organization
+                        return itemsToMap?.length > 0
+                            ? itemsToMap.map((inscription: any) => {
+                                  try {
+                                      const inscriptionStatusForId = inscriptionsAdditionalData.find(
+                                          ({ inscriptionId }) => inscriptionId === inscription.uuid
+                                      )
+                                      const inscriptionStatusForIdWhenCancellation = shouldFetchCancellations
+                                          ? inscriptionsAdditionalData.find(
+                                                ({ inscriptionId }) => inscriptionId === inscription.inscription_uuid
+                                            )
+                                          : null
 
-                                  const isHrValidationEnabled = userMainOrganization?.claro_cursusbundle_quota != null
+                                      const { coordinator, codeCategory, theme, targetAudience } =
+                                          courseData.former22_course ?? {}
 
-                                  const derivedStatus = deriveInscriptionStatus({
-                                      savedStatus: (shouldFetchCancellations
-                                          ? inscriptionStatusForIdWhenCancellation
-                                          : inscriptionStatusForId
-                                      )?.inscriptionStatus as StatusesValues,
-                                      transformedStatus: transformFlagsToStatus({
-                                          validated: inscription.validated,
-                                          registrationType: shouldFetchCancellations
-                                              ? REGISTRATION_TYPES.CANCELLATION
-                                              : inscription.registration_type,
-                                          hrValidationStatus: inscription.status,
-                                          isHrValidationEnabled,
-                                      }),
-                                  })
+                                      const userMainOrganization = inscriptionStatusForId?.former22_organization
+                                          ? allOrganizations.find(
+                                                (o) =>
+                                                    o.id ===
+                                                    inscriptionStatusForId.former22_organization?.organizationId
+                                            )
+                                          : inscription.claro_user.user_organization[0]?.claro__organization
 
-                                  return {
-                                      id: inscription.uuid,
-                                      inscriptionDate: inscription.registration_date,
-                                      type: inscription.registration_type,
-                                      deletedInscriptionUuid: inscription.inscription_uuid,
-                                      remark: inscriptionStatusForId?.remark,
-                                      coordinator,
-                                      codeCategory,
-                                      theme,
-                                      targetAudience,
-                                      attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
-                                      status: shouldFetchCancellations
-                                          ? statusesForAnnulation.includes(derivedStatus as any)
-                                              ? derivedStatus
-                                              : STATUSES.ANNULEE_NON_FACTURABLE
-                                          : derivedStatus,
+                                      const isHrValidationEnabled =
+                                          userMainOrganization?.claro_cursusbundle_quota != null
+
+                                      const derivedStatus = deriveInscriptionStatus({
+                                          savedStatus: (shouldFetchCancellations
+                                              ? inscriptionStatusForIdWhenCancellation
+                                              : inscriptionStatusForId
+                                          )?.inscriptionStatus as StatusesValues,
+                                          transformedStatus: transformFlagsToStatus({
+                                              validated: inscription.validated,
+                                              registrationType: shouldFetchCancellations
+                                                  ? REGISTRATION_TYPES.CANCELLATION
+                                                  : inscription.registration_type,
+                                              hrValidationStatus: inscription.status,
+                                              isHrValidationEnabled,
+                                          }),
+                                      })
+
+                                      return {
+                                          id: inscription.uuid,
+                                          inscriptionDate: inscription.registration_date,
+                                          type: inscription.registration_type,
+                                          deletedInscriptionUuid: inscription.inscription_uuid,
+                                          remark: inscriptionStatusForId?.remark,
+                                          coordinator,
+                                          codeCategory,
+                                          theme,
+                                          targetAudience,
+                                          attestationTitle: inscriptionStatusForId?.former22_attestation?.title,
+                                          status: shouldFetchCancellations
+                                              ? statusesForAnnulation.includes(derivedStatus as any)
+                                                  ? derivedStatus
+                                                  : STATUSES.ANNULEE_NON_FACTURABLE
+                                              : derivedStatus,
+                                          session: {
+                                              id: sessionUuid,
+                                              name: course_name,
+                                              startDate: start_date,
+                                              quotaDays: quota_days,
+                                              isUsedForQuota: used_by_quotas,
+                                              courseName: courseData.course_name,
+                                              coursePrice: courseData.price,
+                                              courseDuration: courseData.session_days,
+                                              startYear: new Date(start_date as unknown as string).getFullYear(),
+                                          },
+                                          user: {
+                                              firstName: inscription.claro_user.first_name,
+                                              lastName: inscription.claro_user.last_name,
+                                              email: inscription.claro_user.mail,
+                                              username: inscription.claro_user.username,
+                                              phone: inscription.claro_user.phone,
+                                              phoneForSms: parsePhoneForSms({
+                                                  phone: inscription.claro_user.phone,
+                                              }),
+                                              userId: inscription.claro_user.uuid,
+                                              shouldReceiveSms: inscription.claro_user.former22_user?.shouldReceiveSms,
+                                              hierarchy: formatOrganizationsHierarchy(
+                                                  allOrganizations,
+                                                  userMainOrganization
+                                              ),
+                                              organization: userMainOrganization?.name,
+                                              organizationId: userMainOrganization?.uuid,
+                                              organizationCode: userMainOrganization?.code,
+                                              profession: getUserProfession({
+                                                  userId: inscription.claro_user.id,
+                                                  professionFacetsValues,
+                                              }),
+                                          },
+                                          validationType:
+                                              inscription.status === 2
+                                                  ? 'Validée'
+                                                  : inscription.status === 3
+                                                  ? 'Validée sur quota'
+                                                  : '',
+                                          organizationClientNumber:
+                                              userMainOrganization?.former22_organization?.clientNumber,
+                                          invoiceNumber: (shouldFetchCancellations
+                                              ? items.find((i) => i.cancellationId === inscription.id)
+                                              : items.find((i) => i.inscriptionId === inscription.id)
+                                          )?.former22_manual_invoice.number,
+                                      }
+                                  } catch (error) {
+                                      console.error(error)
+                                  }
+                              })
+                            : shouldFetchTutors || shouldFetchCancellations
+                            ? []
+                            : [
+                                  {
+                                      id: uuidv4(),
+                                      coordinator: courseData.former22_course?.coordinator,
+                                      codeCategory: courseData.former22_course?.codeCategory,
+                                      theme: courseData.former22_course?.theme,
+                                      targetAudience: courseData.former22_course?.targetAudience,
                                       session: {
                                           id: sessionUuid,
                                           name: course_name,
@@ -399,70 +493,11 @@ export const fetchInscriptionsWithStatuses = async (
                                           quotaDays: quota_days,
                                           isUsedForQuota: used_by_quotas,
                                           courseName: courseData.course_name,
-                                          coursePrice: courseData.price,
-                                          courseDuration: courseData.session_days,
                                           startYear: new Date(start_date as unknown as string).getFullYear(),
                                       },
-                                      user: {
-                                          firstName: inscription.claro_user.first_name,
-                                          lastName: inscription.claro_user.last_name,
-                                          email: inscription.claro_user.mail,
-                                          username: inscription.claro_user.username,
-                                          phone: inscription.claro_user.phone,
-                                          phoneForSms: parsePhoneForSms({
-                                              phone: inscription.claro_user.phone,
-                                          }),
-                                          userId: inscription.claro_user.uuid,
-                                          shouldReceiveSms: inscription.claro_user.former22_user?.shouldReceiveSms,
-                                          hierarchy: formatOrganizationsHierarchy(
-                                              allOrganizations,
-                                              userMainOrganization
-                                          ),
-                                          organization: userMainOrganization?.name,
-                                          organizationId: userMainOrganization?.uuid,
-                                          organizationCode: userMainOrganization?.code,
-                                          profession: getUserProfession({
-                                              userId: inscription.claro_user.id,
-                                              professionFacetsValues,
-                                          }),
-                                      },
-                                      validationType:
-                                          inscription.status === 2
-                                              ? 'Validée'
-                                              : inscription.status === 3
-                                              ? 'Validée sur quota'
-                                              : '',
-                                      organizationClientNumber:
-                                          userMainOrganization?.former22_organization?.clientNumber,
-                                      invoiceNumber: (shouldFetchCancellations
-                                          ? items.find((i) => i.cancellationId === inscription.id)
-                                          : items.find((i) => i.inscriptionId === inscription.id)
-                                      )?.former22_manual_invoice.number,
-                                  }
-                              } catch (error) {
-                                  console.error(error)
-                              }
-                          })
-                        : shouldFetchTutors || shouldFetchCancellations
-                        ? []
-                        : [
-                              {
-                                  id: uuidv4(),
-                                  coordinator: courseData.former22_course?.coordinator,
-                                  codeCategory: courseData.former22_course?.codeCategory,
-                                  theme: courseData.former22_course?.theme,
-                                  targetAudience: courseData.former22_course?.targetAudience,
-                                  session: {
-                                      id: sessionUuid,
-                                      name: course_name,
-                                      startDate: start_date,
-                                      quotaDays: quota_days,
-                                      isUsedForQuota: used_by_quotas,
-                                      courseName: courseData.course_name,
-                                      startYear: new Date(start_date as unknown as string).getFullYear(),
                                   },
-                              },
-                          ]
+                              ]
+                    })()
             )
 
             let fetchedPendingLearners: any[] = []
