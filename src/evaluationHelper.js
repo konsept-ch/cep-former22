@@ -8,6 +8,7 @@ export class EvaluationHelper {
     static ColorGray2 = rgb(0.9, 0.9, 0.9)
     static ColorGray3 = rgb(0.98, 0.98, 0.98)
     static ColorGray4 = rgb(202 / 255, 200 / 255, 198 / 255)
+    static Debug = false
 
     static PageMarginX = 50
     static PageMarginY = 30
@@ -28,17 +29,29 @@ export class EvaluationHelper {
         this.doc = doc
         this.font = font
         this.y = 0
-        this.charset = new RegExp(
-            `[^${font
-                .getCharacterSet()
-                .map((c) => `\\u${c.toString(16).padStart(4, '0')}`)
-                .join('')}]`,
-            'gm'
-        )
+        this.supportedCodePoints = new Set(font.getCharacterSet())
     }
 
     cleanText(text) {
-        return text.replaceAll(this.charset, ' ')
+        let cleaned = ''
+
+        for (const char of String(text ?? '')) {
+            const codePoint = char.codePointAt(0)
+
+            if (char === '\n') {
+                cleaned += '\n'
+                continue
+            }
+            if (char === '\r') continue
+            if (char === '\t') {
+                cleaned += ' '
+                continue
+            }
+
+            cleaned += this.supportedCodePoints.has(codePoint) ? char : ' '
+        }
+
+        return cleaned
     }
 
     gotoPage(index) {
@@ -51,8 +64,29 @@ export class EvaluationHelper {
         this.y += delta
     }
 
+    ensurePageSpace(height) {
+        const pageIndex = (this.y * EvaluationHelper.InvContentHeight) | 0
+        const pageEndY = (pageIndex + 1) * EvaluationHelper.ContentHeight
+        if (this.y + height > pageEndY) {
+            this.y = pageEndY
+        }
+    }
+
+    remainingPageSpace() {
+        const pageIndex = (this.y * EvaluationHelper.InvContentHeight) | 0
+        const pageEndY = (pageIndex + 1) * EvaluationHelper.ContentHeight
+        return pageEndY - this.y
+    }
+
+    pageBreak() {
+        const pageIndex = (this.y * EvaluationHelper.InvContentHeight) | 0
+        this.y = (pageIndex + 1) * EvaluationHelper.ContentHeight
+    }
+
     calculateTextRectangle(text, options) {
         if (options.computed) return options
+
+        const safeText = this.cleanText(text)
 
         const {
             x,
@@ -69,12 +103,13 @@ export class EvaluationHelper {
         const padding2 = padding << 1
         const textWidth = width - padding2
         const lineHeightPixel = this.font.heightAtSize(size * lineHeight)
-        const lines = breakTextIntoLines(text, [' '], textWidth, (t) => this.font.widthOfTextAtSize(t, size)).map(
+        const lines = breakTextIntoLines(safeText, [' '], textWidth, (t) => this.font.widthOfTextAtSize(t, size)).map(
             (t) => ({
                 text: t,
                 width: this.font.widthOfTextAtSize(t, size),
             })
         )
+        if (!lines.length) lines.push({ text: '', width: 0 })
         const textHeight = lineHeightPixel * lines.length
         const maxHeight = Math.max(height, textHeight + padding2)
 
@@ -111,7 +146,7 @@ export class EvaluationHelper {
                 lineHeight -
                 (centered ? height * 0.5 - textHeight * 0.5 : 0.0) +
                 descender
-            return lines.map((line, i) => ({
+            const mappedLines = lines.map((line, i) => ({
                 ...line,
                 pageIndex,
                 advance: 0,
@@ -124,11 +159,14 @@ export class EvaluationHelper {
                     background,
                 },
             }))
+            mappedLines.endY = y + height
+            return mappedLines
         }
 
         let ny = y + (centered ? height * 0.5 - textHeight * 0.5 : 0.0)
         pageIndex = (ny * EvaluationHelper.InvContentHeight) | 0
 
+        let endY = y
         for (let presentedLines = 0; presentedLines < lines.length; ) {
             const oy = ny - pageIndex * EvaluationHelper.ContentHeight
             const currentHeight = EvaluationHelper.ContentHeight - oy
@@ -136,7 +174,7 @@ export class EvaluationHelper {
             const presentLines = fragPresentLines | 0
             const restLineHeight = lineHeight - (fragPresentLines - presentLines) * lineHeight
             const maxPresentLines = Math.min(presentLines, lines.length - presentedLines)
-            const restLineHeightFrag = restLineHeight / maxPresentLines
+            const restLineHeightFrag = maxPresentLines > 0 ? restLineHeight / maxPresentLines : 0
 
             //eslint-disable-next-line no-plusplus
             for (let i = 0; i < maxPresentLines; ++i) {
@@ -157,6 +195,7 @@ export class EvaluationHelper {
                 }
             }
 
+            endY = pageIndex * EvaluationHelper.ContentHeight + oy + maxPresentLines * lineHeight
             ny += currentHeight + restLineHeight + descender
             presentedLines += maxPresentLines
 
@@ -164,6 +203,7 @@ export class EvaluationHelper {
             ++pageIndex
         }
 
+        lines.endY = endY
         return lines
     }
 
@@ -217,8 +257,10 @@ export class EvaluationHelper {
     drawText(text, options) {
         const txt = this.cleanText(text)
         const computed = this.calculateTextRectangle(txt, options)
-        this.drawSplittedText(this.splitText(txt, computed))
-        this.y = options.y + computed.height
+        const splittedText = this.splitText(txt, computed)
+        this.drawSplittedText(splittedText)
+        const endY = typeof splittedText.endY === 'number' ? splittedText.endY : options.y + computed.height
+        this.y = endY
     }
 
     drawTextBlock(text, options) {
@@ -226,7 +268,8 @@ export class EvaluationHelper {
         const computed = this.calculateTextRectangle(txt, options)
         const splittedText = this.splitText(txt, computed)
         const { x, y, width, background } = computed
-        const height = computed.height + splittedText.reduce((s, l) => s + l.advance, 0)
+        const endY = typeof splittedText.endY === 'number' ? splittedText.endY : y + computed.height
+        const height = endY - y
 
         if (background) {
             this.drawRectangle({
@@ -260,8 +303,8 @@ export class EvaluationHelper {
 
     generate(title, participantCount, results, struct) {
         const statistics = results.reduce((acc, result) => {
-            //eslint-disable-next-line no-plusplus
-            for (const key in result.result) if (acc[key]) ++acc[key][result.result[key]]
+            for (const key in result.result)
+                if (acc[key] && acc[key][result.result[key]] !== undefined) acc[key][result.result[key]] += 1
             return acc
         }, Object.fromEntries(struct.filter((block) => block.type === 'notes').map((block) => [block.identifier, Object.fromEntries(block.notes.map((note) => [note, 0]))])))
 
@@ -269,12 +312,12 @@ export class EvaluationHelper {
             h1: { size: 24, color: EvaluationHelper.ColorGray },
             h2: { size: 20, color: EvaluationHelper.ColorBlue },
             h3: { size: 18, color: EvaluationHelper.ColorBlue },
-            h4: { size: 16, color: EvaluationHelper.ColorLightBlue },
+            h4: { size: 16, color: EvaluationHelper.ColorBlue1 },
             h5: { size: 14, color: EvaluationHelper.ColorBlue },
             h6: { size: 12, color: EvaluationHelper.ColorBlue },
         }
 
-        this.drawText(`Date de création: ${new Date().toLocaleString('fr', { timeZone: 'Europe/Zurich' })}`, {
+        this.drawText(`Date de creation: ${new Date().toLocaleString('fr', { timeZone: 'Europe/Zurich' })}`, {
             x: 0,
             y: 0,
         })
@@ -295,12 +338,27 @@ export class EvaluationHelper {
         })
         this.moveDown(24)
 
-        for (const block of struct) {
+        for (let i = 0; i < struct.length; i += 1) {
+            const block = struct[i]
             const { type } = block
 
             //eslint-disable-next-line eqeqeq
             if (type == 'title') {
                 const style = styles[block.tag]
+                const titleRect = this.calculateTextRectangle(block.text, {
+                    x: 0,
+                    y: this.y,
+                    size: style.size,
+                    color: style.color,
+                })
+                if (
+                    typeof block.text === 'string' &&
+                    /^[BCD]\./.test(block.text.trim()) &&
+                    this.remainingPageSpace() < 260
+                ) {
+                    this.pageBreak()
+                }
+                this.ensurePageSpace(titleRect.height + style.size)
                 this.drawText(block.text, {
                     x: 0,
                     y: this.y,
@@ -310,6 +368,12 @@ export class EvaluationHelper {
                 this.moveDown(style.size)
                 //eslint-disable-next-line eqeqeq
             } else if (type == 'paragraph') {
+                const paragraphRect = this.calculateTextRectangle(block.text, {
+                    x: 0,
+                    y: this.y,
+                    lineHeight: 1.5,
+                })
+                this.ensurePageSpace(paragraphRect.height + 24)
                 this.drawText(block.text, {
                     x: 0,
                     y: this.y,
@@ -318,7 +382,11 @@ export class EvaluationHelper {
                 this.moveDown(24)
                 //eslint-disable-next-line eqeqeq
             } else if (type == 'notes') {
-                const headers = [...block.notes.map((n) => n.toString()), 'Total réponses', 'Nbr participants'].map(
+                const questionRect = this.calculateTextRectangle(block.text, {
+                    x: 0,
+                    y: this.y,
+                })
+                const headers = [...block.notes.map((n) => n.toString()), 'Total reponses', 'Nbr participants'].map(
                     (header) => ({
                         text: header,
                         computed: this.calculateTextRectangle(header, {
@@ -352,9 +420,12 @@ export class EvaluationHelper {
                 }))
                 const headerHeight = Math.max(...headers.map((h) => h.computed.height))
                 const bodyHeight = Math.max(...bodies.map((b) => b.computed.height))
-                const columnsWidth = headers.map((h, i) => Math.max(h.computed.width, bodies[i].computed.width))
+                const tableHeight = Math.max(headerHeight + bodyHeight, 60)
+                const columnsWidth = headers.map((h, j) => Math.max(h.computed.width, bodies[j].computed.width))
                 const deltaWidth =
                     (EvaluationHelper.ContentWidth - columnsWidth.reduce((s, w) => s + w)) / headers.length
+
+                this.ensurePageSpace(questionRect.height + 12 + tableHeight + 24)
 
                 this.drawText(block.text, {
                     x: 0,
@@ -363,12 +434,13 @@ export class EvaluationHelper {
                 this.moveDown(12)
 
                 const y = this.y
+                let maxY = y
 
                 //eslint-disable-next-line no-plusplus
-                for (let i = 0, x = 0; i < headers.length; ++i) {
-                    const header = headers[i]
-                    const body = bodies[i]
-                    const width = columnsWidth[i] + deltaWidth
+                for (let j = 0, x = 0; j < headers.length; ++j) {
+                    const header = headers[j]
+                    const body = bodies[j]
+                    const width = columnsWidth[j] + deltaWidth
 
                     this.drawTextBlock(header.text, {
                         ...header.computed,
@@ -385,23 +457,42 @@ export class EvaluationHelper {
                         height: bodyHeight,
                     })
 
+                    if (this.y > maxY) maxY = this.y
                     x += width
                 }
 
-                this.y = y + headerHeight + bodyHeight + 24
+                this.y = maxY + 24
                 //eslint-disable-next-line eqeqeq
             } else if (type == 'remark') {
+                const questionRect = this.calculateTextRectangle(block.text, {
+                    x: 0,
+                    y: this.y,
+                })
+                const remarkText = results
+                    .filter(({ result }) => result[block.identifier])
+                    .map(({ result }) => ` -\t${result[block.identifier]}`)
+                    .join('\n')
+                const hasRemark = remarkText.trim().length > 0
+                const remarkRect = hasRemark
+                    ? this.calculateTextRectangle(remarkText, {
+                          x: 0,
+                          y: this.y,
+                          width: EvaluationHelper.ContentWidth,
+                          padding: 15,
+                          lineHeight: 1.5,
+                          background: {
+                              color: EvaluationHelper.ColorGray3,
+                          },
+                      })
+                    : { height: 0 }
+                this.ensurePageSpace(questionRect.height + 12 + remarkRect.height + 24)
                 this.drawText(block.text, {
                     x: 0,
                     y: this.y,
                 })
                 this.moveDown(12)
-                this.drawTextBlock(
-                    results
-                        .filter(({ result }) => result[block.identifier])
-                        .map(({ result }) => ` -\t${result[block.identifier]}`)
-                        .join('\n'),
-                    {
+                if (hasRemark) {
+                    this.drawTextBlock(remarkText, {
                         x: 0,
                         y: this.y,
                         width: EvaluationHelper.ContentWidth,
@@ -410,9 +501,11 @@ export class EvaluationHelper {
                         background: {
                             color: EvaluationHelper.ColorGray3,
                         },
-                    }
-                )
-                this.moveDown(24)
+                    })
+                    this.moveDown(24)
+                } else {
+                    this.moveDown(12)
+                }
             }
         }
     }
