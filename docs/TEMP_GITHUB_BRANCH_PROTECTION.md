@@ -4,16 +4,17 @@ But: bloquer les merges non controles sur les branches de release.
 
 ## Branches a proteger
 
-- `cep/val`
-- `cep/prod`
-- `cffe/prod`
-- `dgcs/prod`
-- `legacy/evaluations/cep/prod`
-- `legacy/evaluations/cffe/prod`
-- `legacy/evaluations/dgcs/prod`
-- `legacy/reception/cep/prod`
+-   `cep/val`
+-   `cep/prod`
+-   `cffe/prod`
+-   `dgcs/prod`
+-   `legacy/evaluations/cep/prod`
+-   `legacy/evaluations/cffe/prod`
+-   `legacy/evaluations/dgcs/prod`
+-   `legacy/reception/cep/prod`
 
 ## Etapes GitHub (a faire pour chaque branche)
+
 1. Repo GitHub -> `Settings`.
 2. `Branches` -> `Add branch protection rule`.
 3. `Branch name pattern`: mettre la branche exacte (ex: `cep/prod`).
@@ -27,6 +28,7 @@ But: bloquer les merges non controles sur les branches de release.
 11. Enregistrer.
 
 ## Controle rapide apres setup
-- Ouvrir une PR de test vers `cep/val`.
-- Verifier que le check CI est obligatoire.
-- Verifier qu'un push direct sur `cep/val`/`cep/prod` est bloque.
+
+-   Ouvrir une PR de test vers `cep/val`.
+-   Verifier que le check CI est obligatoire.
+-   Verifier qu'un push direct sur `cep/val`/`cep/prod` est bloque.
