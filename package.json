@@ -22,6 +22,7 @@
     "logs": "pm2 logs",
     "clean:cancellations": "node ./scripts/cancellations.js",
     "themes:migrate": "node ./scripts/themes.js",
+    "test:attestations:missing-template": "node ./scripts/verify-missing-attestation-template.cjs",
     "migrate:create": "db-migrate create",
     "migrate:up": "db-migrate up",
     "schema": "prisma db pull && prisma generate",

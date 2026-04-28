@@ -29,6 +29,15 @@ export const callApi = async ({
         body: isFormData ? body : JSON.stringify(body),
     })
 
+    if (!response.ok) {
+        const responseText = await response.text()
+        throw new Error(
+            `Claroline API request failed: ${method.toUpperCase()} ${url} returned ${response.status} ${
+                response.statusText
+            }${responseText ? ` - ${responseText.slice(0, 500)}` : ''}`
+        )
+    }
+
     // if (isFormData) {
     //     // console.log(response)
     //     return await response.json()

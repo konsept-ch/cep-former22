@@ -122,6 +122,9 @@ export const createService = (
                     isFullTimeVisible: true,
                 })}. Time stamp: ${Date.now()}`
             )
+            if (error.context) {
+                winstonLogger.error(`Error context: ${JSON.stringify(error.context)}`)
+            }
             winstonLogger.error(error.stack)
 
             if (logHelper) {
