@@ -606,11 +606,15 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
         await createResource({ uuid: newAttestationsFolder.resourceNode.id })
     }
 
-    await prisma.former22_inscription.update({
+    await prisma.former22_inscription.upsert({
         where: {
             inscriptionId: currentInscription.uuid,
         },
-        data: {
+        update: {
+            attestationId: attestation.id,
+        },
+        create: {
+            inscriptionId: currentInscription.uuid,
             attestationId: attestation.id,
         },
     })
