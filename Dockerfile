@@ -3,9 +3,15 @@
 FROM node:18-bullseye-slim
 
 # use libreoffice for docx to pdf
-RUN apt update && apt install -y \
-    libreoffice \
-    && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    apt-get update -o Acquire::Retries=5; \
+    for attempt in 1 2 3; do \
+        apt-get install -y -o Acquire::Retries=5 --fix-missing libreoffice && break; \
+        if [ "$attempt" = "3" ]; then exit 1; fi; \
+        apt-get update -o Acquire::Retries=5; \
+        sleep 5; \
+    done; \
+    rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
