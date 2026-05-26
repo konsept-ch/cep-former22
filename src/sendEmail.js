@@ -77,7 +77,44 @@ export const sendEmail = async ({
         }),
     })
 
-    const emailResponse = await result.json()
+    const responseText = await result.text()
+    const contentType = result.headers.get('content-type') ?? ''
+    let emailResponse
+
+    if (responseText) {
+        if (contentType.includes('application/json')) {
+            try {
+                emailResponse = JSON.parse(responseText)
+            } catch (error) {
+                throw new Error(
+                    `Mailer returned invalid JSON. Status: ${
+                        result.status
+                    }. Content-Type: ${contentType}. Body: ${responseText.slice(0, 500)}`
+                )
+            }
+        } else {
+            emailResponse = {
+                status: result.status,
+                contentType,
+                body: responseText,
+            }
+        }
+    } else {
+        emailResponse = {
+            status: result.status,
+            contentType,
+            body: '',
+        }
+    }
+
+    if (!result.ok) {
+        throw new Error(
+            `Mailer request failed. Status: ${result.status}. Content-Type: ${contentType}. Body: ${responseText.slice(
+                0,
+                500
+            )}`
+        )
+    }
 
     // TODO use debug logging instead of console.log
 
