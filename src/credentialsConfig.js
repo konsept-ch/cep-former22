@@ -5,11 +5,16 @@ export const clarolineApiUrl = process.env.CLAROLINE_API_URL ?? 'https://www.cep
 // plain cep-val
 // export const clarolineApiUrl = process.env.CLAROLINE_API_URL ?? 'https://claroline-val.jcloud.ik-server.com/apiv2/'
 
+export const isProduction = process.env.NODE_ENV === 'production'
+export const hasMailerHostUrlOverride =
+    typeof process.env.MAILER_HOST_URL === 'string' && process.env.MAILER_HOST_URL.trim() !== ''
+
 export const MIDDLEWARE_URL =
     process.env.MIDDLEWARE_URL ??
     (process.env.NODE_ENV === 'production' ? 'https://middleware.cep-val.ch' : 'http://localhost:4000')
 
-export const mailerHostUrl = process.env.MAILER_HOST_URL ?? 'https://postal.cep-val.ch'
+export const mailerHostUrl =
+    process.env.MAILER_HOST_URL ?? (process.env.NODE_ENV === 'production' ? 'https://postal.cep-val.ch' : '')
 export const smsSenderUrl = process.env.SMS_SENDER_URL ?? 'https://api.smsup.ch/send/simulate'
 export const smsSenderToken = process.env.SMS_SENDER_TOKEN ?? ''
 export const mailerApiKey = process.env.MAILER_API_KEY ?? ''

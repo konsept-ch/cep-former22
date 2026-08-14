@@ -11,11 +11,24 @@ import {
     mailgunApiKey,
     mailgunDomain,
     mailgunWhitelist,
+    hasMailerHostUrlOverride,
+    isProduction,
 } from './credentialsConfig'
 
 const mailgun = new Mailgun(FormData)
 
 const postalSuppressedDomains = mailgunWhitelist.split(',')
+
+const buildMockEmailResponse = ({ from, to, cc, bcc, subject, tag }) => ({
+    mock: true,
+    accepted: true,
+    from,
+    to,
+    cc,
+    bcc,
+    subject,
+    tag,
+})
 
 export const sendEmail = async ({
     to,
@@ -33,24 +46,62 @@ export const sendEmail = async ({
     const destinationsCc = typeof cc === 'string' ? [cc] : cc?.flat()
     const destinationsBcc = typeof bcc === 'string' ? [bcc] : bcc?.flat()
 
-    const result = await fetch(`${mailerHostUrl}/api/v1/send/message`, {
-        method: 'post',
-        headers: {
-            'X-Server-API-Key': isFromClaroline ? mailerApiKeyClaroline : mailerApiKey,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    if (!isProduction && !hasMailerHostUrlOverride) {
+        const emailResponse = buildMockEmailResponse({
             from,
             to: destinations,
             cc: destinationsCc,
             bcc: destinationsBcc,
             subject,
-            html_body,
             tag,
-        }),
-    })
+        })
 
-    const emailResponse = await result.json()
+        // eslint-disable-next-line no-console
+        console.info(`[mailer:mock] ${subject ?? '(no subject)'} -> ${destinations?.join(', ') ?? '(no recipient)'}`)
+
+        return { emailResponse }
+    }
+
+    let emailResponse
+
+    try {
+        const result = await fetch(`${mailerHostUrl}/api/v1/send/message`, {
+            method: 'post',
+            headers: {
+                'X-Server-API-Key': isFromClaroline ? mailerApiKeyClaroline : mailerApiKey,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from,
+                to: destinations,
+                cc: destinationsCc,
+                bcc: destinationsBcc,
+                subject,
+                html_body,
+                tag,
+            }),
+        })
+
+        emailResponse = await result.json()
+    } catch (error) {
+        if (!isProduction) {
+            // eslint-disable-next-line no-console
+            console.warn(`[mailer:mock-fallback] ${error.message}`)
+
+            return {
+                emailResponse: buildMockEmailResponse({
+                    from,
+                    to: destinations,
+                    cc: destinationsCc,
+                    bcc: destinationsBcc,
+                    subject,
+                    tag,
+                }),
+            }
+        }
+
+        throw error
+    }
 
     // TODO use debug logging instead of console.log
 
