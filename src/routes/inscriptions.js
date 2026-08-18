@@ -127,6 +127,15 @@ createService(
                 organizationUuid: req.body.organizationId,
             },
         })
+
+        if (!organization) {
+            res.status(422).json({
+                message: "L'organisation choisie n'est pas configuree dans Former.",
+            })
+
+            return
+        }
+
         await prisma.former22_inscription.update({
             where: { inscriptionId: req.params.inscriptionId },
             data: {
@@ -448,7 +457,10 @@ createService(
             },
         })
 
-        if (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus))) {
+        if (
+            mainOrganizationExtra &&
+            (finalStatuses.includes(newStatus) || lockGroups.some((lockGroup) => lockGroup.includes(newStatus)))
+        ) {
             await prisma.former22_inscription.update({
                 where: {
                     inscriptionId: req.params.inscriptionId,
