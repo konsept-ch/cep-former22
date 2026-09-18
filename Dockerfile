@@ -1,17 +1,14 @@
 # syntax=docker/dockerfile:1
 
-FROM node:18-bullseye-slim
+# Debian 12 (Bookworm). Debian 11 (Bullseye) a atteint sa fin de vie le 2026-08-31 :
+# bullseye-security ne sert plus les paquets LibreOffice et le build echouait en 404.
+# Meme base que le middleware DGCS, deja valide en production sur Jelastic.
+FROM node:22-bookworm-slim
 
 # use libreoffice for docx to pdf
-RUN set -eux; \
-    apt-get update -o Acquire::Retries=5; \
-    for attempt in 1 2 3; do \
-        apt-get install -y -o Acquire::Retries=5 --fix-missing libreoffice && break; \
-        if [ "$attempt" = "3" ]; then exit 1; fi; \
-        apt-get update -o Acquire::Retries=5; \
-        sleep 5; \
-    done; \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libreoffice \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
