@@ -32,7 +32,9 @@
     "eslint:fix": "eslint --ext .js,.jsx,.ts,.tsx . --fix",
     "typescript:check": "tsc --noEmit",
     "start:local": "cross-env CLAROLINE_API_URL=http://localhost/apiv2/ npm start",
-    "ci:check": "npm run prettier:check && npm run eslint:check && npm run typescript:check",
+    "test": "node --test",
+    "verify:path-index": "node scripts/verify-resource-node-path-index.cjs",
+    "ci:check": "npm run prettier:check && npm run eslint:check && npm run typescript:check && npm test",
     "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""
   },
   "dependencies": {

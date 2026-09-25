@@ -4,14 +4,18 @@ import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import fs from 'fs'
 import path from 'path'
-import libre from 'libreoffice-convert'
-import util from 'util'
 import { prisma } from '..'
 import { callApi } from '../callApi'
 import { attestationTemplateFilesDest } from '../utils'
 import { winstonLogger } from '../winston'
-
-libre.convertAsync = util.promisify(libre.convert)
+import { convertDocxToPdf } from './libreOffice'
+import { creerAvecRepriseSurConflit } from './conflitSlug'
+import {
+    ATTESTATIONS_FOLDER_NAME,
+    findAttestationsFolder,
+    findExistingAttestation,
+    resolvePersonalRootNode,
+} from './attestationsResolvers'
 
 export class AttestationGenerationError extends Error {
     constructor(message, context = {}) {
@@ -52,8 +56,22 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
         userFullName: `${user.first_name} ${user.last_name}`,
         sessionName,
     }
+    // Chaque etape porte le temps ecoule depuis le debut et depuis l'etape precedente :
+    // sans cela, un journal ne dit pas ou passe le temps d'une generation.
+    const debut = Date.now()
+    let precedent = debut
+
     const logStep = (step, details = {}) => {
-        winstonLogger.http(`Attestation generation ${step}: ${JSON.stringify({ ...logContext, ...details })}`)
+        const maintenant = Date.now()
+        const etape = {
+            ...logContext,
+            elapsedMs: maintenant - debut,
+            stepMs: maintenant - precedent,
+            ...details,
+        }
+        precedent = maintenant
+
+        winstonLogger.http(`Attestation generation ${step}: ${JSON.stringify(etape)}`)
     }
 
     logStep('started')
@@ -140,8 +158,7 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
 
     const ext = '.pdf'
 
-    // Convert it to pdf format with undefined filter (see Libreoffice docs about filter)
-    const pdfBuf = await libre.convertAsync(docxBuf, ext, undefined)
+    const pdfBuf = await convertDocxToPdf(docxBuf)
     logStep('pdf-converted', {
         pdfSize: pdfBuf.length,
     })
@@ -178,23 +195,18 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
     })
 
     const workspace = currentInscription.claro_user.claro_workspace_claro_user_workspace_idToclaro_workspace
-    const rootResource = workspace?.claro_resource_node
+    const personalNodes = workspace?.claro_resource_node
+
+    const rootNode = resolvePersonalRootNode(personalNodes)
 
     logStep('personal-workspace-resolved', {
         workspaceId: workspace?.id,
         workspaceUuid: workspace?.uuid,
-        rootResourceUuid: rootResource?.[0]?.uuid,
+        rootResourceUuid: rootNode?.uuid,
+        nodesInSelection: personalNodes?.length ?? 0,
     })
 
-    const resources =
-        rootResource != null
-            ? await callApi({
-                  req,
-                  path: `resource/${rootResource[0]?.uuid}`,
-              })
-            : null
-
-    if (!rootResource?.[0]?.uuid) {
+    if (!rootNode?.uuid) {
         throw new AttestationGenerationError("L'espace personnel Claroline de l'utilisateur est incomplet.", {
             selectedTemplateUuid,
             inscriptionUuid: currentInscription.uuid,
@@ -202,17 +214,22 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
         })
     }
 
+    const resources = await callApi({
+        req,
+        path: `resource/${rootNode.uuid}`,
+    })
+
     if (!Array.isArray(resources)) {
         throw new AttestationGenerationError('La lecture des ressources personnelles Claroline a Ã©chouÃ©.', {
             selectedTemplateUuid,
             inscriptionUuid: currentInscription.uuid,
-            rootResourceUuid: rootResource[0].uuid,
+            rootResourceUuid: rootNode.uuid,
         })
     }
     logStep('personal-resources-loaded', {
-        rootResourceUuid: rootResource[0].uuid,
+        rootResourceUuid: rootNode.uuid,
         resourcesCount: resources.length,
-        hasAttestationsFolder: resources.some(({ name }) => name === 'Mes attestations'),
+        hasAttestationsFolder: findAttestationsFolder(resources) != null,
     })
 
     const createResource = async ({ uuid }) => {
@@ -406,187 +423,213 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
         })
     }
 
-    const ATTESTATIONS_FOLDER_NAME = 'Mes attestations'
-
-    const foundAttestationsFolder = resources.find(({ name }) => name === ATTESTATIONS_FOLDER_NAME)
+    const foundAttestationsFolder = findAttestationsFolder(resources)
 
     if (foundAttestationsFolder != null) {
         logStep('attestations-folder-found', {
             attestationsFolderUuid: foundAttestationsFolder.id,
         })
-        await createResource({ uuid: foundAttestationsFolder?.id })
+
+        // Idempotence : une relance ne doit pas empiler un enieme PDF. Le flux historique
+        // creait une nouvelle ressource a chaque appel, d'ou les attestations en trois ou
+        // quatre exemplaires constatees sur CHE/26/03.
+        const existingAttestations = await callApi({
+            req,
+            path: `resource/${foundAttestationsFolder.id}`,
+        })
+
+        const alreadyDeposited = findExistingAttestation(existingAttestations, sessionName)
+
+        if (alreadyDeposited != null) {
+            logStep('attestation-already-present', {
+                attestationsFolderUuid: foundAttestationsFolder.id,
+                existingResourceUuid: alreadyDeposited.id,
+                resourceName: sessionName,
+            })
+        } else {
+            await creerAvecRepriseSurConflit(() => createResource({ uuid: foundAttestationsFolder.id }), {
+                journaliser: (tentative, erreur) =>
+                    logStep('slug-conflict-retry', { tentative, parent: 'folder', message: erreur.message }),
+            })
+        }
     } else {
         logStep('attestations-folder-create-started', {
-            rootResourceUuid: rootResource[0]?.uuid,
+            rootResourceUuid: rootNode.uuid,
         })
-        const newAttestationsFolder = await callApi({
-            req,
-            path: `/resources/add/${rootResource[0]?.uuid}`,
-            method: 'post',
-            body: {
-                resource: null,
-                resourceNode: {
-                    autoId: 0,
-                    id: uuidv4(),
-                    name: 'Mes attestations',
-                    meta: {
-                        published: true,
-                        active: true,
-                        views: 0,
-                        mimeType: 'custom/directory',
-                        type: 'directory',
-                        creator: {
-                            autoId: 2,
-                            id: 'b344ea3b-d492-4f50-af7b-d17e752e50a7',
-                            name: 'John Doe',
-                            firstName: 'John',
-                            lastName: 'Doe',
-                            username: 'root',
-                            picture: null,
-                            thumbnail: null,
-                            email: 'claroline@example.com',
-                            administrativeCode: null,
-                            phone: null,
-                            meta: {
-                                acceptedTerms: true,
-                                lastActivity: '2022-08-31T11:04:37',
-                                created: '2021-05-31T13:37:16',
-                                description: null,
-                                mailValidated: false,
-                                mailNotified: false,
-                                personalWorkspace: true,
-                                locale: 'fr',
-                            },
-                            permissions: {
-                                open: true,
-                                contact: false,
-                                edit: true,
-                                administrate: true,
-                                delete: true,
-                            },
-                            restrictions: {
-                                locked: false,
-                                disabled: false,
-                                removed: false,
-                                dates: [null, '2100-01-01T00:00:00'],
-                            },
-                            poster: null,
-                        },
-                    },
-                    display: {
-                        fullscreen: false,
-                        showIcon: true,
-                    },
-                    restrictions: {
-                        dates: [],
-                        hidden: false,
-                        code: null,
-                        allowedIps: [],
-                    },
-                    notifications: {
-                        enabled: false,
-                    },
-                    workspace: {
-                        id: workspace?.uuid,
-                        autoId: workspace?.id,
-                        slug: workspace?.slug,
-                        name: workspace?.entity_name,
-                        code: workspace?.code,
-                    },
-                    rights: [
-                        {
-                            // id: 6161,
-                            name: 'ROLE_USER',
-                            translationKey: 'user',
-                            permissions: {
-                                open: false,
-                                copy: false,
-                                export: false,
-                                delete: false,
-                                edit: false,
-                                administrate: false,
-                                create: [],
-                            },
-                            workspace: null,
-                        },
-                        {
-                            // id: 6160,
-                            name: 'ROLE_ANONYMOUS',
-                            translationKey: 'anonymous',
-                            permissions: {
-                                open: false,
-                                copy: false,
-                                export: false,
-                                delete: false,
-                                edit: false,
-                                administrate: false,
-                                create: [],
-                            },
-                            workspace: null,
-                        },
-                        {
-                            // id: 6159,
-                            name: `ROLE_WS_COLLABORATOR_${workspace?.uuid}`,
-                            translationKey: 'collaborator',
-                            permissions: {
-                                open: true,
-                                copy: false,
-                                export: true,
-                                delete: false,
-                                edit: false,
-                                administrate: false,
-                                create: [],
-                            },
-                            workspace: {
-                                id: workspace?.uuid,
-                                name: workspace?.entity_name,
-                                code: workspace?.code,
+        const creerDossierAttestations = () =>
+            callApi({
+                req,
+                path: `/resources/add/${rootNode.uuid}`,
+                method: 'post',
+                body: {
+                    resource: null,
+                    resourceNode: {
+                        autoId: 0,
+                        id: uuidv4(),
+                        name: ATTESTATIONS_FOLDER_NAME,
+                        meta: {
+                            published: true,
+                            active: true,
+                            views: 0,
+                            mimeType: 'custom/directory',
+                            type: 'directory',
+                            creator: {
+                                autoId: 2,
+                                id: 'b344ea3b-d492-4f50-af7b-d17e752e50a7',
+                                name: 'John Doe',
+                                firstName: 'John',
+                                lastName: 'Doe',
+                                username: 'root',
+                                picture: null,
+                                thumbnail: null,
+                                email: 'claroline@example.com',
+                                administrativeCode: null,
+                                phone: null,
+                                meta: {
+                                    acceptedTerms: true,
+                                    lastActivity: '2022-08-31T11:04:37',
+                                    created: '2021-05-31T13:37:16',
+                                    description: null,
+                                    mailValidated: false,
+                                    mailNotified: false,
+                                    personalWorkspace: true,
+                                    locale: 'fr',
+                                },
+                                permissions: {
+                                    open: true,
+                                    contact: false,
+                                    edit: true,
+                                    administrate: true,
+                                    delete: true,
+                                },
+                                restrictions: {
+                                    locked: false,
+                                    disabled: false,
+                                    removed: false,
+                                    dates: [null, '2100-01-01T00:00:00'],
+                                },
+                                poster: null,
                             },
                         },
-                        {
-                            // id: 8545,
-                            name: `ROLE_WS_MANAGER_${workspace?.uuid}`,
-                            translationKey: 'manager',
-                            permissions: {
-                                open: true,
-                                copy: true,
-                                export: true,
-                                delete: true,
-                                edit: true,
-                                administrate: true,
-                                create: [
-                                    'file',
-                                    'directory',
-                                    'text',
-                                    'claroline_forum',
-                                    'rss_feed',
-                                    'claroline_announcement_aggregate',
-                                    'claroline_scorm',
-                                    'claroline_web_resource',
-                                    'hevinci_url',
-                                    'icap_blog',
-                                    'icap_wiki',
-                                    'innova_path',
-                                    'ujm_exercise',
-                                    'icap_lesson',
-                                    'claroline_claco_form',
-                                    'ujm_lti_resource',
-                                    'icap_bibliography',
-                                    'claroline_dropzone',
-                                    'shortcut',
-                                    'claro_slideshow',
-                                    'claroline_big_blue_button',
-                                ],
-                            },
-                            workspace: {
-                                id: workspace?.uuid,
-                                name: workspace?.entity_name,
-                                code: workspace?.code,
-                            },
+                        display: {
+                            fullscreen: false,
+                            showIcon: true,
                         },
-                    ],
+                        restrictions: {
+                            dates: [],
+                            hidden: false,
+                            code: null,
+                            allowedIps: [],
+                        },
+                        notifications: {
+                            enabled: false,
+                        },
+                        workspace: {
+                            id: workspace?.uuid,
+                            autoId: workspace?.id,
+                            slug: workspace?.slug,
+                            name: workspace?.entity_name,
+                            code: workspace?.code,
+                        },
+                        rights: [
+                            {
+                                // id: 6161,
+                                name: 'ROLE_USER',
+                                translationKey: 'user',
+                                permissions: {
+                                    open: false,
+                                    copy: false,
+                                    export: false,
+                                    delete: false,
+                                    edit: false,
+                                    administrate: false,
+                                    create: [],
+                                },
+                                workspace: null,
+                            },
+                            {
+                                // id: 6160,
+                                name: 'ROLE_ANONYMOUS',
+                                translationKey: 'anonymous',
+                                permissions: {
+                                    open: false,
+                                    copy: false,
+                                    export: false,
+                                    delete: false,
+                                    edit: false,
+                                    administrate: false,
+                                    create: [],
+                                },
+                                workspace: null,
+                            },
+                            {
+                                // id: 6159,
+                                name: `ROLE_WS_COLLABORATOR_${workspace?.uuid}`,
+                                translationKey: 'collaborator',
+                                permissions: {
+                                    open: true,
+                                    copy: false,
+                                    export: true,
+                                    delete: false,
+                                    edit: false,
+                                    administrate: false,
+                                    create: [],
+                                },
+                                workspace: {
+                                    id: workspace?.uuid,
+                                    name: workspace?.entity_name,
+                                    code: workspace?.code,
+                                },
+                            },
+                            {
+                                // id: 8545,
+                                name: `ROLE_WS_MANAGER_${workspace?.uuid}`,
+                                translationKey: 'manager',
+                                permissions: {
+                                    open: true,
+                                    copy: true,
+                                    export: true,
+                                    delete: true,
+                                    edit: true,
+                                    administrate: true,
+                                    create: [
+                                        'file',
+                                        'directory',
+                                        'text',
+                                        'claroline_forum',
+                                        'rss_feed',
+                                        'claroline_announcement_aggregate',
+                                        'claroline_scorm',
+                                        'claroline_web_resource',
+                                        'hevinci_url',
+                                        'icap_blog',
+                                        'icap_wiki',
+                                        'innova_path',
+                                        'ujm_exercise',
+                                        'icap_lesson',
+                                        'claroline_claco_form',
+                                        'ujm_lti_resource',
+                                        'icap_bibliography',
+                                        'claroline_dropzone',
+                                        'shortcut',
+                                        'claro_slideshow',
+                                        'claroline_big_blue_button',
+                                    ],
+                                },
+                                workspace: {
+                                    id: workspace?.uuid,
+                                    name: workspace?.entity_name,
+                                    code: workspace?.code,
+                                },
+                            },
+                        ],
+                    },
                 },
-            },
+            })
+
+        const newAttestationsFolder = await creerAvecRepriseSurConflit(creerDossierAttestations, {
+            journaliser: (tentative, erreur) =>
+                logStep('slug-conflict-retry', { tentative, parent: 'root', message: erreur.message }),
         })
 
         if (!newAttestationsFolder?.resourceNode?.id) {
@@ -595,7 +638,7 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
                 {
                     selectedTemplateUuid,
                     inscriptionUuid: currentInscription.uuid,
-                    rootResourceUuid: rootResource[0].uuid,
+                    rootResourceUuid: rootNode.uuid,
                 }
             )
         }
@@ -603,7 +646,10 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
             attestationsFolderUuid: newAttestationsFolder.resourceNode.id,
         })
 
-        await createResource({ uuid: newAttestationsFolder.resourceNode.id })
+        await creerAvecRepriseSurConflit(() => createResource({ uuid: newAttestationsFolder.resourceNode.id }), {
+            journaliser: (tentative, erreur) =>
+                logStep('slug-conflict-retry', { tentative, parent: 'new-folder', message: erreur.message }),
+        })
     }
 
     await prisma.former22_inscription.upsert({

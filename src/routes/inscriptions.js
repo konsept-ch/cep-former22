@@ -18,7 +18,8 @@ import {
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
 import { createInvoice } from './manualInvoicesUtils'
-import { generateAttestation } from '../helpers/attestations'
+import { AttestationGenerationError, generateAttestation } from '../helpers/attestations'
+import { winstonLogger } from '../winston'
 import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 
 export const inscriptionsRouter = Router()
@@ -235,7 +236,22 @@ createService(
                                 slug: true,
                                 entity_name: true,
                                 code: true,
-                                claro_resource_node: true,
+                                // la relation porte TOUS les noeuds du workspace, pas sa racine.
+                                // la racine est le noeud sans parent : filtrer explicitement,
+                                // l'ordre rendu par MySQL n'est pas garanti.
+                                claro_resource_node: {
+                                    // La racine est le noeud sans parent ET de type
+                                    // `directory` : 12 espaces personnels ont une racine
+                                    // de type `file` ou `scorm`, sur laquelle Claroline
+                                    // refuse toute creation. 9 autres ont plusieurs
+                                    // racines. L'ordre rendu par MySQL n'est de toute
+                                    // facon pas garanti.
+                                    where: {
+                                        parent_id: null,
+                                        claro_resource_type: { is: { name: 'directory' } },
+                                    },
+                                    orderBy: { id: 'asc' },
+                                },
                             },
                         },
                         user_organization: {
@@ -413,17 +429,38 @@ createService(
             }
         }
 
-        generateAttestation(selectedAttestationTemplateUuid, req, {
-            courseDurationDays,
-            courseDurationHours,
-            user,
-            courseName,
-            sessionName,
-            sessionDates,
-            former22_course,
-            tutors,
-            currentInscription,
-        })
+        // La generation est ATTENDUE. Sans await, l'echec devient un rejet non capture :
+        // le statut est enregistre, la reponse est un succes, et aucune attestation n'est
+        // deposee. L'erreur est capturee ici pour ne pas empecher le changement de statut,
+        // mais elle est remontee dans la reponse : l'operateur doit la voir.
+        // docs/90-incidents/investigation_attestations_che_plantes_2026-09.md
+        let attestationError = null
+
+        try {
+            await generateAttestation(selectedAttestationTemplateUuid, req, {
+                courseDurationDays,
+                courseDurationHours,
+                user,
+                courseName,
+                sessionName,
+                sessionDates,
+                former22_course,
+                tutors,
+                currentInscription,
+            })
+        } catch (error) {
+            attestationError =
+                error instanceof AttestationGenerationError ? error.message : "La génération de l'attestation a échoué."
+
+            winstonLogger.error(
+                `Attestation generation failed: ${JSON.stringify({
+                    inscriptionUuid: req.params.inscriptionId,
+                    selectedAttestationTemplateUuid,
+                    message: error?.message,
+                    context: error?.context,
+                })}`
+            )
+        }
 
         let cancellationId = null
 
@@ -472,7 +509,7 @@ createService(
         }
 
         if (session.claro_cursusbundle_course.generateInvoice) {
-            res.json({ isInvoiceCreated: false })
+            res.json({ isInvoiceCreated: false, ...(attestationError ? { attestationError } : {}) })
             return {
                 entityName: 'Inscription',
                 entityId: req.params.inscriptionId,
@@ -577,7 +614,7 @@ createService(
             }
         }
 
-        res.json({ isInvoiceCreated: config !== null })
+        res.json({ isInvoiceCreated: config !== null, ...(attestationError ? { attestationError } : {}) })
 
         return {
             entityName: 'Inscription',
