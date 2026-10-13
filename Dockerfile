@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:18-bullseye-slim
+FROM node:18-bookworm-slim
 
 # use libreoffice for docx to pdf
 RUN apt update && apt install -y \
@@ -17,4 +17,4 @@ RUN npm ci
 
 COPY . .
 
-CMD [ "npm", "run start-prod" ]
+CMD [ "npm", "run", "start-prod" ]
