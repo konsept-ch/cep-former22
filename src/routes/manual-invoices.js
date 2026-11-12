@@ -700,29 +700,17 @@ createService(
                 codeCompta,
             } = req.body
 
-            const { ['x-login-email-address']: cfEmail } = req.headers
-
-            const [{ invoiceNumberForCurrentYear: invoiceNumberForLastYear = 0 } = {}] =
-                await prisma.former22_manual_invoice.findMany({
-                    where: {
-                        courseYear,
-                    },
-                    orderBy: {
-                        invoiceNumberForCurrentYear: 'desc',
-                    },
-                })
+            // La modification ne touche ni à la séquence (`invoiceNumberForCurrentYear`) ni au
+            // créateur (`creatorUserId`) : tous deux sont fixés à la création, et `number`
+            // (AA + cfNumber du créateur + séquence) n'est jamais recalculé. Les réécrire ici
+            // désaccordait la séquence du numéro affiché et gonflait le MAX lu par
+            // `createInvoice` pour les factures suivantes.
+            // Voir docs/90-incidents/2026-11-12-doublon-facture-26381040.md
 
             const { id: organizationId } =
                 (await prisma.claro__organization.findUnique({
                     where: {
                         uuid: client.uuid,
-                    },
-                })) ?? {}
-
-            const { id: creatorUserId } =
-                (await prisma.claro_user.findUnique({
-                    where: {
-                        mail: typeof cfEmail === 'string' ? cfEmail : cfEmail?.join(),
                     },
                 })) ?? {}
 
@@ -766,7 +754,6 @@ createService(
                     uuid: id,
                 },
                 data: {
-                    invoiceNumberForCurrentYear: invoiceNumberForLastYear ? invoiceNumberForLastYear + 1 : 1,
                     customClientEmail,
                     customClientAddress,
                     customClientTitle,
@@ -777,7 +764,6 @@ createService(
                     concerns,
                     codeCompta,
                     status: status?.value,
-                    creatorUserId,
                     organizationId,
                     selectedUserId,
                     former22_invoice_item: {

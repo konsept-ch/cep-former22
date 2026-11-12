@@ -17,8 +17,9 @@ import {
     transformFlagsToStatus,
 } from './inscriptionsUtils'
 import { getTemplatePreviews } from './templatesUtils'
-import { createInvoice } from './manualInvoicesUtils'
+import { insertInvoice } from './manualInvoicesUtils'
 import { AttestationGenerationError, generateAttestation } from '../helpers/attestations'
+import { serializeInvoiceWrites } from '../helpers/serialize'
 import { winstonLogger } from '../winston'
 import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
 
@@ -380,8 +381,7 @@ createService(
             }
         }
 
-        if (
-            config !== null &&
+        const isAlreadyInvoiced = async () =>
             (await prisma.former22_invoice_item.count({
                 where: {
                     OR: [
@@ -394,7 +394,8 @@ createService(
                     ],
                 },
             })) > 0
-        ) {
+
+        if (config !== null && (await isAlreadyInvoiced())) {
             res.status(400).json({
                 message: 'Une facture est déjà liée à cette inscription',
             })
@@ -520,6 +521,8 @@ createService(
             }
         }
 
+        let isInvoiceCreated = false
+
         if (config !== null) {
             const {
                 uuid,
@@ -551,70 +554,94 @@ createService(
                 cancellationId,
             }
 
-            let alreadyCreated = false
+            // Section critique. La verification faite plus haut ne suffit pas : entre elle et
+            // ce point, la route envoie l'e-mail, genere l'attestation et appelle Claroline,
+            // soit plusieurs secondes. Deux requetes pour la meme inscription (double clic
+            // sur "Confirmer") passaient toutes deux la verification et facturaient deux
+            // fois, sous le meme numero. On reverifie donc ici, sous verrou, et la creation
+            // se fait dans la meme section : la seconde requete voit la facture de la premiere.
+            // docs/90-incidents/2026-11-12-doublon-facture-26381040.md
+            isInvoiceCreated = await serializeInvoiceWrites(async () => {
+                if (await isAlreadyInvoiced()) {
+                    winstonLogger.warn(
+                        `Invoice already linked, second creation skipped: ${JSON.stringify({
+                            inscriptionUuid: req.params.inscriptionId,
+                            newStatus,
+                        })}`
+                    )
 
-            if (!alreadyCreated && mainOrganizationExtra.billingMode === 'Groupée') {
-                const invoice = await prisma.former22_manual_invoice.findFirst({
-                    select: {
-                        id: true,
-                    },
-                    where: {
-                        status: 'A_traiter',
-                        invoiceType: invoiceType.value,
-                        claro__organization: {
-                            is: {
-                                uuid,
+                    return false
+                }
+
+                let alreadyCreated = false
+
+                if (!alreadyCreated && mainOrganizationExtra.billingMode === 'Groupée') {
+                    const invoice = await prisma.former22_manual_invoice.findFirst({
+                        select: {
+                            id: true,
+                        },
+                        where: {
+                            status: 'A_traiter',
+                            invoiceType: invoiceType.value,
+                            claro__organization: {
+                                is: {
+                                    uuid,
+                                },
                             },
                         },
-                    },
-                })
-                if (invoice) {
-                    alreadyCreated = true
+                    })
+                    if (invoice) {
+                        alreadyCreated = true
 
-                    await prisma.former22_invoice_item.create({
-                        data: {
-                            uuid: uuidv4(),
-                            invoiceId: invoice.id,
-                            designation: invoiceItem.designation,
-                            unit: config.unit.value,
-                            price: config.price,
-                            amount: '1',
-                            vatCode: 'EXONERE',
-                            inscriptionId: invoiceItem.inscriptionId,
-                            cancellationId: invoiceItem.cancellationId,
+                        await prisma.former22_invoice_item.create({
+                            data: {
+                                uuid: uuidv4(),
+                                invoiceId: invoice.id,
+                                designation: invoiceItem.designation,
+                                unit: config.unit.value,
+                                price: config.price,
+                                amount: '1',
+                                vatCode: 'EXONERE',
+                                inscriptionId: invoiceItem.inscriptionId,
+                                cancellationId: invoiceItem.cancellationId,
+                            },
+                        })
+                    }
+                }
+
+                if (!alreadyCreated) {
+                    // insertInvoice et non createInvoice : on tient deja le verrou, le
+                    // reprendre ici attendrait la fin de cette meme tache.
+                    await insertInvoice({
+                        invoiceData: {
+                            status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                            invoiceType,
+                            reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
+                            client: {
+                                value: code,
+                                label: name,
+                                uuid,
+                            },
+                            customClientAddress,
+                            customClientEmail: organization.email,
+                            selectedUserUuid: null,
+                            customClientTitle: '',
+                            customClientFirstname: '',
+                            customClientLastname: '',
+                            courseYear: new Date().getFullYear(),
+                            invoiceDate: new Date().toISOString(),
+                            concerns: config.concerns,
+                            items: [invoiceItem],
                         },
+                        cfEmail: req.headers['x-login-email-address'],
                     })
                 }
-            }
 
-            if (!alreadyCreated) {
-                await createInvoice({
-                    invoiceData: {
-                        status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                        invoiceType,
-                        reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
-                        client: {
-                            value: code,
-                            label: name,
-                            uuid,
-                        },
-                        customClientAddress,
-                        customClientEmail: organization.email,
-                        selectedUserUuid: null,
-                        customClientTitle: '',
-                        customClientFirstname: '',
-                        customClientLastname: '',
-                        courseYear: new Date().getFullYear(),
-                        invoiceDate: new Date().toISOString(),
-                        concerns: config.concerns,
-                        items: [invoiceItem],
-                    },
-                    cfEmail: req.headers['x-login-email-address'],
-                })
-            }
+                return true
+            })
         }
 
-        res.json({ isInvoiceCreated: config !== null, ...(attestationError ? { attestationError } : {}) })
+        res.json({ isInvoiceCreated, ...(attestationError ? { attestationError } : {}) })
 
         return {
             entityName: 'Inscription',

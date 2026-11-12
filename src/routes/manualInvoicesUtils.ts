@@ -9,6 +9,7 @@ import {
     invoiceTypesKeys,
     invoiceTypesValues,
 } from '../constants'
+import { serializeInvoiceWrites } from '../helpers/serialize'
 
 export type InvoiceData = {
     client: { uuid: string; value: string; label: string }
@@ -38,7 +39,12 @@ export type InvoiceData = {
     reason: { value: invoiceReasonsKeys; label: invoiceReasonsValues }
 }
 
-export const createInvoice = async ({
+/**
+ * ⚠️ Sans verrou : a n'appeler que DEPUIS une tache de `serializeInvoiceWrites`, quand
+ * l'appelant doit faire d'autres verifications dans la meme section critique. Partout
+ * ailleurs, utiliser `createInvoice`.
+ */
+export const insertInvoice = async ({
     invoiceData: {
         client,
         customClientEmail,
@@ -155,3 +161,14 @@ export const createInvoice = async ({
 
     return uuid
 }
+
+/**
+ * Cree une facture et lui attribue le numero suivant de l'annee.
+ *
+ * Le numero se calcule en lisant `MAX(invoiceNumberForCurrentYear)` : deux creations
+ * simultanees lisaient le meme maximum et sortaient le meme numero (26381040, 26260251,
+ * 26430622 en 2026). La lecture et l'insertion passent donc par `serializeInvoiceWrites`.
+ * docs/90-incidents/2026-11-12-doublon-facture-26381040.md
+ */
+export const createInvoice = (params: Parameters<typeof insertInvoice>[0]) =>
+    serializeInvoiceWrites(() => insertInvoice(params))
