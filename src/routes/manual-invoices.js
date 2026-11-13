@@ -4,7 +4,9 @@ import { Router } from 'express'
 import { prisma } from '..'
 import { buildArchiveCondition, createService, mapStatusToValidationType, yearMinusOne } from '../utils'
 import { invoiceReasonsFromPrisma, invoiceStatusesFromPrisma, invoiceTypesFromPrisma } from '../constants'
-import { createInvoice } from './manualInvoicesUtils'
+import { createInvoice, insertInvoice } from './manualInvoicesUtils'
+import { serializeInvoiceWrites } from '../helpers/serialize'
+import { keepOneUninvoicedPerInscription } from '../helpers/invoiceCandidates'
 import { STATUSES } from './inscriptionsUtils'
 
 export const manualInvoicesRouter = Router()
@@ -221,325 +223,41 @@ createService(
     manualInvoicesRouter
 )
 
-createService(
-    'post',
-    '/direct',
-    async (req, res) => {
-        await prisma.former22_invoice_item.deleteMany({
-            where: {
-                former22_manual_invoice: {
-                    status: 'A_traiter',
-                },
-                claro_cursusbundle_course_session_user: {
-                    claro_cursusbundle_course_session: {
-                        claro_cursusbundle_course: {
-                            generateInvoice: true,
-                        },
-                    },
-                },
-            },
-        })
-
-        await prisma.former22_manual_invoice.deleteMany({
-            where: {
+async function generateDirectInvoices(req, res) {
+    await prisma.former22_invoice_item.deleteMany({
+        where: {
+            former22_manual_invoice: {
                 status: 'A_traiter',
-                former22_invoice_item: {
-                    none: {},
-                },
             },
-        })
-
-        try {
-            const startYear = new Date(`${new Date().getFullYear()}-01-01`)
-
-            const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
-
-            const inscriptions = (
-                await prisma.claro_cursusbundle_course_session_user.findMany({
-                    select: {
-                        id: true,
-                        uuid: true,
-                        claro_cursusbundle_course_session: {
-                            select: {
-                                course_name: true,
-                                price: true,
-                            },
-                        },
-                        claro_user: {
-                            select: {
-                                first_name: true,
-                                last_name: true,
-                                user_organization: {
-                                    where: {
-                                        is_main: true,
-                                    },
-                                    select: {
-                                        claro__organization: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    where: {
-                        claro_cursusbundle_course_session: {
-                            claro_cursusbundle_course: {
-                                generateInvoice: false,
-                            },
-                            start_date: {
-                                gte: startYear,
-                            },
-                        },
-                        former22_invoice_item: {
-                            none: {},
-                        },
-                    },
-                })
-            )
-                .concat(
-                    (
-                        await prisma.claro_cursusbundle_course_session_cancellation.findMany({
-                            select: {
-                                id: true,
-                                uuid: true,
-                                inscription_uuid: true,
-                                claro_cursusbundle_course_session: {
-                                    select: {
-                                        course_name: true,
-                                        price: true,
-                                    },
-                                },
-                                claro_user: {
-                                    select: {
-                                        first_name: true,
-                                        last_name: true,
-                                        user_organization: {
-                                            where: {
-                                                is_main: true,
-                                            },
-                                            select: {
-                                                claro__organization: true,
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                            where: {
-                                claro_cursusbundle_course_session: {
-                                    claro_cursusbundle_course: {
-                                        generateInvoice: false,
-                                    },
-                                    start_date: {
-                                        gte: startYear,
-                                    },
-                                },
-                                former22_invoice_item: {
-                                    none: {},
-                                },
-                            },
-                        })
-                    ).map((c) => ({ ...c, uuid: c.inscription_uuid }))
-                )
-                .filter(({ uuid }) =>
-                    inscriptionsAdditionalData.some(
-                        ({ inscriptionId, inscriptionStatus }) =>
-                            inscriptionId === uuid &&
-                            (inscriptionStatus == null ||
-                                [
-                                    STATUSES.ANNULEE_FACTURABLE,
-                                    STATUSES.NON_PARTICIPATION,
-                                    STATUSES.PARTICIPATION,
-                                    STATUSES.PARTICIPATION_PARTIELLE,
-                                ].includes(inscriptionStatus))
-                    )
-                )
-
-            const organizationsAdditionalData = await prisma.former22_organization.findMany()
-
-            for (const {
-                id,
-                uuid: inscriptionUuid,
-                claro_cursusbundle_course_session: { course_name: sessionName, price: sessionPrice },
-                claro_user: { first_name, last_name, user_organization },
-                inscription_uuid,
-            } of inscriptions) {
-                const mainOrganization = user_organization[0]?.claro__organization
-
-                const organization = organizationsAdditionalData.find(
-                    ({ organizationUuid }) => organizationUuid === mainOrganization.uuid
-                )
-
-                const { inscriptionStatus } = inscriptionsAdditionalData.find(
-                    ({ inscriptionId }) => inscriptionId === inscriptionUuid
-                ) ?? {
-                    status: '',
-                }
-
-                let config = null
-
-                // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
-                if (inscriptionStatus === STATUSES.NON_PARTICIPATION) {
-                    config = {
-                        concerns: 'Absence non annoncée',
-                        unit: { value: 'part.', label: 'part.' },
-                        reason: 'Non_participation',
-                        price: `${sessionPrice}`,
-                    }
-                }
-
-                if (inscriptionStatus === STATUSES.ANNULEE_FACTURABLE) {
-                    config = {
-                        concerns: 'Annulation ou report hors-délai',
-                        unit: { value: 'forfait(s)', label: 'forfait(s)' },
-                        reason: 'Annulation',
-                        price: '50',
-                    }
-                }
-
-                if (
-                    organization?.billingMode === 'Directe' &&
-                    [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus)
-                ) {
-                    config = {
-                        concerns: 'Participation formation CEP',
-                        unit: { value: 'part.', label: 'part.' },
-                        reason: 'Participation',
-                        price: `${sessionPrice}`,
-                    }
-                }
-
-                if (config !== null) {
-                    const {
-                        uuid,
-                        name,
-                        code,
-                        addressTitle,
-                        postalAddressStreet,
-                        postalAddressCode,
-                        postalAddressCountry,
-                        // postalAddressCountryCode,
-                        postalAddressDepartment,
-                        // postalAddressDepartmentCode,
-                        postalAddressLocality,
-                    } = { ...mainOrganization, ...organization }
-
-                    await createInvoice({
-                        invoiceData: {
-                            status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                            invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
-                            reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
-                            client: {
-                                value: code,
-                                label: name,
-                                uuid,
-                            },
-                            customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
-                                postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
-                            }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
-                                postalAddressCode ? `${postalAddressCode} ` : ''
-                            }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
-                            customClientEmail: organization?.email ?? '',
-                            selectedUserUuid: null,
-                            customClientTitle: '',
-                            customClientFirstname: '',
-                            customClientLastname: '',
-                            codeCompta: '',
-                            courseYear: new Date().getFullYear(),
-                            invoiceDate: new Date().toISOString(),
-                            concerns: config.concerns,
-                            items: [
-                                {
-                                    number: '',
-                                    designation: `${last_name} ${first_name} - ${sessionName}`,
-                                    unit: config.unit,
-                                    price: config.price, // Prix TTC (coût affiché sur le site Claroline)
-                                    amount: '1',
-                                    vatCode: { value: 'EXONERE', label: 'EXONERE' },
-                                    ...(inscription_uuid ? { cancellationId: id } : { inscriptionId: id }),
-                                },
-                            ],
-                        },
-                        cfEmail: req.headers['x-login-email-address'],
-                    })
-                }
-            }
-
-            res.json('Factures directes générées')
-        } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error(error)
-            res.status(500).send({ error: 'Erreur de création de facture' })
-        }
-    },
-    null,
-    manualInvoicesRouter
-)
-
-createService(
-    'post',
-    '/grouped',
-    async (req, res) => {
-        await prisma.former22_invoice_item.deleteMany({
-            where: {
-                former22_manual_invoice: {
-                    status: 'A_traiter',
-                },
-                claro_cursusbundle_course_session_user: {
-                    claro_cursusbundle_course_session: {
-                        claro_cursusbundle_course: {
-                            generateInvoice: true,
-                        },
+            claro_cursusbundle_course_session_user: {
+                claro_cursusbundle_course_session: {
+                    claro_cursusbundle_course: {
+                        generateInvoice: true,
                     },
                 },
             },
-        })
+        },
+    })
 
-        await prisma.former22_manual_invoice.deleteMany({
-            where: {
-                status: 'A_traiter',
-                former22_invoice_item: {
-                    none: {},
-                },
+    await prisma.former22_manual_invoice.deleteMany({
+        where: {
+            status: 'A_traiter',
+            former22_invoice_item: {
+                none: {},
             },
-        })
+        },
+    })
 
-        const now = new Date()
+    try {
+        const startYear = new Date(`${new Date().getFullYear()}-01-01`)
 
-        const organizationMap = (
-            await prisma.former22_organization.findMany({
-                select: {
-                    billingMode: true,
-                    organizationId: true,
-                    organizationUuid: true,
-                    addressTitle: true,
-                    postalAddressCountry: true,
-                    postalAddressCountryCode: true,
-                    postalAddressCode: true,
-                    postalAddressStreet: true,
-                    postalAddressDepartment: true,
-                    postalAddressDepartmentCode: true,
-                    postalAddressLocality: true,
-                    claro__organization: {
-                        select: {
-                            name: true,
-                            email: true,
-                            code: true,
-                            claro_cursusbundle_quota: true,
-                            parent_id: true,
-                        },
-                    },
-                },
-            })
-        ).reduce((map, o) => map.set(o.organizationId, o), new Map())
-        const inscriptionMap = (await prisma.former22_inscription.findMany()).reduce(
-            (map, i) => map.set(i.inscriptionId, i),
-            new Map()
-        )
-        const sessionUsers = (
+        const inscriptionsAdditionalData = await prisma.former22_inscription.findMany()
+
+        const candidates = (
             await prisma.claro_cursusbundle_course_session_user.findMany({
                 select: {
                     id: true,
                     uuid: true,
-                    status: true,
                     claro_cursusbundle_course_session: {
                         select: {
                             course_name: true,
@@ -551,35 +269,23 @@ createService(
                             first_name: true,
                             last_name: true,
                             user_organization: {
-                                select: {
-                                    oganization_id: true,
-                                },
                                 where: {
                                     is_main: true,
+                                },
+                                select: {
+                                    claro__organization: true,
                                 },
                             },
                         },
                     },
                 },
                 where: {
-                    claro_user: {
-                        user_organization: {
-                            some: {
-                                claro__organization: {
-                                    former22_organization: {
-                                        billingMode: 'Groupée',
-                                    },
-                                },
-                                is_main: true,
-                            },
-                        },
-                    },
                     claro_cursusbundle_course_session: {
                         claro_cursusbundle_course: {
                             generateInvoice: false,
                         },
                         start_date: {
-                            gte: new Date(`${now.getFullYear()}-01-01`),
+                            gte: startYear,
                         },
                     },
                     former22_invoice_item: {
@@ -587,92 +293,420 @@ createService(
                     },
                 },
             })
-        ).filter(({ uuid }) => {
-            const i = inscriptionMap.get(uuid)
-            return (
-                i &&
-                (i.inscriptionStatus === STATUSES.PARTICIPATION ||
-                    i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
+        )
+            .concat(
+                (
+                    await prisma.claro_cursusbundle_course_session_cancellation.findMany({
+                        select: {
+                            id: true,
+                            uuid: true,
+                            inscription_uuid: true,
+                            claro_cursusbundle_course_session: {
+                                select: {
+                                    course_name: true,
+                                    price: true,
+                                },
+                            },
+                            claro_user: {
+                                select: {
+                                    first_name: true,
+                                    last_name: true,
+                                    user_organization: {
+                                        where: {
+                                            is_main: true,
+                                        },
+                                        select: {
+                                            claro__organization: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        where: {
+                            claro_cursusbundle_course_session: {
+                                claro_cursusbundle_course: {
+                                    generateInvoice: false,
+                                },
+                                start_date: {
+                                    gte: startYear,
+                                },
+                            },
+                            former22_invoice_item: {
+                                none: {},
+                            },
+                        },
+                        // Plusieurs annulations pour une inscription : la plus ancienne est
+                        // celle qu'on facture, voir keepOneUninvoicedPerInscription.
+                        orderBy: { id: 'asc' },
+                    })
+                ).map((c) => ({ ...c, uuid: c.inscription_uuid }))
             )
-        })
+            .filter(({ uuid }) =>
+                inscriptionsAdditionalData.some(
+                    ({ inscriptionId, inscriptionStatus }) =>
+                        inscriptionId === uuid &&
+                        (inscriptionStatus == null ||
+                            [
+                                STATUSES.ANNULEE_FACTURABLE,
+                                STATUSES.NON_PARTICIPATION,
+                                STATUSES.PARTICIPATION,
+                                STATUSES.PARTICIPATION_PARTIELLE,
+                            ].includes(inscriptionStatus))
+                )
+            )
 
-        const mappedInscriptions = new Map()
-
-        for (const inscription of sessionUsers) {
-            const organizationId = inscription.claro_user.user_organization[0].oganization_id
-
-            let parentWithQuota = organizationId
-            for (; parentWithQuota != null; ) {
-                const orga = organizationMap.get(parentWithQuota).claro__organization
-                if (orga.claro_cursusbundle_quota) break
-                parentWithQuota = orga.parent_id
-            }
-            const parentUseQuota = parentWithQuota === null ? 0 : 0.5
-            const key = inscription.status === 3 ? (parentWithQuota ?? organizationId) + parentUseQuota : organizationId
-            mappedInscriptions.set(key, [...(mappedInscriptions.get(key) ?? []), inscription])
-        }
-
-        for (const [key, inscriptions] of mappedInscriptions) {
-            const organizationId = key | 0
-
-            const {
-                organizationUuid,
-                addressTitle,
-                postalAddressStreet,
-                postalAddressCode,
-                postalAddressCountry,
-                postalAddressDepartment,
-                postalAddressLocality,
-                claro__organization: { name, email, code },
-            } = organizationMap.get(organizationId)
-
-            await createInvoice({
-                invoiceData: {
-                    client: {
-                        value: code ?? '',
-                        label: name ?? '',
-                        uuid: organizationUuid,
-                    },
-                    customClientEmail: email ?? '',
-                    customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
-                        postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
-                    }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
-                        postalAddressCode ? `${postalAddressCode} ` : ''
-                    }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
-                    customClientTitle: '',
-                    customClientFirstname: '',
-                    customClientLastname: '',
-                    courseYear: now.getFullYear(),
-                    invoiceDate: now.toISOString(),
-                    selectedUserUuid: null,
-                    concerns: '',
-                    codeCompta: '',
-                    status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
-                    invoiceType:
-                        organizationId !== key
-                            ? { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
-                            : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
-                    reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
-                    items: inscriptions.map(
-                        ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }) => ({
-                            designation: `${last_name} ${first_name} - ${claro_cursusbundle_course_session.course_name}`,
-                            unit: { value: 'part.', label: 'part.' },
-                            price: `${claro_cursusbundle_course_session.price ?? ''}`,
-                            amount: '1',
-                            vatCode: { value: 'EXONERE', label: 'EXONERE' },
-                            inscriptionId: id,
-                            number: '',
-                        })
-                    ),
+        // Inscriptions deja facturees, qu'elles le soient par l'inscription elle-meme ou
+        // par l'une de ses annulations : le filtre `former22_invoice_item: { none }` ci-dessus
+        // ne regarde que la ligne candidate, pas ses soeurs.
+        const invoicedInscriptionUuids = (
+            await prisma.former22_invoice_item.findMany({
+                select: {
+                    claro_cursusbundle_course_session_user: { select: { uuid: true } },
+                    claro_cursusbundle_course_session_cancellation: { select: { inscription_uuid: true } },
                 },
-                cfEmail: req.headers['x-login-email-address'],
             })
+        )
+            .map(
+                (item) =>
+                    item.claro_cursusbundle_course_session_user?.uuid ??
+                    item.claro_cursusbundle_course_session_cancellation?.inscription_uuid
+            )
+            .filter(Boolean)
+
+        const inscriptions = keepOneUninvoicedPerInscription(candidates, invoicedInscriptionUuids)
+
+        const organizationsAdditionalData = await prisma.former22_organization.findMany()
+
+        for (const {
+            id,
+            uuid: inscriptionUuid,
+            claro_cursusbundle_course_session: { course_name: sessionName, price: sessionPrice },
+            claro_user: { first_name, last_name, user_organization },
+            inscription_uuid,
+        } of inscriptions) {
+            const mainOrganization = user_organization[0]?.claro__organization
+
+            const organization = organizationsAdditionalData.find(
+                ({ organizationUuid }) => organizationUuid === mainOrganization.uuid
+            )
+
+            const { inscriptionStatus } = inscriptionsAdditionalData.find(
+                ({ inscriptionId }) => inscriptionId === inscriptionUuid
+            ) ?? {
+                status: '',
+            }
+
+            let config = null
+
+            // TODO: const statusesThatAlwaysGenerateDirectInvoiceOnly = [STATUSES.NON_PARTICIPATION, STATUSES.ANNULEE_FACTURABLE]
+            if (inscriptionStatus === STATUSES.NON_PARTICIPATION) {
+                config = {
+                    concerns: 'Absence non annoncée',
+                    unit: { value: 'part.', label: 'part.' },
+                    reason: 'Non_participation',
+                    price: `${sessionPrice}`,
+                }
+            }
+
+            if (inscriptionStatus === STATUSES.ANNULEE_FACTURABLE) {
+                config = {
+                    concerns: 'Annulation ou report hors-délai',
+                    unit: { value: 'forfait(s)', label: 'forfait(s)' },
+                    reason: 'Annulation',
+                    price: '50',
+                }
+            }
+
+            if (
+                organization?.billingMode === 'Directe' &&
+                [STATUSES.PARTICIPATION, STATUSES.PARTICIPATION_PARTIELLE].includes(inscriptionStatus)
+            ) {
+                config = {
+                    concerns: 'Participation formation CEP',
+                    unit: { value: 'part.', label: 'part.' },
+                    reason: 'Participation',
+                    price: `${sessionPrice}`,
+                }
+            }
+
+            if (config !== null) {
+                const {
+                    uuid,
+                    name,
+                    code,
+                    addressTitle,
+                    postalAddressStreet,
+                    postalAddressCode,
+                    postalAddressCountry,
+                    // postalAddressCountryCode,
+                    postalAddressDepartment,
+                    // postalAddressDepartmentCode,
+                    postalAddressLocality,
+                } = { ...mainOrganization, ...organization }
+
+                // insertInvoice : le verrou est deja tenu par toute la generation.
+                await insertInvoice({
+                    invoiceData: {
+                        status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                        invoiceType: { value: 'Directe', label: invoiceTypesFromPrisma.Directe },
+                        reason: { value: config.reason, label: invoiceReasonsFromPrisma[config.reason] },
+                        client: {
+                            value: code,
+                            label: name,
+                            uuid,
+                        },
+                        customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
+                            postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
+                        }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
+                            postalAddressCode ? `${postalAddressCode} ` : ''
+                        }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
+                        customClientEmail: organization?.email ?? '',
+                        selectedUserUuid: null,
+                        customClientTitle: '',
+                        customClientFirstname: '',
+                        customClientLastname: '',
+                        codeCompta: '',
+                        courseYear: new Date().getFullYear(),
+                        invoiceDate: new Date().toISOString(),
+                        concerns: config.concerns,
+                        items: [
+                            {
+                                number: '',
+                                designation: `${last_name} ${first_name} - ${sessionName}`,
+                                unit: config.unit,
+                                price: config.price, // Prix TTC (coût affiché sur le site Claroline)
+                                amount: '1',
+                                vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                                ...(inscription_uuid ? { cancellationId: id } : { inscriptionId: id }),
+                            },
+                        ],
+                    },
+                    cfEmail: req.headers['x-login-email-address'],
+                })
+            }
         }
 
-        res.json({
-            message: 'Les factures groupées ont été générées avec succès.',
+        res.json('Factures directes générées')
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error)
+        res.status(500).send({ error: 'Erreur de création de facture' })
+    }
+}
+
+createService(
+    'post',
+    '/direct',
+    // Toute la generation tient le verrou des factures : sans lui, un changement de statut
+    // simultane pouvait facturer la meme inscription entre la selection et la creation.
+    // docs/90-incidents/2026-11-12-doublon-facture-26381040.md
+    (req, res) => serializeInvoiceWrites(() => generateDirectInvoices(req, res)),
+    null,
+    manualInvoicesRouter
+)
+
+async function generateGroupedInvoices(req, res) {
+    await prisma.former22_invoice_item.deleteMany({
+        where: {
+            former22_manual_invoice: {
+                status: 'A_traiter',
+            },
+            claro_cursusbundle_course_session_user: {
+                claro_cursusbundle_course_session: {
+                    claro_cursusbundle_course: {
+                        generateInvoice: true,
+                    },
+                },
+            },
+        },
+    })
+
+    await prisma.former22_manual_invoice.deleteMany({
+        where: {
+            status: 'A_traiter',
+            former22_invoice_item: {
+                none: {},
+            },
+        },
+    })
+
+    const now = new Date()
+
+    const organizationMap = (
+        await prisma.former22_organization.findMany({
+            select: {
+                billingMode: true,
+                organizationId: true,
+                organizationUuid: true,
+                addressTitle: true,
+                postalAddressCountry: true,
+                postalAddressCountryCode: true,
+                postalAddressCode: true,
+                postalAddressStreet: true,
+                postalAddressDepartment: true,
+                postalAddressDepartmentCode: true,
+                postalAddressLocality: true,
+                claro__organization: {
+                    select: {
+                        name: true,
+                        email: true,
+                        code: true,
+                        claro_cursusbundle_quota: true,
+                        parent_id: true,
+                    },
+                },
+            },
         })
-    },
+    ).reduce((map, o) => map.set(o.organizationId, o), new Map())
+    const inscriptionMap = (await prisma.former22_inscription.findMany()).reduce(
+        (map, i) => map.set(i.inscriptionId, i),
+        new Map()
+    )
+    const sessionUsers = (
+        await prisma.claro_cursusbundle_course_session_user.findMany({
+            select: {
+                id: true,
+                uuid: true,
+                status: true,
+                claro_cursusbundle_course_session: {
+                    select: {
+                        course_name: true,
+                        price: true,
+                    },
+                },
+                claro_user: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                        user_organization: {
+                            select: {
+                                oganization_id: true,
+                            },
+                            where: {
+                                is_main: true,
+                            },
+                        },
+                    },
+                },
+            },
+            where: {
+                claro_user: {
+                    user_organization: {
+                        some: {
+                            claro__organization: {
+                                former22_organization: {
+                                    billingMode: 'Groupée',
+                                },
+                            },
+                            is_main: true,
+                        },
+                    },
+                },
+                claro_cursusbundle_course_session: {
+                    claro_cursusbundle_course: {
+                        generateInvoice: false,
+                    },
+                    start_date: {
+                        gte: new Date(`${now.getFullYear()}-01-01`),
+                    },
+                },
+                former22_invoice_item: {
+                    none: {},
+                },
+            },
+        })
+    ).filter(({ uuid }) => {
+        const i = inscriptionMap.get(uuid)
+        return (
+            i &&
+            (i.inscriptionStatus === STATUSES.PARTICIPATION || i.inscriptionStatus === STATUSES.PARTICIPATION_PARTIELLE)
+        )
+    })
+
+    const mappedInscriptions = new Map()
+
+    for (const inscription of sessionUsers) {
+        const organizationId = inscription.claro_user.user_organization[0].oganization_id
+
+        let parentWithQuota = organizationId
+        for (; parentWithQuota != null; ) {
+            const orga = organizationMap.get(parentWithQuota).claro__organization
+            if (orga.claro_cursusbundle_quota) break
+            parentWithQuota = orga.parent_id
+        }
+        const parentUseQuota = parentWithQuota === null ? 0 : 0.5
+        const key = inscription.status === 3 ? (parentWithQuota ?? organizationId) + parentUseQuota : organizationId
+        mappedInscriptions.set(key, [...(mappedInscriptions.get(key) ?? []), inscription])
+    }
+
+    for (const [key, inscriptions] of mappedInscriptions) {
+        const organizationId = key | 0
+
+        const {
+            organizationUuid,
+            addressTitle,
+            postalAddressStreet,
+            postalAddressCode,
+            postalAddressCountry,
+            postalAddressDepartment,
+            postalAddressLocality,
+            claro__organization: { name, email, code },
+        } = organizationMap.get(organizationId)
+
+        // insertInvoice : le verrou est deja tenu par toute la generation.
+        await insertInvoice({
+            invoiceData: {
+                client: {
+                    value: code ?? '',
+                    label: name ?? '',
+                    uuid: organizationUuid,
+                },
+                customClientEmail: email ?? '',
+                customClientAddress: `${name}\n${addressTitle ? `${addressTitle}\n` : ''}${
+                    postalAddressDepartment ? `${postalAddressDepartment}\n` : ''
+                }${postalAddressStreet ? `${postalAddressStreet}\n` : ''}${
+                    postalAddressCode ? `${postalAddressCode} ` : ''
+                }${postalAddressLocality ? `${postalAddressLocality}\n` : ''}${postalAddressCountry ?? ''}`,
+                customClientTitle: '',
+                customClientFirstname: '',
+                customClientLastname: '',
+                courseYear: now.getFullYear(),
+                invoiceDate: now.toISOString(),
+                selectedUserUuid: null,
+                concerns: '',
+                codeCompta: '',
+                status: { value: 'A_traiter', label: invoiceStatusesFromPrisma.A_traiter },
+                invoiceType:
+                    organizationId !== key
+                        ? { value: 'Quota', label: invoiceTypesFromPrisma.Quota }
+                        : { value: 'Group_e', label: invoiceTypesFromPrisma.Group_e },
+                reason: { value: 'Participation', label: invoiceReasonsFromPrisma.Participation },
+                items: inscriptions.map(
+                    ({ id, claro_cursusbundle_course_session, claro_user: { first_name, last_name } }) => ({
+                        designation: `${last_name} ${first_name} - ${claro_cursusbundle_course_session.course_name}`,
+                        unit: { value: 'part.', label: 'part.' },
+                        price: `${claro_cursusbundle_course_session.price ?? ''}`,
+                        amount: '1',
+                        vatCode: { value: 'EXONERE', label: 'EXONERE' },
+                        inscriptionId: id,
+                        number: '',
+                    })
+                ),
+            },
+            cfEmail: req.headers['x-login-email-address'],
+        })
+    }
+
+    res.json({
+        message: 'Les factures groupées ont été générées avec succès.',
+    })
+}
+
+createService(
+    'post',
+    '/grouped',
+    // Meme verrou que /direct, pour la meme raison.
+    (req, res) => serializeInvoiceWrites(() => generateGroupedInvoices(req, res)),
     null,
     manualInvoicesRouter
 )
