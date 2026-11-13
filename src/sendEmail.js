@@ -14,12 +14,13 @@ import {
     hasMailerHostUrlOverride,
     isProduction,
 } from './credentialsConfig'
+import { normalizePostalAttachments, toMailgunAttachments } from './helpers/postalAttachments'
 
 const mailgun = new Mailgun(FormData)
 
 const postalSuppressedDomains = mailgunWhitelist.split(',')
 
-const buildMockEmailResponse = ({ from, to, cc, bcc, subject, tag }) => ({
+const buildMockEmailResponse = ({ from, to, cc, bcc, subject, tag, attachments }) => ({
     mock: true,
     accepted: true,
     from,
@@ -28,6 +29,7 @@ const buildMockEmailResponse = ({ from, to, cc, bcc, subject, tag }) => ({
     bcc,
     subject,
     tag,
+    attachments: attachments.map(({ name }) => name),
 })
 
 export const sendEmail = async ({
@@ -38,8 +40,10 @@ export const sendEmail = async ({
     tag = mailerTag,
     subject,
     html_body,
+    attachments: rawAttachments,
     isFromClaroline = false,
 }) => {
+    const attachments = normalizePostalAttachments(rawAttachments)
     // destination will always be only one e-mail address, so it's an array of 1 string,
     // but Claroline sends it as a nested array, so we flatten it here
     const destinations = typeof to === 'string' ? [to] : to?.flat()
@@ -54,10 +58,17 @@ export const sendEmail = async ({
             bcc: destinationsBcc,
             subject,
             tag,
+            attachments,
         })
 
+        const attachmentNames = attachments.length > 0 ? ` [${emailResponse.attachments.join(', ')}]` : ''
+
         // eslint-disable-next-line no-console
-        console.info(`[mailer:mock] ${subject ?? '(no subject)'} -> ${destinations?.join(', ') ?? '(no recipient)'}`)
+        console.info(
+            `[mailer:mock] ${subject ?? '(no subject)'} -> ${
+                destinations?.join(', ') ?? '(no recipient)'
+            }${attachmentNames}`
+        )
 
         return { emailResponse }
     }
@@ -79,6 +90,7 @@ export const sendEmail = async ({
                 subject,
                 html_body,
                 tag,
+                attachments: attachments.length > 0 ? attachments : undefined,
             }),
         })
 
@@ -96,6 +108,7 @@ export const sendEmail = async ({
                     bcc: destinationsBcc,
                     subject,
                     tag,
+                    attachments,
                 }),
             }
         }
@@ -134,6 +147,7 @@ export const sendEmail = async ({
                 bcc: destinationsBcc,
                 subject,
                 html: html_body,
+                ...(attachments.length > 0 && { attachment: toMailgunAttachments(attachments) }),
             })
 
             return { emailResponse, mailgunResult }

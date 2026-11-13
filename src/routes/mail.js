@@ -24,7 +24,7 @@ createService(
     'post',
     '/api/v1/send/message',
     async (req, res) => {
-        const { to, cc, bcc, from, tag, subject, html_body } = req.body
+        const { to, cc, bcc, from, tag, subject, html_body, attachments } = req.body
 
         await sendEmail({
             to,
@@ -34,6 +34,9 @@ createService(
             tag,
             subject,
             html_body,
+            // Claroline les envoie au format Postal (`name`, `content_type`, `data` en base64),
+            // par exemple `invitation.ics` pour une invitation a une seance
+            attachments,
             isFromClaroline: true,
         })
 
