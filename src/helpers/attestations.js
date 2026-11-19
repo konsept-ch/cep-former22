@@ -16,6 +16,24 @@ import {
     findExistingAttestation,
     resolvePersonalRootNode,
 } from './attestationsResolvers'
+import { assurerEspacePersonnel } from './espacePersonnel'
+
+// Meme selection que les routes appelantes (`routes/inscriptions.js`,
+// `routes/attestations.js`) : sert a relire l'espace juste apres sa creation.
+const workspaceSelect = {
+    id: true,
+    uuid: true,
+    slug: true,
+    entity_name: true,
+    code: true,
+    claro_resource_node: {
+        where: {
+            parent_id: null,
+            claro_resource_type: { is: { name: 'directory' } },
+        },
+        orderBy: { id: 'asc' },
+    },
+}
 
 export class AttestationGenerationError extends Error {
     constructor(message, context = {}) {
@@ -167,6 +185,59 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
 
     const originalPdfName = `${attestation.fileOriginalName}${ext}`
 
+    // Avant l'upload du PDF : en cas de refus, on ne laisse pas de fichier orphelin.
+    // Les comptes crees par la personne elle-meme n'ont pas d'espace personnel (Claroline
+    // `NO_PERSONAL_WORKSPACE`, depuis le 09.06.2026) : on le cree ici, a la demande.
+    const {
+        workspace,
+        refuse: creationEspaceRefusee,
+        conflitCode,
+    } = await assurerEspacePersonnel({
+        workspace: currentInscription.claro_user.claro_workspace_claro_user_workspace_idToclaro_workspace,
+        userUuid: user.uuid,
+        creerEspace: (userUuid) =>
+            callApi({
+                req,
+                path: 'user/pws',
+                method: 'post',
+                params: { 'ids[]': userUuid },
+            }),
+        relireEspace: async () => {
+            const relu = await prisma.claro_user.findUnique({
+                where: { id: currentInscription.claro_user.id },
+                select: { claro_workspace_claro_user_workspace_idToclaro_workspace: { select: workspaceSelect } },
+            })
+
+            return relu?.claro_workspace_claro_user_workspace_idToclaro_workspace
+        },
+        journaliser: logStep,
+    })
+
+    if (conflitCode) {
+        throw new AttestationGenerationError(
+            "L'utilisateur n'a pas d'espace personnel Claroline, et un espace portant son identifiant existe déjà " +
+                'sans lui être rattaché. Il doit être réparé par le support avant de relancer la génération.',
+            {
+                selectedTemplateUuid,
+                inscriptionUuid: currentInscription.uuid,
+                userUuid: user.uuid,
+            }
+        )
+    }
+
+    if (creationEspaceRefusee) {
+        throw new AttestationGenerationError(
+            "L'utilisateur n'a pas d'espace personnel Claroline et vos droits ne permettent pas de le créer. " +
+                "Un administrateur peut l'activer dans Claroline (Utilisateurs → Créer l'espace personnel), " +
+                'puis relancer la génération.',
+            {
+                selectedTemplateUuid,
+                inscriptionUuid: currentInscription.uuid,
+                userUuid: user.uuid,
+            }
+        )
+    }
+
     const formData = new FormData()
     const fileBinary = new File([pdfBuf], originalPdfName, {
         type: 'application/pdf',
@@ -194,7 +265,6 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
         uploadedFileUrl: uploadedFile[0].url,
     })
 
-    const workspace = currentInscription.claro_user.claro_workspace_claro_user_workspace_idToclaro_workspace
     const personalNodes = workspace?.claro_resource_node
 
     const rootNode = resolvePersonalRootNode(personalNodes)
