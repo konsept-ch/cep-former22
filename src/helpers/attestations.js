@@ -17,6 +17,7 @@ import {
     resolvePersonalRootNode,
 } from './attestationsResolvers'
 import { assurerEspacePersonnel } from './espacePersonnel'
+import { getAttestationDates } from './attestationDates'
 
 // Meme selection que les routes appelantes (`routes/inscriptions.js`,
 // `routes/attestations.js`) : sert a relire l'espace juste apres sa creation.
@@ -145,26 +146,28 @@ export async function generateAttestation(selectedTemplateUuid, req, params) {
     })
 
     const courseDurationText = getDurationText({ days: courseDurationDays, hours: courseDurationHours })
+    const { sessionDates: sessionDatesText, sessionEndDate } = getAttestationDates(sessionDates)
 
-    doc.render({
-        PARTICIPANT_NOM: `${user.first_name} ${user.last_name}`,
-        FORMATION_NOM: courseName,
-        SESSION_DATE_FIN: Intl.DateTimeFormat('fr-CH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        }).format(sessionDates.at(-1)?.claro_planned_object?.start_date),
-        SESSION_DURÉE: courseDurationText.length > 0 ? courseDurationText : 'non renseigné',
-        SESSION_DATES: sessionDates
-            .map(({ claro_planned_object: { start_date } }) =>
-                Intl.DateTimeFormat('fr-CH', { year: 'numeric', month: 'long', day: 'numeric' }).format(start_date)
-            )
-            .join(', '),
-        OBJECTIFS: former22_course.goals?.split('\n').map((goal) => ({ OBJECTIF: goal })) ?? '',
-        FORMATEURS:
-            tutors?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`).join(', ') ??
-            'Aucun formateur',
-    })
+    try {
+        doc.render({
+            PARTICIPANT_NOM: `${user.first_name} ${user.last_name}`,
+            FORMATION_NOM: courseName,
+            SESSION_DATE_FIN: sessionEndDate,
+            SESSION_DURÉE: courseDurationText.length > 0 ? courseDurationText : 'non renseigné',
+            SESSION_DATES: sessionDatesText,
+            // Un cours jamais ouvert dans Former22 n'a pas de ligne `former22_course` : sans le `?.`,
+            // la generation echouait sur `null.goals` avec un message generique (constate le 25.11.2026).
+            OBJECTIFS: former22_course?.goals?.split('\n').map((goal) => ({ OBJECTIF: goal })) ?? '',
+            FORMATEURS:
+                tutors?.map(({ claro_user: { first_name, last_name } }) => `${first_name} ${last_name}`).join(', ') ??
+                'Aucun formateur',
+        })
+    } catch (error) {
+        throw new AttestationGenerationError("Le modèle d'attestation n'a pas pu être rempli.", {
+            ...logContext,
+            cause: error?.message,
+        })
+    }
     logStep('docx-rendered')
 
     const docxBuf = doc.getZip().generate({
