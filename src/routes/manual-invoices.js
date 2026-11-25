@@ -8,6 +8,8 @@ import { createInvoice, insertInvoice } from './manualInvoicesUtils'
 import { serializeInvoiceWrites } from '../helpers/serialize'
 import { keepOneUninvoicedPerInscription } from '../helpers/invoiceCandidates'
 import { STATUSES } from './inscriptionsUtils'
+import { allowDeleteAllInvoices } from '../credentialsConfig'
+import { winstonLogger } from '../winston'
 
 export const manualInvoicesRouter = Router()
 
@@ -842,9 +844,28 @@ createService(
 createService(
     'delete',
     '/all',
-    async (_req, res) => {
-        await prisma.former22_invoice_item.deleteMany()
-        await prisma.former22_manual_invoice.deleteMany()
+    // Efface TOUTES les factures en une requete. Le bouton de l'Admin UI ne s'affiche qu'en VAL
+    // et en local, mais la route repondait partout, PROD comprise, a tout compte du back-office.
+    // Refusee par defaut : il faut ALLOW_DELETE_ALL_INVOICES=true sur l'environnement (jamais en PROD).
+    async (req, res) => {
+        if (!allowDeleteAllInvoices) {
+            winstonLogger.warn(
+                `Delete all invoices refused (ALLOW_DELETE_ALL_INVOICES not set): ${JSON.stringify({
+                    user: req.headers['x-login-email-address'],
+                })}`
+            )
+
+            res.status(403).json("La suppression de toutes les factures n'est pas autorisée sur cet environnement.")
+
+            return
+        }
+
+        await serializeInvoiceWrites(async () => {
+            await prisma.former22_invoice_item.deleteMany()
+            await prisma.former22_manual_invoice.deleteMany()
+        })
+
+        winstonLogger.warn(`All invoices deleted: ${JSON.stringify({ user: req.headers['x-login-email-address'] })}`)
 
         res.json('Toutes factures et articles ont été supprimés')
     },

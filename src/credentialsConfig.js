@@ -6,6 +6,8 @@ export const clarolineApiUrl = process.env.CLAROLINE_API_URL ?? 'https://www.cep
 // export const clarolineApiUrl = process.env.CLAROLINE_API_URL ?? 'https://claroline-val.jcloud.ik-server.com/apiv2/'
 
 export const isProduction = process.env.NODE_ENV === 'production'
+// `DELETE /manual-invoices/all` efface toutes les factures : refuse sauf opt-in explicite. Jamais en PROD.
+export const allowDeleteAllInvoices = process.env.ALLOW_DELETE_ALL_INVOICES === 'true'
 export const hasMailerHostUrlOverride =
     typeof process.env.MAILER_HOST_URL === 'string' && process.env.MAILER_HOST_URL.trim() !== ''
 
