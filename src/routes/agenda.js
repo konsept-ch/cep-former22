@@ -55,6 +55,8 @@ createService(
             const events = (
                 await prisma.claro_planned_object.findMany({
                     select: {
+                        // Sans lui, chaque evenement de l'agenda partait avec `id: undefined`.
+                        uuid: true,
                         entity_name: true,
                         start_date: true,
                         end_date: true,
@@ -144,11 +146,13 @@ createService(
                     description,
                     claro_location_room,
                     claro_cursusbundle_session_event,
-                    claro_user: { first_name: firstName, last_name: lastName, mail: email },
+                    claro_user: plannedObjectCreator,
                     uuid,
                     // claro__location: _claro__location,
                     ...rest
                 }) => {
+                    // Une reservation sans createur (compte supprime) faisait repondre 500 a toute la route.
+                    const { first_name: firstName, last_name: lastName, mail: email } = plannedObjectCreator ?? {}
                     let studentsCount
                     let teachers
 
