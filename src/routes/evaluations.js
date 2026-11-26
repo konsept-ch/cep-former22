@@ -154,8 +154,10 @@ createService(
         res.send(Buffer.from(await helper.save(), 'binary'))
     },
     null,
-    evaluationsRouter
-    //authMiddleware
+    evaluationsRouter,
+    // Etait commente : la synthese PDF des reponses (remarques libres comprises) etait lisible par
+    // quiconque connaissait l'uuid, celui-la meme qu'on envoie aux participants. Protegee le 26.11.2026.
+    authMiddleware
 )
 
 createService(
@@ -264,8 +266,10 @@ createService(
         res.send(Buffer.from(await helper.save(), 'binary'))
     },
     null,
-    evaluationsRouter
-    //authMiddleware
+    evaluationsRouter,
+    // Etait commente : la synthese PDF des reponses (remarques libres comprises) etait lisible par
+    // quiconque connaissait l'uuid, celui-la meme qu'on envoie aux participants. Protegee le 26.11.2026.
+    authMiddleware
 )
 
 createService(
