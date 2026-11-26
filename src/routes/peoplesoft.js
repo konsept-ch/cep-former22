@@ -94,7 +94,9 @@ createService(
             if (currentAuth === 'Access Denied.') {
                 respondToPeopleSoft(res, "Votre token n'existe pas dans Claroline")
             } else {
-                const isAdmin = currentAuth[0]?.permissions.edit
+                // Un refus autre que "Access Denied." (objet d'erreur, liste vide) faisait planter ici
+                // sur `permissions.edit` : PeopleSoft recevait un 500 au lieu d'un refus lisible.
+                const isAdmin = Array.isArray(currentAuth) && currentAuth[0]?.permissions?.edit === true
 
                 if (!isAdmin) {
                     respondToPeopleSoft(res, "Vous n'êtes pas admin")
