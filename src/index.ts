@@ -9,8 +9,6 @@ import yaml from 'js-yaml'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 
-import { generateEndpoints } from './expressEndpoints' // deprecated, use routes instead
-
 import { authRouter } from './routes/auth'
 import { agendaRouter } from './routes/agenda'
 import { coursesRouter } from './routes/courses'
@@ -84,8 +82,6 @@ app.use(
     swaggerUi.serveFiles(undefined, swaggerUiOptions),
     swaggerUi.setup(undefined, swaggerUiOptions)
 )
-
-generateEndpoints()
 
 app.use('/peoplesoft', peoplesoftRouter)
 
