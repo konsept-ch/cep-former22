@@ -85,11 +85,26 @@ createService(
         if (token == null) {
             respondToPeopleSoft(res, `Vous devez passer le header ${PEOPLESOFT_TOKEN}`)
         } else {
-            const currentAuth = await callApi({
-                req,
-                path: '/apiv2/apitoken/list/current',
-                headers: { [CLAROLINE_TOKEN]: token },
-            })
+            let currentAuth
+
+            try {
+                currentAuth = await callApi({
+                    req,
+                    path: '/apiv2/apitoken/list/current',
+                    headers: { [CLAROLINE_TOKEN]: token },
+                })
+            } catch (error) {
+                // Depuis v2.1.5-rc.1, `callApi` leve une erreur sur toute reponse non 2xx : un jeton
+                // refuse par Claroline (401 "Access Denied.") donnait un 500 a PeopleSoft au lieu
+                // d'un refus lisible. Seule une vraie panne de Claroline reste une erreur serveur.
+                if ([401, 403].includes(error?.status)) {
+                    respondToPeopleSoft(res, "Votre token n'existe pas dans Claroline")
+
+                    return
+                }
+
+                throw error
+            }
 
             if (currentAuth === 'Access Denied.') {
                 respondToPeopleSoft(res, "Votre token n'existe pas dans Claroline")

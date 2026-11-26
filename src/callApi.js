@@ -31,11 +31,14 @@ export const callApi = async ({
 
     if (!response.ok) {
         const responseText = await response.text()
-        throw new Error(
+        const error = new Error(
             `Claroline API request failed: ${method.toUpperCase()} ${url} returned ${response.status} ${
                 response.statusText
             }${responseText ? ` - ${responseText.slice(0, 500)}` : ''}`
         )
+        // Le statut permet a l'appelant de distinguer un refus (401, 403) d'une panne.
+        error.status = response.status
+        throw error
     }
 
     // if (isFormData) {
